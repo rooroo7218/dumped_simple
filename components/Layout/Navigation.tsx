@@ -70,13 +70,7 @@ interface NavigationProps {
 
 const MAIN_TABS = [
     { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
-    { id: 'tasks',        icon: ListBulletIcon,      solidIcon: ListBulletIconSolid,      label: 'Tasks',      mobileLabel: 'Tasks' },
-    { id: 'priorities',   icon: QueueListIcon,       solidIcon: QueueListIconSolid,       label: 'Priorities', mobileLabel: 'Priority' },
-    { id: 'focus',        icon: FocusCircleIcon,     solidIcon: FocusCircleIconSolid,     label: 'Focus',      mobileLabel: 'Focus' },
-    { id: 'diary',        icon: BookOpenIcon,        solidIcon: BookOpenIconSolid,        label: 'Journals',   mobileLabel: 'Journal' },
-    { id: 'simple-dump',  icon: PencilSquareIcon,    solidIcon: PencilSquareIconSolid,    label: 'Simple',     mobileLabel: 'Simple' },
-    { id: 'memory-grid',  icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Patterns',   mobileLabel: 'Patterns' },
-    { id: 'settings',     icon: UserIcon,            solidIcon: UserIconSolid,            label: 'About Me',   mobileLabel: 'Me' },
+    { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Patterns',   mobileLabel: 'Patterns' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────

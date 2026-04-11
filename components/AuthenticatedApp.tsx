@@ -23,13 +23,9 @@ import { ZenPlayer } from './ZenPlayer';
 
 // Modular Hubs
 import { BrainDumpHub } from './BrainDumpHub';
-import { TasksHub } from './TasksHub';
-import { PrioritiesHub } from './PrioritiesHub';
-import { JournalHub } from './JournalHub';
-import { FocusHub } from './FocusHub';
-import { SimpleDumpHub } from './SimpleDumpHub';
+import { OverviewHub } from './OverviewHub';
 import { MemoryGridHub } from './MemoryGridHub';
-import { PersonaEditor } from './Persona/PersonaEditor';
+import { SimpleDumpHub } from './SimpleDumpHub';
 // Modals & Notifications
 import { TaskDetailModal } from './Modals/TaskDetailModal';
 import { DuplicateCleanupModal } from './DuplicateCleanupModal';
@@ -145,10 +141,16 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
         const allTaskIds = new Set(data.memories.flatMap(m => m.actions ?? []).map(a => a.id));
         const fromDb = data.memories.flatMap(m => m.actions ?? []).filter(a => a.parked).map(a => a.id);
         const fromLocal: string[] = JSON.parse(localStorage.getItem(PARKED_KEY) || '[]');
-        // Only include localStorage IDs that still exist as tasks (prevents stale ghost entries)
         const validLocal = fromLocal.filter(id => allTaskIds.has(id));
         return [...new Set([...fromDb, ...validLocal])];
     }, [data.memories]);
+    const groupTasksByCategory = (tasks: ActionItem[]) => {
+        const counts: Record<string, number> = {};
+        tasks.forEach(t => {
+            if (t.category) counts[t.category] = (counts[t.category] || 0) + 1;
+        });
+        return counts;
+    };
     const { memories, setMemories, persona, aiStatus, setAiStatus, lastAiError, setLastAiError } = data;
 
     const logic = useAppLogic(memories, setMemories, persona, data.diaryEntries, data.setLifeSynthesis, data.updateTaskDetails, data.addCustomCategory, data.deleteCategory, setAiStatus, setLastAiError, showToast, maybeLaterIds);
@@ -579,97 +581,18 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
                 <main className="flex-1 px-5 md:px-16 pt-8 md:pt-16 pb-24 w-full relative z-10">
                     {activeTab === 'dump' && <BrainDumpHub {...dump} persona={persona} memories={memories} activeTab={activeTab} onUpdatePersona={p => { data.setPersona(p); databaseService.savePersona(p); }} />}
-                    {activeTab === 'tasks' && (
-                        <TasksHub
-                            groupedTasks={groupedTasks}
-                            allCategories={allCategories}
-                            toggleTask={handleToggleTask}
-                            setSelectedTask={setSelectedTaskIds}
-                            memories={memories}
-                            updateTaskDetails={data.updateTaskDetails}
-                            deleteCategory={data.deleteCategory}
-                            activeDragBatchId={activeDragBatchId}
-                            activeTab={activeTab}
-                            maybeLaterIds={maybeLaterIds}
-                            onMaybeLater={addMaybeLater}
-                            onRestoreMaybeLater={removeMaybeLater}
-                            isCheckingDuplicates={isCheckingDuplicates}
-                            setIsCheckingDuplicates={setIsCheckingDuplicates}
-                            setDuplicateGroups={setDuplicateGroups}
-                            setIsCleanupModalOpen={setIsCleanupModalOpen}
-                            findDuplicateTasks={findDuplicateTasks} handleDeleteTask={deleteTask} clearAllTasks={clearAllTasks} addCustomCategory={data.addCustomCategory} exportAppData={data.exportAppData} importAppData={data.importAppData} themeClasses={themeClasses}
-                            reorderCategories={data.reorderCategories}
-                            addManualTask={data.addManualTask}
-                            rankedTasks={rankedTasks}
-                            reorderTasks={data.reorderTasks}
-                        />
+                    {activeTab === 'patterns' && (
+                        <div className="space-y-8">
+                            <OverviewHub
+                                lifeSynthesis={data.lifeSynthesis}
+                                starGraphData={groupTasksByCategory(allActiveTasks)}
+                                themeClasses={themeClasses}
+                            />
+                            <div className="pt-8 border-t border-slate-200/50">
+                                <MemoryGridHub memories={memories} setActiveTab={setActiveTab} />
+                            </div>
+                        </div>
                     )}
-                    {activeTab === 'priorities' && (
-                        <PrioritiesHub
-                            rankedTasks={rankedTasks}
-                            memories={memories}
-                            handleGlobalReprioritization={handleGlobalReprioritization}
-                            isProcessing={isProcessing}
-                            setSelectedTask={setSelectedTaskIds}
-                            activeDragBatchId={activeDragBatchId}
-                            themeClasses={themeClasses}
-                            maybeLaterIds={maybeLaterIds}
-                            onMaybeLater={addMaybeLater}
-                            onRestoreMaybeLater={removeMaybeLater}
-                            onStartFocus={(taskId) => {
-                                setFocusTaskId(taskId);
-                                setActiveTab('focus');
-                            }}
-                        />
-                    )}
-                    {activeTab === 'focus' && (
-                        <FocusHub
-                            rankedTasks={logic.rankedTasks}
-                            memories={data.memories}
-                            toggleTask={handleToggleTask}
-                            updateTaskDetails={data.updateTaskDetails}
-                            setIsZenMode={setIsZenMode}
-                            initialTaskId={focusTaskId}
-                            onExitFocus={(completions) => setWeeklyModalCompletions(completions)}
-                            persona={persona}
-                        />
-                    )}
-                    {activeTab === 'diary' && <JournalHub {...data} memories={memories} handleSaveDiary={handleSaveDiaryWrapped} startSpeechToText={dump.startSpeechToText} isListening={dump.isListening} themeClasses={themeClasses} />}
-                    {activeTab === 'simple-dump' && <SimpleDumpHub memories={memories} setActiveTab={setActiveTab} />}
-                    {activeTab === 'memory-grid' && <MemoryGridHub memories={memories} setActiveTab={setActiveTab} />}
-                    {activeTab === 'settings' && (() => {
-                        // 2.8: compute life stats for display
-                        const allTasks = memories.flatMap(m => m.actions ?? []);
-                        const totalCompleted = allTasks.filter(a => a.completed).length;
-                        const totalDumps = memories.length;
-                        const totalGoals = (persona.longTermGoals || []).length;
-                        const focusSessions = (() => { let t = 0; for (let i = 0; i < 30; i++) { const d = new Date(); d.setDate(d.getDate() - i); try { t += parseInt(localStorage.getItem(`dumped_focus_sessions_${d.toDateString()}`) || '0', 10); } catch {} } return t; })();
-                        return (
-                            <>
-                                {/* 2.8 — Life stats strip */}
-                                <div className="max-w-2xl mx-auto mb-6 grid grid-cols-4 gap-3">
-                                    {[
-                                        { label: 'Dumps', value: totalDumps },
-                                        { label: 'Done', value: totalCompleted },
-                                        { label: 'Focus sessions', value: focusSessions },
-                                        { label: 'Goals set', value: totalGoals },
-                                    ].map(s => (
-                                        <div key={s.label} className="p-4 rounded-2xl bg-white/70 border-2 border-slate-950 backdrop-blur-md text-center shadow-sm">
-                                            <div className="text-2xl font-black text-slate-800">{s.value}</div>
-                                            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mt-0.5">{s.label}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <PersonaEditor
-                                    persona={persona}
-                                    onSave={(p) => { data.setPersona(p); databaseService.savePersona(p); }}
-                                    onReprioritize={(p) => { data.setPersona(p); databaseService.savePersona(p); logic.handleGlobalReprioritization(p); }}
-                                    isProcessing={logic.isProcessing}
-                                    onRerunOnboarding={() => setShowReonboarding(true)}
-                                />
-                            </>
-                        );
-                    })()}
                 </main>
 
                 {(() => {
