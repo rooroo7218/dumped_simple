@@ -1,0 +1,7 @@
+{
+  "name": "Dumped",
+  "description": "A sophisticated personal assistant that captures your thoughts via text, speech, or files, organizing them into a coherent life structure using advanced AI reasoning.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

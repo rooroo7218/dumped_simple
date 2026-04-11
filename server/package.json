@@ -1,0 +1,20 @@
+{
+  "name": "brain-dump-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend for Brain Dump App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@supabase/supabase-js": "^2.93.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

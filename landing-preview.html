@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dumped — Landing Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f8fafc;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        canvas { position: fixed; inset: 0; z-index: 0; }
+
+        /* ── Centre overlay (just the title + subtext) ── */
+        #overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #dumped-wrap {
+            pointer-events: auto;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+
+        #dumped-title {
+            font-size: clamp(80px, 15vw, 170px);
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+        #dumped-wrap:hover #dumped-title { transform: scale(1.02); }
+
+        /* ── "tap to clear" — sits below the title ── */
+        #tap-hint {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 10px 28px;
+            background: #0f172a;
+            color: #fff;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            transition: background 0.2s, transform 0.15s;
+        }
+        #tap-hint:hover  { background: #1e293b; transform: scale(1.04); }
+        #tap-hint:active { transform: scale(0.97); }
+
+        /* ── Subtext ── */
+        #subtext-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            padding: 0 32px;
+        }
+
+        .sub-line {
+            font-size: clamp(28px, 4.8vw, 58px);
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            white-space: nowrap;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards;
+        }
+
+        #cta {
+            margin-top: 48px;
+            padding: 14px 38px;
+            background: #0f172a;
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            pointer-events: auto;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+            transition: background 0.2s, transform 0.15s;
+        }
+        #cta:hover  { background: #1e293b; transform: scale(1.05); }
+        #cta:active { transform: scale(0.97); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50%       { opacity: 1;   }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0);    }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div id="overlay">
+    <div id="dumped-wrap">
+        <h1 id="dumped-title">Dumped</h1>
+        <div style="text-align:center;">
+            <button id="tap-hint">Tap to empty your brain</button>
+        </div>
+    </div>
+    <div id="subtext-wrap"></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const { Engine, Bodies, Composite, Body } = Matter;
+
+    // ── Tasks & colours ──────────────────────────────────────────────────────
+    const TASKS = [
+        // Work
+        'Review Q4 budget','Update project timeline','Fix login bug','Deploy to staging',
+        'Write release notes','Review pull request','Update dependencies','Fix broken tests',
+        'Schedule team standup','Reply to client email','Send weekly report','Book meeting room',
+        'Prepare slide deck','Update roadmap','Review design mockups','Fix CSS bug',
+        'Update API docs','Deploy to production','Write unit tests','Review user feedback',
+        'Update onboarding flow','Fix memory leak','Schedule performance review','Reply to Slack thread',
+        'Send invoice #102','Book conference call','Prepare sprint backlog','Update error handling',
+        'Review analytics','Fix broken link','Schedule demo call','Reply to support ticket',
+        'Send status update','Book team lunch','Prepare quarterly report','Update sitemap',
+        'Fix redirect loop','Schedule code review','Reply to recruiter','Send contract',
+        'Book office supplies','Prepare budget proposal','Update changelog','Fix responsive layout',
+        'Schedule 1:1','Reply to review comments','Send project brief','Prepare onboarding doc',
+        'Update user stories','Fix caching issue','Schedule retro','Send NDA',
+        'Prepare technical spec','Update pricing page','Fix authentication','Schedule launch',
+        'Reply to partnership email','Send follow-up','Prepare case study','Update help docs',
+        'Fix payment flow','Schedule training','Send invoice reminder','Book accountant',
+        'Prepare demo script','Update privacy policy','Fix checkout bug','Schedule board meeting',
+        'Reply to investor','Send welcome email','Prepare pitch deck','Update terms of service',
+        'Fix data migration','Schedule product review','Reply to customer','Send proposal',
+        'Prepare meeting agenda','Fix SQL query','Schedule design review','Reply to contractor',
+        'Update the wiki','Rotate API keys','Archive old tickets','Review error logs',
+        'Update test coverage','Write migration script','Review security audit','Close sprint',
+        'Tag the release','Merge develop to main','Update staging env','Clear build cache',
+        'Review SEO report','Audit accessibility','Update font stack','Compress images',
+        'Minify CSS bundle','Check broken redirects','Update meta descriptions','Review A/B test',
+        // Personal
+        'Call dentist','Buy groceries','Walk the dog','Clean the house','Pay rent',
+        'Renew passport','Pick up prescription','Fix leaking faucet','Cancel gym membership',
+        'Schedule haircut','Call mom','Order birthday cake','Clean the garage','Pay electricity bill',
+        'Renew car insurance','Pick up dry cleaning','Fix squeaky door','Cancel Netflix',
+        'Schedule car service','Call dad','Order new glasses','Clean the oven','Pay phone bill',
+        'Renew driver\'s license','Pick up kids from school','Fix broken screen','Schedule eye exam',
+        'Call bank','Order Christmas gifts','Clean the fridge','Pay parking ticket',
+        'Pick up takeout','Fix running toilet','Schedule dental cleaning','Call landlord',
+        'Order office chair','Clean windows','Pay credit card','Pick up medication',
+        'Fix bike tyre','Schedule vet appointment','Call insurance','Order birthday flowers',
+        'Clean under the bed','Pay water bill','Pick up parcel','Fix the fence',
+        'Schedule massage','Call plumber','Order grocery delivery','Clean the car',
+        'Pay council tax','Pick up school photos','Fix doorbell','Schedule blood test',
+        'Call electrician','Order new pillows','Clean the bathroom','Pay internet bill',
+        'Pick up keys','Fix garage door','Call broadband provider','Order printer ink',
+        'Clean the patio','Pay gas bill','Fix garden tap','Buy new towels',
+        'Schedule car wash','Clean the gutters','Pay late fee','Book restaurant',
+        'Order new headphones','Fix running shoe','Cancel free trial','Plan weekend trip',
+        // Health
+        'Gym at 6pm','Morning run','Yoga class','Book physio','Order supplements',
+        'Meal prep Sunday','Track calories','Book blood test','Refill vitamins',
+        'Book chiropractor','Stretch routine','Book dermatologist','Drink 2L water',
+        'Take medication','Book eye test','Pack gym bag','Cook healthy dinner',
+        'Book therapist','Meditate 10 min','Book dietitian','Morning walk',
+        'Swim session','Take iron tablets','Check heart rate','Log workouts',
+        'Book flu shot','Renew gym membership','Buy protein powder','Foam roll tonight',
+        'Book sports massage','Sleep by 10pm','Limit screen time','Cut sugar this week',
+        // Finance
+        'File tax return','Review investments','Update budget spreadsheet','Check credit score',
+        'Transfer to savings','Review pension','Pay off credit card','Review insurance',
+        'Cancel old bank account','Check mortgage rate','Review utility bills','File expense report',
+        'Update financial plan','Review subscriptions','Review loan terms','Check interest rates',
+        'Update will','Review emergency fund','Pay estimated taxes','Rebalance portfolio',
+        'Check dividend income','Close dormant account','Review stock options','File VAT return',
+        'Update beneficiaries','Review 401k','Check crypto portfolio','Pay contractor',
+        // Learning
+        'Study for exam','Read design book','Watch tutorial series','Complete online course',
+        'Practice Spanish','Read newsletter','Watch conference talk','Study algorithms',
+        'Read product doc','Practice piano','Learn Excel shortcuts','Read autobiography',
+        'Watch documentary','Study design patterns','Read case study','Learn Figma',
+        'Read history book','Watch cooking tutorial','Study for certification','Take notes',
+        'Finish Duolingo streak','Review flashcards','Watch YouTube lecture','Join webinar',
+        'Read research paper','Complete coding challenge','Listen to podcast','Read chapter 5',
+        // Home
+        'Buy lightbulbs','Fix garden fence','Clean gutters','Plant new flowers',
+        'Paint bedroom wall','Buy new doormat','Fix washing machine','Clean air filters',
+        'Buy new pillows','Fix radiator','Clean dishwasher','Buy bath towels',
+        'Clean wine glasses','Buy kitchen mat','Fix patio paving','Hang curtains',
+        'Assemble shelving','Deep clean bathroom','Replace shower head','Buy new lamp',
+        'Fix loose tile','Oil the hinges','Re-grout the shower','Patch the drywall',
+        'Touch up paint','Replace door handle','Fix loose plug','Buy storage boxes',
+        'Declutter wardrobe','Donate old clothes','Recycle electronics','Book skip hire',
+        // Social & admin
+        'RSVP dinner','Renew subscription','Back up laptop','Buy birthday gift',
+        'Team standup','Water the plants','Code review','Submit the PR',
+        'Write newsletter','Take out the trash','Doctor follow-up','Clean the desk',
+        'Prepare slides','Send thank-you note','Book travel insurance','Update LinkedIn',
+        'Reply to DMs','Plan birthday party','Write recommendation','Confirm attendance',
+        'Send holiday card','Update emergency contacts','Register to vote','Renew library card',
+        'Apply for grant','Submit timesheet','Update profile photo','Check voicemail',
+        'Reply to comments','Follow up on quote','Confirm reservation','Archive old emails',
+    ];
+
+    const COLORS = [
+        '#e0f2fe','#dbeafe','#ede9fe','#fce7f3',
+        '#d1fae5','#fef9c3','#ffedd5','#fee2e2',
+        '#f0fdf4','#fdf4ff','#e0e7ff','#ccfbf1',
+    ];
+
+    // ── Canvas ───────────────────────────────────────────────────────────────
+    const canvas = document.getElementById('canvas');
+    const ctx    = canvas.getContext('2d');
+    const mCtx   = document.createElement('canvas').getContext('2d');
+
+    function measure(text, fontSize) {
+        mCtx.font = `700 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+        const padX = 30, padY = 18;
+        return { w: mCtx.measureText(text).width + padX * 2, h: fontSize + padY * 2 };
+    }
+
+    // ── Physics ──────────────────────────────────────────────────────────────
+    let engine  = Engine.create({ gravity: { x: 0, y: 1.4 } });
+    let walls   = [];
+    let bubbles = [];
+    let dumped  = false;
+
+    const WALL_T      = 80;
+    const SPAWN_MS    = 103;
+    const MAX_BUBBLES = 400;
+    let lastSpawn     = 0;
+
+    function buildWalls() {
+        const W = canvas.width, H = canvas.height, T = WALL_T;
+        const s = { isStatic: true, friction: 0.5 };
+        const floor = Bodies.rectangle(W / 2,    H + T / 2,   W * 3, T,    s);
+        const wallL = Bodies.rectangle(-T / 2,   H / 2,       T,     H * 4, s);
+        const wallR = Bodies.rectangle(W + T / 2, H / 2,      T,     H * 4, s);
+        walls = [floor, wallL, wallR];
+        Composite.add(engine.world, walls);
+    }
+
+    function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        Engine.clear(engine);
+        Composite.clear(engine.world, false);
+        bubbles = [];
+        engine  = Engine.create({ gravity: { x: 0, y: 1.4 } });
+        buildWalls();
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── Pill drawing ─────────────────────────────────────────────────────────
+    function drawPill(x, y, w, h) {
+        const r = h / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(x + r, y + h);
+        ctx.arc(x + r,     y + r, r,  Math.PI / 2, -Math.PI / 2);
+        ctx.closePath();
+    }
+
+    // ── Spawn ─────────────────────────────────────────────────────────────────
+    function spawnBubble() {
+        if (bubbles.length >= MAX_BUBBLES) return;
+
+        const text     = TASKS[Math.floor(Math.random() * TASKS.length)];
+        const fontSize = 20 + Math.floor(Math.random() * 7);   // 20–26 px
+        const { w, h } = measure(text, fontSize);
+
+        const margin = w / 2 + 10;
+        const x = margin + Math.random() * (canvas.width - margin * 2);
+        const y = -h / 2 - Math.random() * 120;
+
+        const body = Bodies.rectangle(x, y, w, h, {
+            restitution: 0.35,
+            friction:    0.65,
+            frictionAir: 0.012,
+            density:     0.002,
+            chamfer:     { radius: Math.min(h / 2, 16) },
+        });
+        Body.setAngle(body,    (Math.random() - 0.5) * 0.35);
+        Body.setVelocity(body, { x: (Math.random() - 0.5) * 3, y: 10 + Math.random() * 10 });
+
+        Composite.add(engine.world, body);
+        bubbles.push({
+            body, text, fontSize, w, h,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        });
+    }
+
+    // ── Render loop ───────────────────────────────────────────────────────────
+    let lastTime = performance.now();
+
+    function animate(now) {
+        const delta = Math.min(now - lastTime, 50);
+        lastTime = now;
+
+        Engine.update(engine, delta);
+
+        if (!dumped && now - lastSpawn > SPAWN_MS) {
+            spawnBubble();
+            lastSpawn = now;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Remove bubbles that have fully left the screen
+        bubbles = bubbles.filter(b => b.body.position.y < canvas.height + 400);
+
+        for (const b of bubbles) {
+            const px = b.body.position.x;
+            const py = b.body.position.y;
+            const a  = b.body.angle;
+
+            // Fade out as they fall below the screen edge
+            const fadeStart = canvas.height - 40;
+            const fadeEnd   = canvas.height + 300;
+            const opacity   = dumped
+                ? Math.max(0, 1 - (py - fadeStart) / (fadeEnd - fadeStart))
+                : 1;
+
+            if (opacity <= 0) continue;
+
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.translate(px, py);
+            ctx.rotate(a);
+
+            const hw = b.w / 2, hh = b.h / 2;
+
+            ctx.shadowColor   = 'rgba(0,0,0,0.13)';
+            ctx.shadowBlur    = 12;
+            ctx.shadowOffsetY = 5;
+
+            drawPill(-hw, -hh, b.w, b.h);
+            ctx.fillStyle = b.color;
+            ctx.fill();
+
+            ctx.shadowColor   = 'transparent';
+            ctx.shadowBlur    = 0;
+            ctx.shadowOffsetY = 0;
+
+            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+            ctx.lineWidth   = 1;
+            ctx.stroke();
+
+            ctx.fillStyle    = 'rgba(15,23,42,0.88)';
+            ctx.font         = `700 ${b.fontSize}px "Plus Jakarta Sans", sans-serif`;
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(b.text, 0, 0);
+
+            ctx.restore();
+        }
+
+        requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // ── Dump click ────────────────────────────────────────────────────────────
+    document.getElementById('dumped-wrap').addEventListener('click', function () {
+        if (dumped) return;
+        dumped = true;
+
+        // Remove only the floor — side walls keep bubbles from flying sideways
+        Composite.remove(engine.world, walls[0]);
+
+        // Crank gravity so they rush downward
+        engine.gravity.y = 4.5;
+
+        // Kick every bubble downward — bottom ones harder so they lead the cascade
+        bubbles.forEach(function (b) {
+            const normY = b.body.position.y / canvas.height; // 0 = top, 1 = bottom
+            const kick  = 6 + normY * 14 + Math.random() * 4;
+            Body.setVelocity(b.body, {
+                x: b.body.velocity.x + (Math.random() - 0.5) * 3,
+                y: b.body.velocity.y + kick,
+            });
+            Body.setAngularVelocity(b.body,
+                b.body.angularVelocity + (Math.random() - 0.5) * 0.3
+            );
+        });
+
+        document.getElementById('dumped-wrap').style.display = 'none';
+
+        setTimeout(showSubtext, 1000);
+    });
+
+    // ── Subtext ───────────────────────────────────────────────────────────────
+    const LINES = [
+        { text: 'Finally.',                 delay: 0    },
+        { text: 'Your brain decluttered.', delay: 1000 },
+        { text: 'Your tasks prioritized.', delay: 2000 },
+        { text: 'Your time to focus.',     delay: 3000 },
+    ];
+
+    function showSubtext() {
+        const wrap = document.getElementById('subtext-wrap');
+        wrap.style.display = 'flex';
+
+        LINES.forEach(function (line) {
+            const p = document.createElement('p');
+            p.className = 'sub-line';
+            p.textContent = line.text;
+            p.style.animationDelay = line.delay + 'ms';
+            wrap.appendChild(p);
+        });
+
+        const btn = document.createElement('button');
+        btn.id = 'cta';
+        btn.textContent = 'Get started →';
+        btn.style.animationDelay = '4200ms';
+        btn.addEventListener('click', function () {
+            alert('→ Would navigate to the app here.');
+        });
+        wrap.appendChild(btn);
+    }
+
+})();
+</script>
+</body>
+</html>
