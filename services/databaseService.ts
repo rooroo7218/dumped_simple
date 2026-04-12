@@ -178,8 +178,8 @@ export const databaseService = {
         }
         localStorage.setItem('dumped_memories', JSON.stringify(localMemories));
 
-        // 1. Save memory to database (may fail if not authenticated)
-        const { error: memError } = await supabase.from('memories').upsert({
+        // 1. Save memory to database (may fail if not authenticated or missing columns)
+        let { error: memError } = await supabase.from('memories').upsert({
             id: memory.id,
             timestamp: memory.timestamp,
             content: memory.content,
@@ -192,6 +192,23 @@ export const databaseService = {
             life_context_insight: memory.lifeContextInsight,
             user_id: (await supabase.auth.getUser()).data.user?.id || (JSON.parse(localStorage.getItem('dumped_user') || '{}').id)
         });
+
+        // RECOVERY: If columns like 'mood' or 'life_context_insight' are missing in OLD projects, strip and retry
+        if (memError && (memError.message?.includes('column') || memError.details?.includes('column'))) {
+            console.warn('Schema mismatch on memories — stripping new columns and retrying...');
+            const { error: retryError } = await supabase.from('memories').upsert({
+                id: memory.id,
+                timestamp: memory.timestamp,
+                content: memory.content,
+                source: memory.source,
+                priority: memory.priority,
+                tags: memory.tags,
+                processed: memory.processed,
+                category: memory.category,
+                user_id: (await supabase.auth.getUser()).data.user?.id || (JSON.parse(localStorage.getItem('dumped_user') || '{}').id)
+            });
+            memError = retryError;
+        }
 
         if (memError) {
             emitSync('local-only');
