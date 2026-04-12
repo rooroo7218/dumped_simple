@@ -164,7 +164,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
     } = { ...data, ...logic };
 
     const profileUpdater = useProfileUpdater(memories, data.diaryEntries, persona, data.setPersona);
-    const dump = useBrainDump(memories, persona, setMemories, () => setActiveTab('tasks'), handleSynthesis, logic.handleAutoReprioritize, setAiStatus, setLastAiError, showToast, profileUpdater.triggerAfterDump);
+    const dump = useBrainDump(memories, persona, setMemories, () => setActiveTab('patterns'), handleSynthesis, logic.handleAutoReprioritize, setAiStatus, setLastAiError, showToast, profileUpdater.triggerAfterDump);
 
     // 3.9 — Persona conflict detection
     useEffect(() => {
