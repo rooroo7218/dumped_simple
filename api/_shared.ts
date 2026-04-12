@@ -8,21 +8,33 @@ export { SchemaType };
 
 // ── Clients ───────────────────────────────────────────────────────────────────
 
-export const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const DB_URL = process.env.SUPABASE_URL;
+const DB_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+export const ai = GEMINI_API_KEY 
+    ? new GoogleGenerativeAI(GEMINI_API_KEY) 
+    : null;
 
-// 10 AI requests per user per minute
-const ratelimit = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(10, '1 m'),
-    prefix: 'dumped:ratelimit',
-});
+const redis = (REDIS_URL && REDIS_TOKEN) 
+    ? new Redis({ url: REDIS_URL, token: REDIS_TOKEN }) 
+    : null;
+
+const ratelimit = redis 
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '1 m'),
+        prefix: 'dumped:ratelimit',
+    }) 
+    : null;
 
 export async function checkRateLimit(userId: string, res: VercelResponse): Promise<boolean> {
+    if (!ratelimit) {
+        console.warn('⚠️ [Config] UPSTASH_REDIS_REST_URL/TOKEN missing. Rate limiting is disabled.');
+        return true;
+    }
     const { success } = await ratelimit.limit(userId);
     if (!success) {
         res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
@@ -31,10 +43,14 @@ export async function checkRateLimit(userId: string, res: VercelResponse): Promi
     return true;
 }
 
-export const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!
-);
+export const supabaseAdmin = (DB_URL && DB_SERVICE_KEY)
+    ? createClient(DB_URL, DB_SERVICE_KEY)
+    : null;
+
+function verifyConfig() {
+    if (!ai) throw new Error('Missing GEMINI_API_KEY');
+    if (!supabaseAdmin) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
+}
 
 // ── System Prompt ─────────────────────────────────────────────────────────────
 
@@ -48,9 +64,10 @@ Address the user naturally as "you" and maintain a friendly, personal connection
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export async function verifyAuth(req: VercelRequest): Promise<string> {
+    verifyConfig();
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) throw new Error('Unauthorized: no token provided');
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAdmin!.auth.getUser(token);
     if (error || !user) throw new Error('Unauthorized: invalid token');
     return user.id;
 }
@@ -79,8 +96,9 @@ const PRIMARY_MODEL = 'gemini-2.0-flash';
 const FALLBACK_MODEL = 'gemini-1.5-flash';
 
 export async function generateWithFallback(config: any, payload: any): Promise<any> {
+    verifyConfig();
     try {
-        const model = ai.getGenerativeModel({ ...config, model: PRIMARY_MODEL });
+        const model = ai!.getGenerativeModel({ ...config, model: PRIMARY_MODEL });
         const result = await retryWithBackoff(() => model.generateContent(payload), 2, 1000);
         return result;
     } catch (error: any) {
@@ -119,11 +137,12 @@ export async function extractText(response: any): Promise<string> {
 // ── Data Fetching ─────────────────────────────────────────────────────────────
 
 export async function fetchUserContext(userId: string, personaOverride: any = null) {
+    verifyConfig();
     try {
         const [authRes, dbMemories, dbProfile] = await Promise.all([
-            supabaseAdmin.auth.admin.getUserById(userId).catch(() => ({ data: { user: null } })),
-            supabaseAdmin.from('memories').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(20),
-            supabaseAdmin.from('profiles').select('*').eq('user_id', userId).maybeSingle()
+            supabaseAdmin!.auth.admin.getUserById(userId).catch(() => ({ data: { user: null } })),
+            supabaseAdmin!.from('memories').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(20),
+            supabaseAdmin!.from('profiles').select('*').eq('user_id', userId).maybeSingle()
         ]);
 
         const user = (authRes as any).data?.user;
@@ -179,7 +198,8 @@ export function getTimeContext(): string {
 }
 
 export async function fetchUserTasks(userId: string) {
-    const { data: actions } = await supabaseAdmin
+    verifyConfig();
+    const { data: actions } = await supabaseAdmin!
         .from('actions')
         .select('*')
         .eq('user_id', userId)
