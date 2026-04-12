@@ -92,20 +92,26 @@ export async function retryWithBackoff<T>(
     }
 }
 
-const PRIMARY_MODEL = 'gemini-1.5-flash';
-const FALLBACK_MODEL = 'gemini-1.5-flash-8b';
+const PRIMARY_MODEL = 'gemini-3-flash';
+const FALLBACK_MODEL = 'gemini-1.5-flash';
 
 export async function generateWithFallback(config: any, payload: any): Promise<any> {
     verifyConfig();
+    let currentModelName = PRIMARY_MODEL;
     try {
-        const model = ai!.getGenerativeModel({ ...config, model: PRIMARY_MODEL });
+        const model = ai!.getGenerativeModel({ ...config, model: currentModelName });
         const result = await retryWithBackoff(() => model.generateContent(payload), 2, 1000);
         return result;
     } catch (error: any) {
+        console.error(`❌ [AI] ${currentModelName} failed:`, error.message);
+        
         const isQuota = error.status === 429 || error.message?.includes('429');
-        const isUnavailable = error.status === 503;
+        const isUnavailable = error.status === 503 || error.message?.includes('404') || error.message?.includes('not found');
+        
         if (isQuota || isUnavailable) {
-            const fallback = ai.getGenerativeModel({ ...config, model: FALLBACK_MODEL });
+            currentModelName = FALLBACK_MODEL;
+            console.log(`🔄 [AI] Falling back to ${currentModelName}...`);
+            const fallback = ai!.getGenerativeModel({ ...config, model: currentModelName });
             return await retryWithBackoff(() => fallback.generateContent(payload), 1, 2000);
         }
         throw error;
