@@ -184,10 +184,12 @@ export const useBrainDump = (
         } catch (e: any) {
             console.error("❌ Brain Dump processing failed:", e);
             setAiStatus('error');
-            setLastAiError(e.message || "Failed to process brain dump.");
-            const errorMsg = e.message?.includes('Failed to fetch')
-                ? "Server Unreachable. Ensure backend is running on :3001"
-                : `AI Error: ${e.message?.substring(0, 50) || "Retry?"}`;
+            const rawMessage = e.message || "Failed to process brain dump.";
+            setLastAiError(rawMessage);
+            
+            const errorMsg = rawMessage.includes('Failed to fetch')
+                ? "Server Unreachable. Ensure backend is running."
+                : `AI Error: ${rawMessage.substring(0, 100)}`;
 
             setScanDraft(prev => {
                 if (!prev) return null;

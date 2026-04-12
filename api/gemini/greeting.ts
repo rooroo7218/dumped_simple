@@ -58,6 +58,9 @@ Return only the sentence, nothing else.`,
     } catch (error: any) {
         if (error.message?.startsWith('Unauthorized')) return res.status(401).json({ error: 'Unauthorized' });
         console.error('[greeting] Error:', error.message);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ 
+            error: 'Greeting Failed', 
+            message: error.message 
+        });
     }
 }
