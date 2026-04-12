@@ -23,7 +23,6 @@ import { ZenPlayer } from './ZenPlayer';
 
 // Modular Hubs
 import { BrainDumpHub } from './BrainDumpHub';
-import { OverviewHub } from './OverviewHub';
 import { MemoryGridHub } from './MemoryGridHub';
 import { SimpleDumpHub } from './SimpleDumpHub';
 // Modals & Notifications
@@ -583,14 +582,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                     {activeTab === 'dump' && <BrainDumpHub {...dump} persona={persona} memories={memories} activeTab={activeTab} onUpdatePersona={p => { data.setPersona(p); databaseService.savePersona(p); }} />}
                     {activeTab === 'patterns' && (
                         <div className="space-y-8">
-                            <OverviewHub
-                                lifeSynthesis={data.lifeSynthesis}
-                                starGraphData={groupTasksByCategory(allActiveTasks)}
-                                themeClasses={themeClasses}
-                            />
-                            <div className="pt-8 border-t border-slate-200/50">
-                                <MemoryGridHub memories={memories} setActiveTab={setActiveTab} />
-                            </div>
+                            <MemoryGridHub memories={data.memories} setActiveTab={setActiveTab} />
                         </div>
                     )}
                 </main>
