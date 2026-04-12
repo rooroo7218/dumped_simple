@@ -92,8 +92,8 @@ export async function retryWithBackoff<T>(
     }
 }
 
-const PRIMARY_MODEL = 'gemini-2.0-flash';
-const FALLBACK_MODEL = 'gemini-1.5-flash';
+const PRIMARY_MODEL = 'gemini-1.5-flash';
+const FALLBACK_MODEL = 'gemini-1.5-flash-8b';
 
 export async function generateWithFallback(config: any, payload: any): Promise<any> {
     verifyConfig();
