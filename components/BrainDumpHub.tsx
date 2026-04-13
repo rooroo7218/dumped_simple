@@ -184,7 +184,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         </div>
                     )}
 
-                    <div className="bg-white/70 backdrop-blur-2xl border border-white/20 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] flex flex-col transition-all group focus-within:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.2)]">
+                    <div className="bg-white/90 backdrop-blur-2xl border-2 border-slate-950 rounded-[36px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] flex flex-col transition-all group focus-within:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.25)]">
                         <textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -194,44 +194,44 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                                     handleBrainDumpSubmit();
                                 }
                             }}
-                            placeholder={isProcessing ? 'AI is scanning...' : 'Deep breath... dump your mind here (⌘+Enter to send)'}
-                            className="w-full bg-transparent border-none focus:ring-0 resize-none font-medium text-lg text-slate-800 placeholder:text-slate-300 px-6 pt-6 pb-2 leading-relaxed"
-                            rows={3}
+                            placeholder={isProcessing ? 'AI is scanning...' : 'Take a deep breath and empty your mind - thoughts, tasks, worries, ideas, anything at all, get it all out...'}
+                            className="w-full bg-transparent border-none focus:ring-0 resize-none font-medium text-[17px] text-slate-800 placeholder:text-slate-400 px-7 pt-7 pb-2 leading-relaxed"
+                            rows={4}
                             disabled={isProcessing}
                         />
 
-                        <div className="flex items-center justify-between px-5 pb-5 pt-1">
-                            <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-between px-6 pb-6 pt-1">
+                            <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => startSpeechToText((res) => setInput(p => p + ' ' + res))}
                                     disabled={isProcessing}
-                                    className={`p-2.5 rounded-2xl transition-all active:scale-95 ${
-                                        isListening ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'
+                                    className={`transition-all active:scale-95 ${
+                                        isListening ? 'text-rose-500' : 'text-slate-400 hover:text-slate-900'
                                     }`}
                                 >
-                                    <MicrophoneIcon className="w-5.5 h-5.5" />
+                                    <MicrophoneIcon className="w-6 h-6" />
                                 </button>
-                                <label className="p-2.5 rounded-2xl cursor-pointer text-slate-400 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all">
+                                <label className="cursor-pointer text-slate-400 hover:text-slate-900 active:scale-95 transition-all">
                                     <input type="file" className="hidden" accept="image/*" onChange={handleImageSelect} disabled={isProcessing} />
-                                    <LinkIcon className="w-5.5 h-5.5" />
+                                    <LinkIcon className="w-6 h-6" />
                                 </label>
                             </div>
 
                             <button
                                 onClick={handleBrainDumpSubmit}
                                 disabled={isProcessing || !input.trim()}
-                                className={`h-11 px-6 rounded-2xl font-bold flex items-center gap-2.5 transition-all shadow-lg ${
+                                className={`h-12 px-7 rounded-[22px] font-bold flex items-center gap-2.5 transition-all shadow-lg ${
                                     isProcessing || !input.trim()
                                         ? 'bg-slate-100 text-slate-300'
-                                        : 'bg-slate-950 text-white hover:bg-slate-800 active:scale-95'
+                                        : 'bg-[#0f172a] text-white hover:bg-slate-800 active:scale-95'
                                 }`}
                             >
                                 {isProcessing ? (
-                                    <ArrowPathIcon className="w-4 h-4 animate-spin text-white" />
+                                    <ArrowPathIcon className="w-5 h-5 animate-spin text-white" />
                                 ) : (
                                     <>
-                                        <span>Dump it</span>
-                                        <PaperAirplaneIcon className="w-4 h-4" />
+                                        <PaperAirplaneIcon className="w-5 h-5" />
+                                        <span className="text-[15px]">Dump it</span>
                                     </>
                                 )}
                             </button>
