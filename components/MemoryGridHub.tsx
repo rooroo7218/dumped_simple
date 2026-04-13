@@ -125,9 +125,9 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ memories, setActiv
         setTiles(buildTiles(memories));
     }, [memories]);
 
-    const handleDismiss = useCallback((key: string) => {
-        dismissTile(key);
-        setTiles(prev => prev.filter(t => t.key !== key));
+    const handleDismiss = useCallback((id: string) => {
+        dismissTile(id);
+        setTiles(prev => prev.filter(t => t.id !== id));
     }, []);
 
     const maxCount = tiles[0]?.count || 1;

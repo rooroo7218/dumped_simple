@@ -104,6 +104,10 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         await databaseService.saveMemory(memory);
     }, []);
 
+    const updateBrutalistBackground = useCallback((bg: string) => {
+        handleUpdatePersona({ brutalistBackground: bg });
+    }, [handleUpdatePersona]);
+
     return {
         // State
         memories,
@@ -122,6 +126,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         handleUpdatePersona,
         handleAddManualTask,
         handleDeleteMemory,
-        handleSyncMemory
+        handleSyncMemory,
+        updateBrutalistBackground
     };
 };

@@ -308,8 +308,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     const lines: { text: string; delay: number }[] = [
         { text: 'Finally.',                 delay: 0    },
         { text: 'Your brain decluttered.',  delay: 1000 },
-        { text: 'Your tasks prioritized.',  delay: 2000 },
-        { text: 'Your time to focus.',      delay: 3000 },
+        { text: 'Your time to focus.',      delay: 2000 },
     ];
 
     return (
@@ -383,7 +382,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                             style={{
                                 opacity:        0,
                                 animation:      'fadeSlideUp 1s ease forwards',
-                                animationDelay: '4200ms',
+                                animationDelay: '3200ms',
                                 fontFamily:     "'Plus Jakarta Sans', sans-serif",
                             }}
                             className="px-9 py-3.5 bg-slate-900 text-white font-bold text-sm rounded-full hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-lg"
