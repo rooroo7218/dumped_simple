@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MemoryItem } from '../types';
-import { MemoryItem } from '../types';
 
 const DISMISSED_KEY = 'dumped_dismissed_tiles';
 
