@@ -8,8 +8,6 @@ export const useBrainDump = (
     persona: UserPersona,
     setMemories: React.Dispatch<React.SetStateAction<MemoryItem[]>>,
     onCommitSuccess: () => void,
-    handleSynthesis: () => void,
-    onAutoReprioritize: (tasks: ActionItem[]) => void,
     setAiStatus: (status: 'idle' | 'processing' | 'error' | 'success') => void,
     setLastAiError: (error: string | null) => void,
     showToast: (message: string, variant?: 'success' | 'info' | 'error', sub?: string) => void,
@@ -38,22 +36,22 @@ export const useBrainDump = (
         });
     }, []);
 
+    const commitManual = useCallback(async (memory: MemoryItem) => {
+        const tasks = memory.actions || [];
+        setMemories(prev => [memory, ...prev]);
+        await databaseService.saveMemory(memory);
+        showToast(`${tasks.length} item${tasks.length !== 1 ? 's' : ''} captured`, 'success');
+        onCommitSuccess();
+        if (onProfileUpdate) onProfileUpdate(memory.content);
+    }, [setMemories, showToast, onCommitSuccess, onProfileUpdate]);
+
     const handleCommitScan = useCallback(async () => {
         if (!scanDraft) return;
-        const newTasks = scanDraft.actions || [];
-        setMemories(prev => [scanDraft, ...prev]);
-        await databaseService.saveMemory(scanDraft);
+        await commitManual(scanDraft);
         setScanDraft(null);
         setInput('');
         clearImage();
-        showToast(`${newTasks.length} task${newTasks.length !== 1 ? 's' : ''} saved`, 'success');
-        onCommitSuccess();
-        setTimeout(() => {
-            handleSynthesis();
-            onAutoReprioritize(newTasks);
-            if (onProfileUpdate) onProfileUpdate(scanDraft.content);
-        }, 500);
-    }, [scanDraft, setMemories, clearImage, onCommitSuccess, handleSynthesis, onAutoReprioritize, onProfileUpdate]);
+    }, [scanDraft, commitManual, clearImage]);
 
     const handleBubbleDragStart = (e: React.MouseEvent, taskId: string) => {
         e.preventDefault();
@@ -84,11 +82,11 @@ export const useBrainDump = (
         const tempId = crypto.randomUUID();
         const optimisticAction: ActionItem = {
             id: tempId,
-            text: input || "Scanning Image...",
+            text: input || "Scanning...",
             urgency: 5,
             category: "Processing...",
             effort: "low",
-            rationale: "Optimistic placeholder",
+            rationale: "Placeholder",
             completed: false,
             x: 50,
             y: 50
@@ -97,14 +95,12 @@ export const useBrainDump = (
         const currentInput = input;
         const currentImage = selectedImage;
 
-        // Reset inputs immediately
         setInput('');
         clearImage();
         setIsProcessing(true);
         setAiStatus('processing');
         setLastAiError(null);
 
-        // Add optimistic action
         setScanDraft(prev => {
             if (prev) {
                 return { ...prev, actions: [...(prev.actions || []), optimisticAction] };
@@ -132,21 +128,19 @@ export const useBrainDump = (
                 memoryId: newMemId,
                 completed: false,
                 steps: [],
-                // Randomize position based on viewport to avoid stacking perfect on previous tasks
                 x: Math.max(10, Math.min(80, 15 + Math.random() * 60)),
                 y: Math.max(10, Math.min(80, 20 + Math.random() * 50)),
                 isNew: true
             }));
 
-            // Fallback if AI returns nothing (but didn't throw error)
             if (newActions.length === 0) {
                 newActions = [{
                     id: crypto.randomUUID(),
-                    text: result.summary || "I couldn't quite find a task in that... could you rephrase?",
-                    urgency: 10,
-                    category: "System",
+                    text: result.summary || currentInput || "Thought captured",
+                    urgency: 5,
+                    category: result.category || "General",
                     effort: "low",
-                    rationale: result.error || "Gemini processed the input but found 0 actionable items.",
+                    rationale: result.error || "Processed",
                     completed: false,
                     x: 50,
                     y: 50,
@@ -154,56 +148,58 @@ export const useBrainDump = (
                 }];
             }
 
-            setScanDraft(prev => {
-                if (!prev) {
-                    // This creates the draft if it doesn't exist (optimistic update should have created it though)
-                    return {
-                        id: newMemId,
-                        timestamp: Date.now(),
-                        content: currentInput || "Processing...",
-                        source: (currentImage ? 'camera' : 'text') as any,
-                        priority: 'medium',
-                        tags: [],
-                        processed: true,
-                        category: result.category || 'General',
-                        actions: newActions
-                    };
-                }
+            const finalMemory: MemoryItem = {
+                id: newMemId,
+                timestamp: Date.now(),
+                content: currentInput || "Thought",
+                source: (currentImage ? 'camera' : 'text') as any,
+                priority: 'medium',
+                tags: [],
+                processed: true,
+                category: result.category || 'General',
+                actions: newActions
+            };
 
-                const filtered = (prev.actions || []).filter(a => a.id !== tempId);
-
-                return {
-                    ...prev,
-                    category: result.category || prev.category,
-                    processed: true,
-                    actions: [...filtered, ...newActions]
-                };
-            });
+            await commitManual(finalMemory);
+            setScanDraft(null); 
             setAiStatus('success');
             setTimeout(() => setAiStatus('idle'), 3000);
         } catch (e: any) {
             console.error("❌ Brain Dump processing failed:", e);
             setAiStatus('error');
-            const rawMessage = e.message || "Failed to process brain dump.";
+            const rawMessage = e.message || "Failed to process.";
             setLastAiError(rawMessage);
             
-            const errorMsg = rawMessage.includes('Failed to fetch')
-                ? "Server Unreachable. Ensure backend is running."
-                : `AI Error: ${rawMessage.substring(0, 100)}`;
+            const fallbackMemId = crypto.randomUUID();
+            const fallbackMemory: MemoryItem = {
+                id: fallbackMemId,
+                timestamp: Date.now(),
+                content: currentInput || "Error during processing",
+                source: (currentImage ? 'camera' : 'text') as any,
+                priority: 'medium',
+                tags: ['error-fallback'],
+                processed: false,
+                category: 'Inbox',
+                actions: [{
+                    id: crypto.randomUUID(),
+                    text: currentInput || "Draft item",
+                    urgency: 10,
+                    category: "Inbox",
+                    effort: "medium",
+                    rationale: `Save attempt failed. Raw text captured.`,
+                    completed: false,
+                    x: 50,
+                    y: 50,
+                    steps: []
+                }]
+            };
 
-            setScanDraft(prev => {
-                if (!prev) return null;
-                const updated = (prev.actions || []).map(a =>
-                    a.id === tempId
-                        ? { ...a, text: errorMsg, category: "Error", urgency: 10, rationale: e.message || "API Error or Timeout" }
-                        : a
-                );
-                return { ...prev, actions: updated };
-            });
+            await commitManual(fallbackMemory);
+            setScanDraft(null);
         } finally {
             setIsProcessing(false);
         }
-    }, [input, selectedImage, isProcessing, memories, persona, clearImage, setScanDraft, setInput, setIsProcessing]);
+    }, [input, selectedImage, isProcessing, memories, persona, clearImage, setScanDraft, setInput, setIsProcessing, commitManual]);
 
     const handleCanvasMouseUp = () => setDraggingTaskId(null);
 
@@ -225,28 +221,18 @@ export const useBrainDump = (
 
     const startSpeechToText = (onResult: (text: string) => void) => {
         const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("Voice recognition is not supported in this browser. Please try Chrome.");
-            return;
-        }
-
+        if (!SpeechRecognition) return;
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = 'en-US';
-
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => setIsListening(false);
-        recognition.onerror = (event: any) => {
-            console.error("Speech recognition error", event.error);
-            setIsListening(false);
-        };
-
+        recognition.onerror = () => setIsListening(false);
         recognition.onresult = (event: any) => {
             const transcript = event.results[0][0].transcript;
             onResult(transcript);
         };
-
         recognition.start();
     };
 
@@ -275,3 +261,4 @@ export const useBrainDump = (
         isListening
     };
 };
+

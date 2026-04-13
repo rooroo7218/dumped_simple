@@ -25,23 +25,18 @@
             document.body.appendChild(div);
         };
     </script>
-<link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Google One Tap / Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         html {
             overflow-y: auto;
-            -ms-overflow-style: none;
-            /* IE and Edge */
-            scrollbar-width: none;
-            /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
         }
 
         html::-webkit-scrollbar {
-            display: none;
-            /* Chrome, Safari and Opera */
+            display: none; /* Chrome, Safari and Opera */
         }
 
         body {
@@ -51,13 +46,10 @@
             transition: background-color 0.5s ease;
         }
 
-        h1,
-        h2,
-        h3 {
+        h1, h2, h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
             letter-spacing: -0.02em;
         }
-
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.7);
@@ -72,386 +64,40 @@
             overflow: hidden;
         }
 
-        .gradient-text {
-            background: linear-gradient(90deg, #6366f1, #ec4899, #8b5cf6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% auto;
-            animation: shine 3s linear infinite;
-        }
-
-        @keyframes shine {
-            to {
-                background-position: 200% center;
-            }
-        }
-
-        @keyframes rainbow-burst {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        .rainbow-ripple {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
-            pointer-events: none;
-            z-index: 50;
-            animation: rainbow-burst 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
 
-        /* Girly Pop Mode Specific Styles */
-        .girly-gradient {
-            background: linear-gradient(135deg, #fef2f2 0%, #fdf4ff 100%);
-        }
-
-        @keyframes girly-float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-20px) rotate(10deg);
-            }
-
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-        }
-
-        .girly-float {
-            animation: girly-float 4s ease-in-out infinite;
-        }
-
-        @keyframes sparkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        .sparkle-slow {
-            animation: sparkle 3s ease-in-out infinite;
-        }
-
-        /* Girly bubble effect */
-        .girly-bubble {
-            box-shadow: 0 10px 40px -10px rgba(236, 72, 153, 0.2);
-            border: 2px solid rgba(251, 207, 232, 0.5);
-        }
-
-        /* Brain Canvas & Bubble Animations */
-        @keyframes bubble-pop {
-            0% {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-
-            70% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .bubble-pop {
-            animation: bubble-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
+        /* Ambient effects */
         @keyframes ambient-float {
-
-            0%,
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            33% {
-                transform: translateY(-10px) rotate(2deg);
-            }
-
-            66% {
-                transform: translateY(5px) rotate(-1deg);
-            }
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(2deg); }
+            66% { transform: translateY(5px) rotate(-1deg); }
         }
 
         .ambient-float {
             animation: ambient-float 8s ease-in-out infinite;
         }
 
-        .working-area-bg {
-            background-image: radial-gradient(rgba(0, 0, 0, 0.05) 2px, transparent 0);
-            background-size: 40px 40px;
-        }
-
-        .girly-mode .working-area-bg {
-            background-image: radial-gradient(rgba(236, 72, 153, 0.1) 2px, transparent 0);
-        }
-
         @keyframes bg-scrolling {
-            0% {
-                background-position: 0% 0%;
-            }
-
-            100% {
-                background-position: 100% 100%;
-            }
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         .animate-bg-scrolling {
             animation: bg-scrolling 60s linear infinite;
         }
 
-        /* STICKER STYLES */
-        .sticker-content {
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .sticker-diecut {
-            filter:
-                drop-shadow(3px 3px 0 white) drop-shadow(-3px -3px 0 white) drop-shadow(4px 4px 10px rgba(0, 0, 0, 0.1));
-            transition: filter 0.2s, transform 0.2s;
-            pointer-events: auto;
-            will-change: transform, filter;
-        }
-
-        .sticker-stamp {
-            background: #fff;
-            padding: 4px;
-            position: relative;
-            filter: drop-shadow(4px 4px 12px rgba(0, 0, 0, 0.15));
-            mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q 5 5 10 0 L 20 0 Q 25 5 30 0 L 40 0 Q 45 5 50 0 L 60 0 Q 65 5 70 0 L 80 0 Q 85 5 90 0 L 100 10 Q 95 15 100 20 L 100 30 Q 95 35 100 40 L 100 50 Q 95 55 100 60 L 100 70 Q 95 75 100 80 L 100 90 Q 95 95 90 100 L 80 100 Q 75 95 70 100 L 60 100 Q 55 95 50 100 L 40 100 Q 35 95 30 100 L 20 100 Q 15 95 10 100 L 0 90 Q 5 85 0 80 L 0 70 Q 5 65 0 60 L 0 50 Q 5 45 0 40 L 0 30 Q 5 25 0 20 Z' fill='black'/%3E%3C/svg%3E");
-            mask-size: 100% 100%;
-            -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q 5 5 10 0 L 20 0 Q 25 5 30 0 L 40 0 Q 45 5 50 0 L 60 0 Q 65 5 70 0 L 80 0 Q 85 5 90 0 L 100 10 Q 95 15 100 20 L 100 30 Q 95 35 100 40 L 100 50 Q 95 55 100 60 L 100 70 Q 95 75 100 80 L 100 90 Q 95 95 90 100 L 80 100 Q 75 95 70 100 L 60 100 Q 55 95 50 100 L 40 100 Q 35 95 30 100 L 20 100 Q 15 95 10 100 L 0 90 Q 5 85 0 80 L 0 70 Q 5 65 0 60 L 0 50 Q 5 45 0 40 L 0 30 Q 5 25 0 20 Z' fill='black'/%3E%3C/svg%3E");
-            -webkit-mask-size: 100% 100%;
-            transition: transform 0.2s;
-        }
-
-        .sticker-stamp .sticker-content {
-            background: #fbf8e1;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            width: 100px;
-            height: 120px;
-        }
-
-        .sticker-jelly {
-            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 50%),
-                radial-gradient(circle at center, rgba(255, 182, 193, 0.7) 0%, rgba(147, 112, 219, 0.5) 100%);
-            border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow:
-                inset -10px -10px 20px rgba(0, 0, 0, 0.1),
-                inset 10px 10px 20px rgba(255, 255, 255, 0.5),
-                0 10px 20px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(2px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            animation: jelly-jiggle 5s ease-in-out infinite;
-        }
-
-        .sticker-jelly .sticker-content {
-            filter: saturate(1.5) contrast(1.1);
-            opacity: 0.8;
-        }
-
-        .sticker-shine {
-            position: absolute;
-            top: 15%;
-            left: 20%;
-            width: 30%;
-            height: 15%;
-            background: white;
-            border-radius: 50%;
-            filter: blur(4px);
-            opacity: 0.6;
-            transform: rotate(-25deg);
-        }
-
-        @keyframes jelly-jiggle {
-
-            0%,
-            100% {
-                border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
-            }
-
-            33% {
-                border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
-            }
-
-            66% {
-                border-radius: 30% 70% 50% 50% / 40% 60% 40% 60%;
-            }
-        }
-
-        .sticker-holographic {
-            mask-image: linear-gradient(135deg, black, transparent, black);
-            mask-size: 200% 200%;
-            animation: holo-shine 4s linear infinite;
-            position: relative;
-        }
-
-        .sticker-holographic::before {
-            content: '';
-            position: absolute;
-            inset: -10%;
-            background: linear-gradient(135deg,
-                    rgba(255, 12, 219, 0.4) 0%,
-                    rgba(48, 255, 169, 0.4) 25%,
-                    rgba(12, 190, 255, 0.4) 50%,
-                    rgba(255, 238, 0, 0.4) 75%,
-                    rgba(255, 12, 219, 0.4) 100%);
-            background-size: 400% 400%;
-            animation: holographic-move 6s ease infinite;
-            mix-blend-mode: color-dodge;
-            z-index: 11;
-            pointer-events: none;
-        }
-
-        @keyframes holo-shine {
-            0% {
-                mask-position: 200% 200%;
-            }
-
-            100% {
-                mask-position: -200% -200%;
-            }
-        }
-
-        @keyframes holographic-move {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        .animate-shimmer {
-            animation: shimmer 1s infinite;
-        }
-
-        /* CUSTOM FOCUS AESTHETICS */
-        input:focus,
-        textarea:focus {
+        /* Custom focus aesthetics */
+        input:focus, textarea:focus {
             outline: none !important;
             box-shadow: none !important;
             border-color: inherit !important;
-        }
-
-        input,
-        textarea {
-            caret-color: #ec4899;
-            /* Pink-500 */
-        }
-
-        /* Landing page subtext reveal */
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Gradient animation blob keyframes */
-        @keyframes moveInCircle {
-            0%   { transform: rotate(0deg); }
-            50%  { transform: rotate(180deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes moveVertical {
-            0%   { transform: translateY(-50%); }
-            50%  { transform: translateY(50%); }
-            100% { transform: translateY(-50%); }
-        }
-        @keyframes moveHorizontal {
-            0%   { transform: translateX(-50%) translateY(-10%); }
-            50%  { transform: translateX(50%) translateY(10%); }
-            100% { transform: translateX(-50%) translateY(-10%); }
-        }
-        .animate-first  { animation: moveVertical   30s ease    infinite; }
-        .animate-second { animation: moveInCircle   20s reverse infinite; }
-        .animate-third  { animation: moveInCircle   40s linear  infinite; }
-        .animate-fourth { animation: moveHorizontal 40s ease    infinite; }
-        .animate-fifth  { animation: moveInCircle   20s ease    infinite; }
-
-        /* Aurora background animation */
-        @keyframes aurora {
-            from { background-position: 50% 50%, 50% 50%; }
-            to   { background-position: 350% 50%, 350% 50%; }
-        }
-
-        /* Onboarding slide transitions */
-        @keyframes obSlideInRight {
-            from { opacity: 0; transform: translateX(40px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes obSlideInLeft {
-            from { opacity: 0; transform: translateX(-40px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes obDotBounce {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-            40%            { transform: scale(1.1); opacity: 1; }
         }
     </style>
 </head>
 
 <body>
-    <!-- Global SVG filter for gradient animation -->
-    <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
-        <defs>
-            <filter id="blurMe">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                <feColorMatrix in="blur" mode="matrix"
-                    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
-                <feBlend in="SourceGraphic" in2="goo" />
-            </filter>
-        </defs>
-    </svg>
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>

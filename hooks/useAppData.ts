@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MemoryItem, UserPersona, DiaryEntry, UserSticker, LifeSynthesis, ActionItem } from '../types';
+import { MemoryItem, UserPersona, ActionItem } from '../types';
 import { databaseService, SyncStatus } from '../services/databaseService';
 
-export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: string) => Promise<boolean>) => {
+export const useAppData = (userId?: string, _confirmFn?: (message: string, sub?: string) => Promise<boolean>) => {
     const [memories, setMemories] = useState<MemoryItem[]>([]);
-    const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
     const [persona, setPersona] = useState<UserPersona>({
         writingStyle: "",
         thoughtProcess: "",
@@ -13,14 +12,8 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         age: undefined,
         jobTitle: "",
         lifestyle: "",
-        brutalistBackground: 'miyazaki_meadow'
-    });
-    const [userStickers, setUserStickers] = useState<UserSticker[]>([]);
-    const [diaryInput, setDiaryInput] = useState('');
-    const [diaryMood, setDiaryMood] = useState('neutral');
-    const [lifeSynthesis, setLifeSynthesis] = useState<LifeSynthesis | null>(() => {
-        const saved = localStorage.getItem('dumped_synthesis');
-        return saved ? JSON.parse(saved) : null;
+        brutalistBackground: 'miyazaki_meadow',
+        customCategories: ['Career', 'Health', 'Finance', 'Household', 'Creativity', 'Learning', 'Experiment', 'Social', 'Maintenance']
     });
     const [aiStatus, setAiStatus] = useState<'idle' | 'processing' | 'error' | 'success'>('idle');
     const [lastAiError, setLastAiError] = useState<string | null>(null);
@@ -32,34 +25,18 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         return () => { databaseService.onSyncChange(null); };
     }, []);
 
-    // Initial Load - Re-run when userId changes (login/logout/switch)
+    // Initial Load
     useEffect(() => {
         const initDb = async () => {
-            // If no user (and not tester mode), maybe clear data?
-            // For now, just reload whatever the service finds (it handles fallback)
             setIsDbLoading(true);
             try {
-                const [dbMems, dbPersona, dbDiary, dbStickers] = await Promise.all([
+                const [dbMems, dbPersona] = await Promise.all([
                     databaseService.loadMemories(),
-                    databaseService.loadPersona(),
-                    databaseService.loadDiary(),
-                    databaseService.loadStickers()
+                    databaseService.loadPersona()
                 ]);
 
                 setMemories(dbMems || []);
-                setPersona(dbPersona || {
-                    writingStyle: "",
-                    thoughtProcess: "",
-                    values: [],
-                    speakingNuances: "",
-                    age: undefined,
-                    jobTitle: "",
-                    lifestyle: "",
-                    brutalistBackground: 'miyazaki_meadow',
-                    customCategories: ['Career', 'Health', 'Finance', 'Household', 'Creativity', 'Learning', 'Experiment', 'Social', 'Maintenance']
-                });
-                setDiaryEntries(dbDiary || []);
-                setUserStickers(dbStickers || []);
+                if (dbPersona) setPersona(dbPersona);
             } catch (e) {
                 console.error("Failed to load initial data from DB:", e);
             } finally {
@@ -69,105 +46,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         initDb();
     }, [userId]);
 
-    // Persistence observers
-    useEffect(() => {
-        if (lifeSynthesis) {
-            localStorage.setItem('dumped_synthesis', JSON.stringify(lifeSynthesis));
-        }
-    }, [lifeSynthesis]);
-
     // Data Update Handlers
-    const updateTaskDetails = useCallback((memoryId: string, taskId: string, updates: Partial<ActionItem>) => {
-        setMemories(prev => {
-            const mIdx = prev.findIndex(m => m.id === memoryId);
-            if (mIdx === -1) return prev;
-
-            const newMemories = [...prev];
-            const updatedActions = newMemories[mIdx].actions!.map(a => a.id === taskId ? { ...a, ...updates } : a);
-            newMemories[mIdx] = { ...newMemories[mIdx], actions: updatedActions };
-
-            databaseService.saveMemory(newMemories[mIdx]);
-            return newMemories;
-        });
-    }, []);
-
-    const toggleTask = useCallback((e: React.MouseEvent, memoryId: string, task: ActionItem, onEarnSticker: (sticker: UserSticker) => void) => {
-        e.stopPropagation();
-
-        // State update handled here, sticker logic passed in as callback to keep this hook pure-ish
-        setMemories(prev => prev.map(m => {
-            if (m.id === memoryId) {
-                const updatedActions = m.actions?.map(a => {
-                    if (a.id !== task.id) return a;
-                    const nowCompleting = !task.completed;
-                    return { ...a, completed: nowCompleting, completedAt: nowCompleting ? Date.now() : undefined };
-                });
-                const updatedMem = { ...m, actions: updatedActions };
-                databaseService.saveMemory(updatedMem);
-                return updatedMem;
-            }
-            return m;
-        }));
-
-    }, []);
-
-    const deleteTask = useCallback(async (memoryId: string, taskId: string) => {
-        try {
-            await databaseService.deleteAction(memoryId, taskId);
-            setMemories(prev => prev.map(m => {
-                if (m.id === memoryId) {
-                    const updatedActions = (m.actions || []).filter(a => a.id !== taskId);
-                    return { ...m, actions: updatedActions };
-                }
-                return m;
-            }));
-            return true;
-        } catch (e) {
-            console.error("Failed to delete task:", e);
-            return false;
-        }
-    }, []);
-
-    const reorderTasks = useCallback((reorderedItems: { id: string, urgency?: number, categoryOrder?: number, globalOrder?: number }[], newCategory?: string, persist = true, draggedId?: string) => {
-        setMemories(prev => {
-            const updateMap = new Map(reorderedItems.map(item => [item.id, item]));
-            let hasGlobalChanges = false;
-
-            const newMemories = prev.map(m => {
-                let memoryHasChanges = false;
-                const updatedActions = m.actions?.map(a => {
-                    const update = updateMap.get(a.id);
-                    const isDragged = draggedId === a.id;
-                    if (update || (newCategory && isDragged)) {
-                        memoryHasChanges = true;
-                        hasGlobalChanges = true;
-                        return {
-                            ...a,
-                            ...(update || {}),
-                            ...(newCategory && isDragged ? { category: newCategory } : {})
-                        };
-                    }
-                    return a;
-                });
-
-                if (memoryHasChanges) {
-                    const updatedMem = { ...m, actions: updatedActions };
-                    if (persist) databaseService.saveMemory(updatedMem);
-                    return updatedMem;
-                }
-                return m;
-            });
-
-            return hasGlobalChanges ? newMemories : prev;
-        });
-    }, []);
-
-    const clearAllTasks = useCallback(async () => {
-        const ok = confirmFn
-            ? await confirmFn('Wipe ALL tasks forever?', 'This cannot be undone.')
-            : window.confirm('CRITICAL: Wipe ALL tasks forever?');
-        if (!ok) return;
-        try {
             await databaseService.clearAllMemories();
             setMemories([]);
         } catch (e) {

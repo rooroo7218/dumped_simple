@@ -1,41 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    PlusIcon, ListBulletIcon, QueueListIcon, BookOpenIcon,
+    PlusIcon,
     UserIcon, PhotoIcon,
     ArrowsPointingOutIcon, ArrowsPointingInIcon,
     ArrowRightStartOnRectangleIcon,
     MusicalNoteIcon,
-    PencilSquareIcon,
     Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
     SpeakerWaveIcon, SpeakerXMarkIcon,
     PlusIcon as PlusIconSolid,
-    ListBulletIcon as ListBulletIconSolid,
-    QueueListIcon as QueueListIconSolid,
-    BookOpenIcon as BookOpenIconSolid,
     UserIcon as UserIconSolid,
-    PencilSquareIcon as PencilSquareIconSolid,
     Squares2X2Icon as Squares2X2IconSolid,
 } from '@heroicons/react/24/solid';
 
-// ─── Custom Focus icon — concentric circles evoking calm ─────────────────────
-const FocusCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className={className}>
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-);
-
-const FocusCircleIconSolid: React.FC<{ className?: string }> = ({ className }) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className={className}>
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" fill="currentColor" />
-        <circle cx="12" cy="12" r="2" fill="white" stroke="none" />
-    </svg>
-);
 import { UserProfile, UserPersona } from '../../types';
 import { ZenPlayerState, TRACKS } from '../../hooks/useZenPlayer';
 
@@ -61,8 +40,6 @@ interface NavigationProps {
     updateBrutalistBackground: (bg: string) => void;
     backgroundScenes: BackgroundScene[];
     player: ZenPlayerState;
-    onAddTask: (text: string, category: string, effort: 'low' | 'medium' | 'high') => void;
-    allCategories: string[];
     syncStatus?: 'idle' | 'saving' | 'saved' | 'local-only';
 }
 
@@ -79,7 +56,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     activeTab, setActiveTab, themeClasses, isZenMode,
     isCollapsed, setIsCollapsed, user, handleSignOut, persona,
     updateBrutalistBackground, backgroundScenes, player,
-    onAddTask, allCategories, syncStatus = 'idle',
+    syncStatus = 'idle',
 }) => {
     const [isSceneryOpen,       setIsSceneryOpen]       = useState(false);
     const [isUserMenuOpen,      setIsUserMenuOpen]      = useState(false);
@@ -88,51 +65,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     const musicPopoverRef = useRef<HTMLDivElement>(null);
     const musicButtonRef  = useRef<HTMLButtonElement>(null);
 
-    // Quick-add task state
-    const [isAddTaskOpen,   setIsAddTaskOpen]   = useState(false);
-    const [addTaskText,     setAddTaskText]     = useState('');
-    const [addTaskCategory, setAddTaskCategory] = useState('');
-    const [addTaskEffort,   setAddTaskEffort]   = useState<'low' | 'medium' | 'high'>('medium');
-    const addTaskInputRef = useRef<HTMLInputElement>(null);
-    const addTaskPopoverRef = useRef<HTMLDivElement>(null);
-    const addTaskButtonRef  = useRef<HTMLButtonElement>(null);
-
-    const openAddTask = (): void => {
-        setAddTaskText('');
-        setAddTaskCategory(allCategories[0] ?? '');
-        setAddTaskEffort('medium');
-        setIsAddTaskOpen(true);
-        setIsSceneryOpen(false);
-        setIsUserMenuOpen(false);
-        setTimeout(() => addTaskInputRef.current?.focus(), 50);
-    };
-
-    const submitAddTask = (): void => {
-        const text = addTaskText.trim();
-        if (!text) return;
-        const category = addTaskCategory || allCategories[0] || 'General';
-        onAddTask(text, category, addTaskEffort);
-        setIsAddTaskOpen(false);
-        setAddTaskText('');
-    };
-
-    useEffect(() => {
-        if (!isAddTaskOpen) return;
-        const handler = (e: MouseEvent): void => {
-            if (addTaskButtonRef.current?.contains(e.target as Node)) return;
-            if (addTaskPopoverRef.current && !addTaskPopoverRef.current.contains(e.target as Node)) {
-                setIsAddTaskOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [isAddTaskOpen]);
-
-
     useEffect(() => {
         if (!isMusicSelectorOpen) return;
         const handler = (e: MouseEvent): void => {
-            // Exclude the toggle button itself — its onClick will close it via the toggle
             if (musicButtonRef.current?.contains(e.target as Node)) return;
             if (musicPopoverRef.current && !musicPopoverRef.current.contains(e.target as Node)) {
                 setIsMusicSelectorOpen(false);
@@ -229,65 +164,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     </span>
                 )}
 
-                {/* ── Quick-add task button (desktop) ── */}
-                <div className="relative">
-                    <button
-                        ref={addTaskButtonRef}
-                        onClick={openAddTask}
-                        title="Add task"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 text-white text-[11px] font-semibold hover:bg-slate-700 active:scale-95 transition-all"
-                    >
-                        <PlusIconSolid className="w-3.5 h-3.5" />
-                        Add task
-                    </button>
 
-                    {isAddTaskOpen && (
-                        <div ref={addTaskPopoverRef} className={`${dropdown} w-72 p-4`}>
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 text-slate-500">Quick add task</p>
-                            <input
-                                ref={addTaskInputRef}
-                                type="text"
-                                value={addTaskText}
-                                onChange={e => setAddTaskText(e.target.value)}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') submitAddTask();
-                                    if (e.key === 'Escape') setIsAddTaskOpen(false);
-                                }}
-                                placeholder="What needs doing?"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 mb-3"
-                            />
-                            <div className="flex gap-2 mb-3">
-                                <select
-                                    value={addTaskCategory}
-                                    onChange={e => setAddTaskCategory(e.target.value)}
-                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700"
-                                >
-                                    {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                                <div className="flex gap-1 p-0.5 bg-slate-100 rounded-xl">
-                                    {(['low', 'medium', 'high'] as const).map(e => (
-                                        <button
-                                            key={e}
-                                            onClick={() => setAddTaskEffort(e)}
-                                            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all capitalize ${
-                                                addTaskEffort === e ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-600'
-                                            }`}
-                                        >
-                                            {e}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <button
-                                onClick={submitAddTask}
-                                disabled={!addTaskText.trim()}
-                                className="w-full py-2 bg-slate-800 text-white text-[12px] font-bold rounded-xl hover:bg-slate-700 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                                Add task
-                            </button>
-                        </div>
-                    )}
-                </div>
 
                 <div className={divider} />
 
@@ -381,56 +258,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
             } bg-white/75 border-white/40`}>
 
-                {/* Mobile quick-add task sheet */}
-                {isAddTaskOpen && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 p-4 rounded-2xl bg-white border border-slate-200 shadow-xl z-[200] animate-in slide-in-from-bottom-4 duration-200">
-                        <div className="flex items-center justify-between mb-3">
-                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Add task</p>
-                            <button onClick={() => setIsAddTaskOpen(false)} className="text-slate-400 hover:text-slate-500 text-lg leading-none">✕</button>
-                        </div>
-                        <input
-                            ref={addTaskInputRef}
-                            type="text"
-                            value={addTaskText}
-                            onChange={e => setAddTaskText(e.target.value)}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') submitAddTask();
-                                if (e.key === 'Escape') setIsAddTaskOpen(false);
-                            }}
-                            placeholder="What needs doing?"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] font-medium text-slate-800 placeholder:text-slate-400 mb-3"
-                        />
-                        <div className="flex gap-2 mb-3">
-                            <select
-                                value={addTaskCategory}
-                                onChange={e => setAddTaskCategory(e.target.value)}
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-[12px] font-semibold text-slate-700"
-                            >
-                                {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                            <div className="flex gap-1 p-0.5 bg-slate-100 rounded-xl">
-                                {(['low', 'medium', 'high'] as const).map(e => (
-                                    <button
-                                        key={e}
-                                        onClick={() => setAddTaskEffort(e)}
-                                        className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg transition-all capitalize ${
-                                            addTaskEffort === e ? 'bg-white shadow text-slate-800' : 'text-slate-500'
-                                        }`}
-                                    >
-                                        {e}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <button
-                            onClick={submitAddTask}
-                            disabled={!addTaskText.trim()}
-                            className="w-full py-2.5 bg-slate-800 text-white text-[13px] font-bold rounded-xl hover:bg-slate-700 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                            Add task
-                        </button>
-                    </div>
-                )}
+
 
                 {/* Track selector popover */}
                 {isMusicSelectorOpen && (
@@ -486,17 +314,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                         );
                     })}
 
-                    {/* Quick-add task button (mobile) */}
-                    <button
-                        ref={addTaskButtonRef}
-                        onClick={openAddTask}
-                        className="flex flex-col items-center gap-[3px] py-1 flex-1 transition-all active:scale-90"
-                    >
-                        <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center">
-                            <PlusIconSolid className="w-3.5 h-3.5 text-white" />
-                        </div>
-                        <span className="text-[9px] font-semibold text-slate-800">Add</span>
-                    </button>
+
 
                     {/* Divider */}
                     <div className="w-px h-7 bg-slate-200/80 shrink-0" />

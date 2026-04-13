@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MemoryItem } from '../types';
-import { SIMPLE_KEY, SimpleEntry } from './SimpleDumpHub';
+import { MemoryItem } from '../types';
 
 const DISMISSED_KEY = 'dumped_dismissed_tiles';
 
@@ -10,19 +10,38 @@ interface MemoryGridHubProps {
 }
 
 interface TileData {
-    key: string;
+    id: string;
     text: string;
     count: number;
-    lastSeen: string;
+    lastSeen: number;
+}
+
+/**
+ * Safely parses various date formats (numbers, numeric strings, ISO strings)
+ */
+function parseSafeDate(val: any): Date {
+    if (!val) return new Date(0);
+    // Handle numeric strings like "16813XXXXX"
+    if (typeof val === 'string' && /^\d+$/.test(val)) {
+        return new Date(parseInt(val, 10));
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date(0) : d;
 }
 
 function getSimilarity(a: string, b: string): number {
-    const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-    const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+    // Normalize and filter for meaningful words
+    const filter = (text: string) => text.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    const wordsA = new Set(filter(a));
+    const wordsB = new Set(filter(b));
+
     if (wordsA.size === 0 && wordsB.size === 0) return 1;
     if (wordsA.size === 0 || wordsB.size === 0) return 0;
-    const intersection = [...wordsA].filter(w => wordsB.has(w));
-    return intersection.length / Math.max(wordsA.size, wordsB.size);
+
+    let intersection = 0;
+    for (const word of wordsA) if (wordsB.has(word)) intersection++;
+
+    return intersection / Math.max(wordsA.size, wordsB.size);
 }
 
 function getDismissed(): Set<string> {
@@ -36,43 +55,28 @@ function dismissTile(key: string) {
 }
 
 function buildTiles(memories: MemoryItem[]): TileData[] {
-    const allTexts: { text: string; timestamp: string }[] = [];
+    const allTexts: { text: string; timestamp: Date }[] = [];
 
     // AI-extracted action items from existing memories
     for (const memory of memories) {
+        const memDate = parseSafeDate(memory.timestamp);
         for (const action of memory.actions || []) {
-            if (!action.completed) {
-                allTexts.push({ text: action.text, timestamp: String(memory.timestamp) });
+            if (!action.completed && action.text?.trim()) {
+                allTexts.push({ text: action.text.trim(), timestamp: memDate });
             }
         }
     }
 
-    // Raw lines from SimpleDump sessions
-    try {
-        const raw = localStorage.getItem(SIMPLE_KEY);
-        const entries: SimpleEntry[] = raw ? JSON.parse(raw) : [];
-        for (const entry of entries) {
-            for (const line of entry.lines) {
-                allTexts.push({ text: line, timestamp: entry.timestamp });
-            }
-        }
-    } catch { /* ignore */ }
-
-    if (allTexts.length === 0) return [];
-
-    const dismissed = getDismissed();
-
-    // Group by text similarity (>50% word overlap = same cluster)
-    const groups: { key: string; count: number; canonical: string; lastSeen: string }[] = [];
+    const groups: { key: string; count: number; canonical: string; lastSeen: Date }[] = [];
 
     for (const { text, timestamp } of allTexts) {
         const norm = text.toLowerCase().trim();
         let matched = false;
 
         for (const group of groups) {
-            if (getSimilarity(norm, group.key) > 0.5) {
+            if (getSimilarity(norm, group.key) > 0.6) { // Slightly stricter threshold
                 group.count += 1;
-                if (new Date(timestamp) > new Date(group.lastSeen)) {
+                if (timestamp > group.lastSeen) {
                     group.lastSeen = timestamp;
                     group.canonical = text;
                 }
@@ -86,13 +90,19 @@ function buildTiles(memories: MemoryItem[]): TileData[] {
         }
     }
 
-    // Only show items seen in the last 14 days, capped at 20
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 1);
+    cutoff.setDate(cutoff.getDate() - 14);
+
+    const dismissed = getDismissed();
 
     return groups
-        .filter(g => new Date(g.lastSeen) > cutoff && !dismissed.has(g.key))
-        .map(g => ({ key: g.key, text: g.canonical, count: g.count, lastSeen: g.lastSeen }))
+        .filter(g => g.lastSeen > cutoff && !dismissed.has(g.key))
+        .map(g => ({
+            id: g.key,
+            text: g.canonical,
+            count: g.count,
+            lastSeen: g.lastSeen.getTime()
+        }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 20);
 }
@@ -129,7 +139,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ memories, setActiv
                 <p className="text-slate-500 text-sm">Nothing here yet.</p>
                 <p className="text-slate-400 text-xs">Do a dump first — your patterns will appear here.</p>
                 <button
-                    onClick={() => setActiveTab('simple-dump')}
+                    onClick={() => setActiveTab('dump')}
                     className="mt-2 bg-slate-800 text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition-colors"
                 >
                     Go dump something
