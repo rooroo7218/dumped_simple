@@ -160,8 +160,7 @@ export const useBrainDump = (
                 actions: newActions
             };
 
-            await commitManual(finalMemory);
-            setScanDraft(null); 
+            setScanDraft(finalMemory);
             setAiStatus('success');
             setTimeout(() => setAiStatus('idle'), 3000);
         } catch (e: any) {

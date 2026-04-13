@@ -124,21 +124,24 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <div className={divider} />
 
                 {/* Tabs */}
-                <nav className="flex items-center gap-0.5 overflow-x-auto no-scrollbar">
-                    {MAIN_TABS.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all whitespace-nowrap text-[11px] font-semibold ${
-                                activeTab === tab.id
-                                    ? themeClasses.navActive
-                                    : 'text-slate-600 hover:bg-white/50'
-                            }`}
-                        >
-                            <tab.icon className="w-3.5 h-3.5 shrink-0" />
-                            <span>{tab.label}</span>
-                        </button>
-                    ))}
+                <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar ml-2">
+                    {MAIN_TABS.map((tab) => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-bold ${
+                                    isActive
+                                        ? themeClasses.navActive
+                                        : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'
+                                }`}
+                            >
+                                <tab.icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                                <span>{tab.label}</span>
+                            </button>
+                        );
+                    })}
                 </nav>
 
                 {/* Spacer */}

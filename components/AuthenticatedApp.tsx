@@ -95,10 +95,11 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
     const themeClasses = {
         bg: 'bg-transparent',
-        panel: 'bg-white/70 backdrop-blur-xl border-2 border-slate-950 rounded-[32px] shadow-2xl transition-all duration-700',
-        card: 'bg-white/60 backdrop-blur-md border-2 border-slate-950 rounded-2xl',
+        panel: 'bg-white/70 backdrop-blur-xl border border-white/20 rounded-[32px] shadow-2xl transition-all duration-700',
+        card: 'bg-white/60 backdrop-blur-md border border-white/20 rounded-2xl',
         text: 'text-slate-900',
-        header: 'bg-white/40 backdrop-blur-3xl border-b-2 border-slate-950',
+        header: 'bg-white/40 backdrop-blur-3xl border-b border-white/10',
+        navActive: 'bg-slate-950 text-white shadow-lg',
     };
 
     return (
@@ -116,7 +117,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 updateBrutalistBackground={data.updateBrutalistBackground}
                 backgroundScenes={BACKGROUND_SCENES}
                 player={player}
-                onAddTask={data.addManualTask}
+                onAddTask={data.handleAddManualTask}
                 allCategories={allCategories}
                 syncStatus={data.syncStatus}
             />
@@ -131,8 +132,16 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 
                 {ripples.map(r => <div key={r.id} className="rainbow-ripple" style={{ left: r.x - 50, top: r.y - 50 }} />)}
 
-                <main className="flex-1 px-5 md:px-16 pt-8 md:pt-16 pb-24 w-full relative z-10">
-                    {activeTab === 'dump' && <BrainDumpHub {...dump} persona={persona} memories={memories} activeTab={activeTab} onUpdatePersona={p => { data.setPersona(p); databaseService.savePersona(p); }} />}
+                <main className="flex-1 px-5 md:px-16 pt-8 md:pt-16 pb-32 w-full relative z-10">
+                    {activeTab === 'dump' && (
+                        <BrainDumpHub 
+                            {...dump} 
+                            persona={persona} 
+                            memories={memories} 
+                            activeTab={activeTab} 
+                            onUpdatePersona={p => { data.setPersona(p); databaseService.savePersona(p); }} 
+                        />
+                    )}
                     {activeTab === 'patterns' && (
                         <div className="space-y-8">
                             <MemoryGridHub memories={data.memories} setActiveTab={setActiveTab} />
@@ -141,6 +150,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 </main>
             </div>
 
+            <ZenPlayer player={player} />
             <ToastList toasts={toasts} dismissToast={dismissToast} />
             {confirmState && (
                 <ConfirmDialog {...confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />

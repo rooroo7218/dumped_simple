@@ -171,7 +171,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ memories, setActiv
                             className={`relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col gap-1.5 ${isXL ? 'col-span-2 py-4' : ''}`}
                         >
                             <button
-                                onClick={() => handleDismiss(tile.key)}
+                                onClick={() => handleDismiss(tile.id)}
                                 className="absolute top-2 right-2 text-slate-300 hover:text-slate-500 transition-colors p-0.5 rounded-full"
                                 aria-label="Dismiss"
                             >

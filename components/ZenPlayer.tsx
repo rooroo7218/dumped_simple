@@ -50,8 +50,8 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
             >
                 {/* Selector Popover */}
                 {isExpanded && (
-                    <div className="w-64 mb-2 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/80 backdrop-blur-md border-2 border-slate-950 rounded-[28px] shadow-xl">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-40 text-black">Select Your Vibe</h4>
+                    <div className="w-64 mb-2 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/70 backdrop-blur-md border border-white/20 rounded-[28px] shadow-2xl">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-40 text-slate-500">Select Your Vibe</h4>
                         <div className="space-y-2">
                             {TRACKS.map((track, idx) => (
                                 <button
@@ -77,10 +77,10 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                 )}
 
                 {/* Main Controller Bubble */}
-                <div className={`flex items-center gap-2 p-2 transition-all ${isExpanded ? 'scale-105' : 'hover:scale-105'} bg-white/80 backdrop-blur-md border-2 border-slate-950 rounded-full shadow-lg`}>
+                <div className={`flex items-center gap-2 p-2 transition-all ${isExpanded ? 'scale-105' : 'hover:scale-105'} bg-white/70 backdrop-blur-md border border-white/20 rounded-full shadow-xl`}>
                     {isPlaying && (
                         <div className="px-3 py-1 flex flex-col overflow-hidden max-w-[120px]">
-                            <span className="text-[8px] font-black uppercase truncate text-black">{currentTrack.title}</span>
+                            <span className="text-[8px] font-black uppercase truncate text-slate-800">{currentTrack.title}</span>
                             <span className="text-[6px] font-bold uppercase opacity-40 whitespace-nowrap">Now Playing</span>
                         </div>
                     )}
