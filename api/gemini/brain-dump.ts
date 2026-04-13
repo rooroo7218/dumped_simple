@@ -10,22 +10,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const userId = await verifyAuth(req);
         if (!await checkRateLimit(userId, res)) return;
-        const { input, imageAttachment } = req.body;
+        const { input, imageAttachment, activeItems = [] } = req.body;
         const { persona } = await fetchUserContext(userId, req.body.persona);
 
-        const isImageOnly = (!input || !input.trim()) && !!imageAttachment;
+        const activeItemsJson = JSON.stringify(activeItems.map((item: any) => ({ id: item.id, label: item.label })));
 
-        const promptText = isImageOnly
-            ? `TASK: Extract every distinct item or thought from the attached image.
-               - Read the original text carefully.
-               - Clean up grammar and spelling for readability.
-               - Each distinct point or line must be its own object in the array.`
-            : `USER INPUT: "${input}"
-               TASK: Clean up and extract items from this dump.
-               - If it's a single thought, return it cleaned up.
-               - If it's multiple thoughts, separate them into 2-5 distinct items.
-               - FIX GRAMMAR and ensure each item is a complete, clear sentence or phrase.
-               - DO NOT SUMMARIZE. Preserve the user's intent.`;
+        const promptText = `
+SYSTEM INSTRUCTION:
+You are a processing engine for a brain dump app. The user has submitted a dump. Your job is two steps.
+
+Step 1 — Extract all discrete items from the dump. An item is anything specific: a task, a worry, something to do, something weighing on them. Ignore vague filler.
+
+Step 2 — For each extracted item, check against the user's existing active items. If semantically the same thing (even if worded differently), assign to that item. If genuinely new, create it.
+
+Existing active items:
+${activeItemsJson}
+
+Dump text:
+"${input}"
+
+RULES:
+- Labels: 2–5 words, lowercase, plain language
+- Assign when semantic overlap is clear (e.g., "milk" and "buy milk" are the same)
+- Create only when genuinely new
+- raw_excerpt must be the user's ACTUAL words from the dump, never paraphrased.
+`;
 
         const parts: any[] = [{
             text: `${getTimeContext()}
@@ -52,23 +61,21 @@ ${promptText}
                     responseSchema: {
                         type: SchemaType.OBJECT,
                         properties: {
-                            summary: { type: SchemaType.STRING },
-                            actions: {
+                            results: {
                                 type: SchemaType.ARRAY,
                                 items: {
                                     type: SchemaType.OBJECT,
                                     properties: {
-                                        text: { type: SchemaType.STRING },
-                                        urgency: { type: SchemaType.NUMBER },
-                                        category: { type: SchemaType.STRING },
-                                        rationale: { type: SchemaType.STRING },
+                                        action: { type: SchemaType.STRING, enum: ['assign', 'create'] },
+                                        item_id: { type: SchemaType.STRING, nullable: true },
+                                        label: { type: SchemaType.STRING, nullable: true },
+                                        raw_excerpt: { type: SchemaType.STRING },
                                     },
-                                    required: ['text', 'urgency', 'category', 'rationale'],
+                                    required: ['action', 'raw_excerpt'],
                                 },
                             },
-                            category: { type: SchemaType.STRING },
                         },
-                        required: ['summary', 'actions', 'category'],
+                        required: ['results'],
                     },
                 },
             }
@@ -77,27 +84,13 @@ ${promptText}
         const text = await extractText(result.response);
         if (!text) throw new Error('AI returned no results.');
 
-        let parsed: any = { summary: '', actions: [], category: 'General' };
+        let parsed: any = { results: [] };
         try {
             parsed = JSON.parse(text);
-            if (!Array.isArray(parsed.actions)) parsed.actions = [];
+            if (!Array.isArray(parsed.results)) parsed.results = [];
         } catch {
             // Safety net handles this
         }
-
-        if (!parsed.actions || parsed.actions.length === 0) {
-            parsed.actions = [{
-                text: (input && input.trim()) ? input.substring(0, 100) : 'Captured thought',
-                urgency: 5,
-                category: 'General',
-                rationale: 'Extracted directly.',
-            }];
-            if (!parsed.summary) parsed.summary = "Captured.";
-        }
-
-        // Add dummy values for fields that were stripped from schema but might be expected by types
-        parsed.tags = [];
-        parsed.priority = 'medium';
 
         return res.json(parsed);
 

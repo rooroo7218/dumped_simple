@@ -104,23 +104,26 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
     return (
         <>
-            <Navigation
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                themeClasses={themeClasses}
-                isZenMode={isZenMode}
-                isCollapsed={isSidebarCollapsed}
-                setIsCollapsed={setIsSidebarCollapsed}
-                user={user}
-                handleSignOut={handleSignOut}
-                persona={persona}
-                updateBrutalistBackground={data.updateBrutalistBackground}
-                backgroundScenes={BACKGROUND_SCENES}
-                player={player}
-                onAddTask={data.handleAddManualTask}
-                allCategories={allCategories}
-                syncStatus={data.syncStatus}
-            />
+            {/* Show Navigation only on non-dump tabs for that v3 "minimalist ritual" feel */}
+            {activeTab !== 'dump' && (
+                <Navigation
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    themeClasses={themeClasses}
+                    isZenMode={isZenMode}
+                    isCollapsed={isSidebarCollapsed}
+                    setIsCollapsed={setIsSidebarCollapsed}
+                    user={user}
+                    handleSignOut={handleSignOut}
+                    persona={persona}
+                    updateBrutalistBackground={data.updateBrutalistBackground}
+                    backgroundScenes={BACKGROUND_SCENES}
+                    player={player}
+                    onAddTask={data.handleAddManualTask}
+                    allCategories={allCategories}
+                    syncStatus={data.syncStatus}
+                />
+            )}
 
             <div className={`min-h-screen ${themeClasses.text} ${themeClasses.bg} font-['Plus_Jakarta_Sans'] overflow-x-hidden transition-all duration-500 relative`}>
                 <ZenBackground
@@ -130,21 +133,16 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                     isFocusActive={isZenMode}
                 />
                 
-                {ripples.map(r => <div key={r.id} className="rainbow-ripple" style={{ left: r.x - 50, top: r.y - 50 }} />)}
-
-                <main className="flex-1 px-5 md:px-16 pt-8 md:pt-16 pb-32 w-full relative z-10">
+                <main className={`flex-1 w-full relative z-10 ${activeTab === 'dump' ? 'p-0' : 'px-5 md:px-16 pt-8 md:pt-16 pb-32'}`}>
                     {activeTab === 'dump' && (
                         <BrainDumpHub 
                             {...dump} 
-                            persona={persona} 
-                            memories={memories} 
-                            activeTab={activeTab} 
-                            onUpdatePersona={p => { data.setPersona(p); databaseService.savePersona(p); }} 
+                            onNavigateToGrid={() => setActiveTab('patterns')}
                         />
                     )}
                     {activeTab === 'patterns' && (
                         <div className="space-y-8">
-                            <MemoryGridHub memories={data.memories} setActiveTab={setActiveTab} />
+                            <MemoryGridHub setActiveTab={setActiveTab} />
                         </div>
                     )}
                 </main>
@@ -158,3 +156,4 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
         </>
     );
 };
+

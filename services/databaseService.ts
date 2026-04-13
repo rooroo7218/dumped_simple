@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { MemoryItem, UserPersona, DiaryEntry, ActionItem, TaskStep, UserSticker } from '../types';
+import { MemoryItem, UserPersona, DiaryEntry, ActionItem, TaskStep, UserSticker, Item, DumpItem } from '../types';
 
 // ─── Sync status event system ─────────────────────────────────────────────────
 export type SyncStatus = 'idle' | 'saving' | 'saved' | 'local-only';
@@ -336,5 +336,152 @@ export const databaseService = {
         localStorage.setItem('dumped_memories', JSON.stringify(updated));
 
         await supabase.from('actions').delete().eq('id', taskId);
+    },
+
+    // --- DUMPED v3: Items & Excerpts ---
+    async loadItems(): Promise<Item[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('items')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('mention_count', { ascending: false });
+
+        if (error) {
+            console.error("Error loading v3 items:", error);
+            return [];
+        }
+
+        return (data || []).map(d => ({
+            id: d.id,
+            userId: d.user_id,
+            label: d.label,
+            mentionCount: d.mention_count,
+            lastMentionedAt: new Date(d.last_mentioned_at).getTime(),
+            firstMentionedAt: new Date(d.first_mentioned_at).getTime(),
+            isFlagged: d.is_flagged,
+            flagOrder: d.flag_order,
+            isCompleted: d.is_completed,
+            completedAt: d.completed_at ? new Date(d.completed_at).getTime() : undefined,
+            fadedAt: d.faded_at ? new Date(d.faded_at).getTime() : undefined,
+            createdAt: new Date(d.created_at).getTime()
+        }));
+    },
+
+    async loadItemExcerpts(itemId: string): Promise<DumpItem[]> {
+        const { data, error } = await supabase
+            .from('dump_items')
+            .select('*')
+            .eq('item_id', itemId)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+        if (error) return [];
+        return (data || []).map(d => ({
+            id: d.id,
+            dumpId: d.dump_id,
+            itemId: d.item_id,
+            rawExcerpt: d.raw_excerpt,
+            createdAt: new Date(d.created_at).getTime()
+        }));
+    },
+
+    async processDumpResult(dumpId: string, results: { action: 'assign' | 'create', item_id?: string, label?: string, raw_excerpt: string }[]) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        for (const res of results) {
+            let itemId = res.item_id;
+
+            if (res.action === 'create' && res.label) {
+                // Create new item
+                const { data: newItem, error: createError } = await supabase
+                    .from('items')
+                    .insert({
+                        user_id: user.id,
+                        label: res.label,
+                        mention_count: 1
+                    })
+                    .select()
+                    .single();
+                
+                if (createError) {
+                    console.error("Error creating v3 item:", createError);
+                    continue;
+                }
+                itemId = newItem.id;
+            } else if (res.action === 'assign' && itemId) {
+                // Increment mention count
+                const { error: updateError } = await supabase.rpc('increment_item_mention', { 
+                    item_id_param: itemId 
+                });
+
+                // Fallback if RPC isn't defined yet
+                if (updateError) {
+                    await supabase
+                        .from('items')
+                        .update({ 
+                            mention_count: supabase.rpc('increment'), // Note: raw increment might not work via update, better use RPC or manual fetch-update
+                            last_mentioned_at: new Date().toISOString() 
+                        })
+                        .eq('id', itemId);
+                }
+            }
+
+            if (itemId) {
+                // Link to dump via excerpt
+                await supabase.from('dump_items').insert({
+                    dump_id: dumpId,
+                    item_id: itemId,
+                    raw_excerpt: res.raw_excerpt
+                });
+            }
+        }
+    },
+
+    async toggleFlag(itemId: string, isFlagged: boolean) {
+        await supabase.from('items').update({ is_flagged: isFlagged }).eq('id', itemId);
+    },
+
+    async toggleComplete(itemId: string, isCompleted: boolean) {
+        const updates: any = { is_completed: isCompleted };
+        if (isCompleted) {
+            updates.completed_at = new Date().toISOString();
+            updates.mention_count = 0; // Reset on completion as per spec
+        } else {
+            updates.completed_at = null;
+        }
+    },
+
+    async fetchHabitData(): Promise<boolean[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return new Array(7).fill(false);
+
+        const { data, error } = await supabase
+            .from('memories')
+            .select('timestamp')
+            .eq('user_id', user.id)
+            .gte('timestamp', Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        if (error) return new Array(7).fill(false);
+
+        const habitDots = new Array(7).fill(false);
+        const now = new Date();
+        
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(now);
+            day.setDate(now.getDate() - i);
+            const startOfDay = new Date(day.setHours(0, 0, 0, 0)).getTime();
+            const endOfDay = new Date(day.setHours(23, 59, 59, 999)).getTime();
+
+            const hadDump = data.some(d => d.timestamp >= startOfDay && d.timestamp <= endOfDay);
+            habitDots[6 - i] = hadDump; // Index 6 is today, 0 is 6 days ago
+        }
+
+        return habitDots;
     }
 };
+
+

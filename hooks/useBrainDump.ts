@@ -13,210 +13,73 @@ export const useBrainDump = (
     showToast: (message: string, variant?: 'success' | 'info' | 'error', sub?: string) => void,
     onProfileUpdate?: (content: string) => void
 ) => {
-    const [scanDraft, setScanDraft] = useState<MemoryItem | null>(null);
     const [input, setInput] = useState('');
-    const [selectedImage, setSelectedImage] = useState<{ data: string, mimeType: string } | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const canvasRef = useRef<HTMLDivElement>(null);
-    const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-    const clearImage = useCallback(() => {
-        setSelectedImage(null);
-        setImagePreview(null);
-    }, []);
-
-    const updateDraftTask = useCallback((taskId: string, updates: Partial<ActionItem>) => {
-        setScanDraft(prev => {
-            if (!prev) return null;
-            const updatedActions = (prev.actions || []).map(a => a.id === taskId ? { ...a, ...updates } : a);
-            return { ...prev, actions: updatedActions };
-        });
-    }, []);
-
-    const commitManual = useCallback(async (memory: MemoryItem) => {
-        const tasks = memory.actions || [];
-        setMemories(prev => [memory, ...prev]);
-        await databaseService.saveMemory(memory);
-        showToast(`${tasks.length} item${tasks.length !== 1 ? 's' : ''} captured`, 'success');
-        onCommitSuccess();
-        if (onProfileUpdate) onProfileUpdate(memory.content);
-    }, [setMemories, showToast, onCommitSuccess, onProfileUpdate]);
-
-    const handleCommitScan = useCallback(async () => {
-        if (!scanDraft) return;
-        await commitManual(scanDraft);
-        setScanDraft(null);
-        setInput('');
-        clearImage();
-    }, [scanDraft, commitManual, clearImage]);
-
-    const handleBubbleDragStart = (e: React.MouseEvent, taskId: string) => {
-        e.preventDefault();
-        const task = scanDraft?.actions?.find(a => a.id === taskId);
-        if (!task || !canvasRef.current) return;
-        const rect = canvasRef.current.getBoundingClientRect();
-        const currentX = (task.x || 0) * (rect.width / 100);
-        const currentY = (task.y || 0) * (rect.height / 100);
-        setDraggingTaskId(taskId);
-        setDragOffset({ x: e.clientX - currentX, y: e.clientY - currentY });
-    };
-
-    const handleCanvasMouseMove = (e: React.MouseEvent) => {
-        if (!draggingTaskId || !scanDraft || !canvasRef.current) return;
-        const rect = canvasRef.current.getBoundingClientRect();
-        let newX = ((e.clientX - dragOffset.x) / rect.width) * 100;
-        let newY = ((e.clientY - dragOffset.y) / rect.height) * 100;
-        newX = Math.max(5, Math.min(85, newX));
-        newY = Math.max(5, Math.min(85, newY));
-        updateDraftTask(draggingTaskId, { x: newX, y: newY });
-    };
-
     const handleBrainDumpSubmit = useCallback(async () => {
-        if (isProcessing || (!input.trim() && !selectedImage)) {
-            return;
-        }
-
-        const tempId = crypto.randomUUID();
-        const optimisticAction: ActionItem = {
-            id: tempId,
-            text: input || "Scanning...",
-            urgency: 5,
-            category: "Processing...",
-            effort: "low",
-            rationale: "Placeholder",
-            completed: false,
-            x: 50,
-            y: 50
-        };
+        if (isProcessing || !input.trim()) return;
 
         const currentInput = input;
-        const currentImage = selectedImage;
+        const dumpId = crypto.randomUUID();
+        const timestamp = Date.now();
 
+        // 1. CLEAR IMMEDIATELY (v3 Ritual)
         setInput('');
-        clearImage();
         setIsProcessing(true);
         setAiStatus('processing');
         setLastAiError(null);
 
-        setScanDraft(prev => {
-            if (prev) {
-                return { ...prev, actions: [...(prev.actions || []), optimisticAction] };
-            }
-            return {
-                id: crypto.randomUUID(),
-                timestamp: Date.now(),
-                content: currentInput || "Processing...",
-                source: (currentImage ? 'camera' : 'text') as any,
+        try {
+            // 2. SAVE RAW DUMP FIRST
+            const rawDump: MemoryItem = {
+                id: dumpId,
+                timestamp,
+                content: currentInput,
+                source: 'text',
                 priority: 'medium',
                 tags: [],
                 processed: false,
-                category: 'General',
-                actions: [optimisticAction]
+                category: 'General'
             };
-        });
+            await databaseService.saveMemory(rawDump);
 
-        try {
-            const result = await processBrainDump(currentInput, memories, persona, currentImage || undefined);
+            // 3. FETCH ACTIVE ITEMS FOR CONTEXT
+            const activeItems = await databaseService.loadItems();
+            const uncompletedItems = activeItems.filter(i => !i.isCompleted);
 
-            const newMemId = crypto.randomUUID();
-            let newActions = (result.actions || []).map((a: any) => ({
-                ...a,
-                id: crypto.randomUUID(),
-                memoryId: newMemId,
-                completed: false,
-                steps: [],
-                x: Math.max(10, Math.min(80, 15 + Math.random() * 60)),
-                y: Math.max(10, Math.min(80, 20 + Math.random() * 50)),
-                isNew: true
-            }));
+            // 4. CALL AI FOR DEDUPLICATION
+            const response = await fetch('/api/gemini/brain-dump', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    input: currentInput,
+                    activeItems: uncompletedItems
+                })
+            });
 
-            if (newActions.length === 0) {
-                newActions = [{
-                    id: crypto.randomUUID(),
-                    text: result.summary || currentInput || "Thought captured",
-                    urgency: 5,
-                    category: result.category || "General",
-                    effort: "low",
-                    rationale: result.error || "Processed",
-                    completed: false,
-                    x: 50,
-                    y: 50,
-                    steps: []
-                }];
-            }
+            if (!response.ok) throw new Error('AI processing failed');
+            const result = await response.json();
 
-            const finalMemory: MemoryItem = {
-                id: newMemId,
-                timestamp: Date.now(),
-                content: currentInput || "Thought",
-                source: (currentImage ? 'camera' : 'text') as any,
-                priority: 'medium',
-                tags: [],
-                processed: true,
-                category: result.category || 'General',
-                actions: newActions
-            };
+            // 5. PROCESS RESULTS (Assign/Create)
+            await databaseService.processDumpResult(dumpId, result.results);
 
-            setScanDraft(finalMemory);
             setAiStatus('success');
             setTimeout(() => setAiStatus('idle'), 3000);
+            
+            // Notify UI to refresh (e.g. MemoryGrid)
+            onCommitSuccess();
+
         } catch (e: any) {
             console.error("❌ Brain Dump processing failed:", e);
             setAiStatus('error');
-            const rawMessage = e.message || "Failed to process.";
-            setLastAiError(rawMessage);
-            
-            const fallbackMemId = crypto.randomUUID();
-            const fallbackMemory: MemoryItem = {
-                id: fallbackMemId,
-                timestamp: Date.now(),
-                content: currentInput || "Error during processing",
-                source: (currentImage ? 'camera' : 'text') as any,
-                priority: 'medium',
-                tags: ['error-fallback'],
-                processed: false,
-                category: 'Inbox',
-                actions: [{
-                    id: crypto.randomUUID(),
-                    text: currentInput || "Draft item",
-                    urgency: 10,
-                    category: "Inbox",
-                    effort: "medium",
-                    rationale: `Save attempt failed. Raw text captured.`,
-                    completed: false,
-                    x: 50,
-                    y: 50,
-                    steps: []
-                }]
-            };
-
-            await commitManual(fallbackMemory);
-            setScanDraft(null);
+            setLastAiError(e.message || "Failed to process brain dump.");
         } finally {
             setIsProcessing(false);
         }
-    }, [input, selectedImage, isProcessing, memories, persona, clearImage, setScanDraft, setInput, setIsProcessing, commitManual]);
+    }, [input, isProcessing, onCommitSuccess, setAiStatus, setLastAiError]);
 
-    const handleCanvasMouseUp = () => setDraggingTaskId(null);
 
     const [isListening, setIsListening] = useState(false);
-
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64String = reader.result as string;
-            const base64Data = base64String.split(',')[1];
-            setSelectedImage({ data: base64Data, mimeType: file.type });
-            setImagePreview(base64String);
-        };
-        reader.readAsDataURL(file);
-    };
 
     const startSpeechToText = (onResult: (text: string) => void) => {
         const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -236,28 +99,13 @@ export const useBrainDump = (
     };
 
     return {
-        scanDraft,
-        setScanDraft,
         input,
         setInput,
-        selectedImage,
-        setSelectedImage,
-        imagePreview,
-        setImagePreview,
         isProcessing,
-        setIsProcessing,
-        canvasRef,
-        draggingTaskId,
-        handleCommitScan,
-        updateDraftTask,
-        handleBubbleDragStart,
-        handleCanvasMouseMove,
-        handleCanvasMouseUp,
-        clearImage,
         handleBrainDumpSubmit,
-        handleImageSelect,
         startSpeechToText,
         isListening
     };
 };
+
 

@@ -204,3 +204,27 @@ export interface CraftingRecipe {
   resultStickerId: string;
   resultRarity: StickerRarity;
 }
+
+export interface Item {
+  id: string;
+  userId: string;
+  label: string;
+  mentionCount: number;
+  lastMentionedAt: number;
+  firstMentionedAt: number;
+  isFlagged: boolean;
+  flagOrder?: number;
+  isCompleted: boolean;
+  completedAt?: number;
+  fadedAt?: number;
+  createdAt: number;
+  excerpts?: DumpItem[]; // Loaded on expansion
+}
+
+export interface DumpItem {
+  id: string;
+  dumpId: string;
+  itemId: string;
+  rawExcerpt: string;
+  createdAt: number;
+}

@@ -58,7 +58,57 @@ CREATE POLICY "Users can only access their own actions"
 ON actions FOR ALL
 USING (auth.uid() = user_id);
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_memories_user_id ON memories(user_id);
-CREATE INDEX IF NOT EXISTS idx_actions_user_id ON actions(user_id);
-CREATE INDEX IF NOT EXISTS idx_actions_memory_id ON actions(memory_id);
+-- ─── DUMPED v3 TABLES ───────────────────────────────────────────────────────
+
+-- 1. Items (The deduplicated "recurring thoughts")
+CREATE TABLE IF NOT EXISTS items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    mention_count INTEGER DEFAULT 1,
+    last_mentioned_at TIMESTAMPTZ DEFAULT NOW(),
+    first_mentioned_at TIMESTAMPTZ DEFAULT NOW(),
+    is_flagged BOOLEAN DEFAULT false,
+    flag_order INTEGER,
+    is_completed BOOLEAN DEFAULT false,
+    completed_at TIMESTAMPTZ,
+    faded_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Dump Items (Junction table for excerpts)
+CREATE TABLE IF NOT EXISTS dump_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    dump_id UUID NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    raw_excerpt TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Enable RLS
+ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dump_items ENABLE ROW LEVEL SECURITY;
+
+-- 4. Policies
+CREATE POLICY "Users can manage own items" ON items
+    FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage own dump_items" ON dump_items
+    FOR ALL USING (
+        dump_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
+    );
+
+-- 5. Indexes
+CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);
+CREATE INDEX IF NOT EXISTS idx_items_is_completed ON items(is_completed);
+-- 6. RPC Functions
+CREATE OR REPLACE FUNCTION increment_item_mention(item_id_param UUID)
+RETURNS void AS $$
+BEGIN
+    UPDATE items
+    SET mention_count = mention_count + 1,
+        last_mentioned_at = NOW()
+    WHERE id = item_id_param;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+

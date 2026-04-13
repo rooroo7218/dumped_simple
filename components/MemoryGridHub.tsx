@@ -1,206 +1,254 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { MemoryItem } from '../types';
-
-const DISMISSED_KEY = 'dumped_dismissed_tiles';
+import React, { useState, useEffect } from 'react';
+import { Item, DumpItem } from '../types';
+import { databaseService } from '../services/databaseService';
+import { 
+    FlagIcon as FlagOutline,
+    CheckCircleIcon as CheckOutline,
+    ChevronDownIcon,
+    ChevronUpIcon,
+} from '@heroicons/react/24/outline';
+import { 
+    FlagIcon as FlagSolid,
+    CheckCircleIcon as CheckSolid 
+} from '@heroicons/react/24/solid';
 
 interface MemoryGridHubProps {
-    memories: MemoryItem[];
     setActiveTab: (tab: string) => void;
 }
 
-interface TileData {
-    id: string;
-    text: string;
-    count: number;
-    lastSeen: number;
-}
+export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) => {
+    const [items, setItems] = useState<Item[]>([]);
+    const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+    const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
+    const [isLoading, setIsLoading] = useState(true);
 
-/**
- * Safely parses various date formats (numbers, numeric strings, ISO strings)
- */
-function parseSafeDate(val: any): Date {
-    if (!val) return new Date(0);
-    // Handle numeric strings like "16813XXXXX"
-    if (typeof val === 'string' && /^\d+$/.test(val)) {
-        return new Date(parseInt(val, 10));
-    }
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? new Date(0) : d;
-}
-
-function getSimilarity(a: string, b: string): number {
-    // Normalize and filter for meaningful words
-    const filter = (text: string) => text.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
-    const wordsA = new Set(filter(a));
-    const wordsB = new Set(filter(b));
-
-    if (wordsA.size === 0 && wordsB.size === 0) return 1;
-    if (wordsA.size === 0 || wordsB.size === 0) return 0;
-
-    let intersection = 0;
-    for (const word of wordsA) if (wordsB.has(word)) intersection++;
-
-    return intersection / Math.max(wordsA.size, wordsB.size);
-}
-
-function getDismissed(): Set<string> {
-    try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]')); } catch { return new Set(); }
-}
-
-function dismissTile(key: string) {
-    const dismissed = getDismissed();
-    dismissed.add(key);
-    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed]));
-}
-
-function buildTiles(memories: MemoryItem[]): TileData[] {
-    const allTexts: { text: string; timestamp: Date }[] = [];
-
-    // AI-extracted action items from existing memories
-    for (const memory of memories) {
-        const memDate = parseSafeDate(memory.timestamp);
-        for (const action of memory.actions || []) {
-            if (!action.completed && action.text?.trim()) {
-                allTexts.push({ text: action.text.trim(), timestamp: memDate });
-            }
-        }
-    }
-
-    const groups: { key: string; count: number; canonical: string; lastSeen: Date }[] = [];
-
-    for (const { text, timestamp } of allTexts) {
-        const norm = text.toLowerCase().trim();
-        let matched = false;
-
-        for (const group of groups) {
-            if (getSimilarity(norm, group.key) > 0.6) { // Slightly stricter threshold
-                group.count += 1;
-                if (timestamp > group.lastSeen) {
-                    group.lastSeen = timestamp;
-                    group.canonical = text;
-                }
-                matched = true;
-                break;
-            }
-        }
-
-        if (!matched) {
-            groups.push({ key: norm, count: 1, canonical: text, lastSeen: timestamp });
-        }
-    }
-
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 14);
-
-    const dismissed = getDismissed();
-
-    return groups
-        .filter(g => g.lastSeen > cutoff && !dismissed.has(g.key))
-        .map(g => ({
-            id: g.key,
-            text: g.canonical,
-            count: g.count,
-            lastSeen: g.lastSeen.getTime()
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 20);
-}
-
-function tileSize(count: number, max: number): 'xl' | 'lg' | 'md' | 'sm' {
-    const ratio = max <= 1 ? 0 : (count - 1) / (max - 1);
-    if (ratio >= 0.75) return 'xl';
-    if (ratio >= 0.5) return 'lg';
-    if (ratio >= 0.25) return 'md';
-    return 'sm';
-}
-
-function tileOpacity(count: number, max: number): number {
-    return 0.35 + (count / max) * 0.65;
-}
-
-export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ memories, setActiveTab }) => {
-    const [tiles, setTiles] = useState<TileData[]>([]);
+    const load = async () => {
+        setIsLoading(true);
+        const data = await databaseService.loadItems();
+        setItems(data);
+        setIsLoading(false);
+    };
 
     useEffect(() => {
-        setTiles(buildTiles(memories));
-    }, [memories]);
-
-    const handleDismiss = useCallback((id: string) => {
-        dismissTile(id);
-        setTiles(prev => prev.filter(t => t.id !== id));
+        load();
     }, []);
 
-    const maxCount = tiles[0]?.count || 1;
+    const toggleExpand = async (itemId: string) => {
+        if (expandedItemId === itemId) {
+            setExpandedItemId(null);
+            return;
+        }
+        setExpandedItemId(itemId);
+        if (!excerpts[itemId]) {
+            const data = await databaseService.loadItemExcerpts(itemId);
+            setExcerpts(prev => ({ ...prev, [itemId]: data }));
+        }
+    };
 
-    if (tiles.length === 0) {
+    const handleToggleFlag = async (e: React.MouseEvent, item: Item) => {
+        e.stopPropagation();
+        await databaseService.toggleFlag(item.id, !item.isFlagged);
+        load();
+    };
+
+    const handleToggleComplete = async (e: React.MouseEvent, item: Item) => {
+        e.stopPropagation();
+        await databaseService.toggleComplete(item.id, !item.isCompleted);
+        load();
+    };
+
+    // Filter Items
+    const now = Date.now();
+    const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
+    
+    const flagged = items.filter(i => !i.isCompleted && i.isFlagged);
+    const active = items.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt < fourteenDaysMs));
+    const completed = items.filter(i => i.isCompleted);
+    const faded = items.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt >= fourteenDaysMs));
+
+    if (isLoading && items.length === 0) return null;
+
+    if (items.length === 0) {
         return (
-            <div className="animate-in fade-in min-h-[80vh] flex flex-col items-center justify-center max-w-lg mx-auto w-full text-center gap-4">
-                <p className="text-slate-500 text-sm">Nothing here yet.</p>
-                <p className="text-slate-400 text-xs">Do a dump first — your patterns will appear here.</p>
-                <button
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="text-slate-400 font-medium mb-4">Your head is empty (for now).</p>
+                <button 
                     onClick={() => setActiveTab('dump')}
-                    className="mt-2 bg-slate-800 text-white rounded-full px-6 py-2.5 text-sm font-semibold hover:bg-slate-700 transition-colors"
+                    className="text-slate-900 font-bold border-b-2 border-slate-900 pb-1"
                 >
-                    Go dump something
+                    Start a dump
                 </button>
             </div>
         );
     }
 
+    const maxMentionCount = Math.max(...active.map(i => i.mentionCount), 1);
+
     return (
-        <div className="animate-in fade-in max-w-lg mx-auto w-full py-8">
+        <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700">
+            
+            {/* ── Flagged ────────────────────────────────────────────────── */}
+            {flagged.length > 0 && (
+                <section className="mb-12">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Flagged</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                        {flagged.map(item => (
+                            <ItemTile 
+                                key={item.id} 
+                                item={item} 
+                                isExpanded={expandedItemId === item.id}
+                                excerpts={excerpts[item.id] || []}
+                                onToggle={() => toggleExpand(item.id)}
+                                onFlag={(e) => handleToggleFlag(e, item)}
+                                onComplete={(e) => handleToggleComplete(e, item)}
+                                size="flagged"
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
 
-            {/* Header */}
-            <div className="mb-5">
-                <h2 className="text-slate-800 font-semibold text-xl tracking-tight">What keeps coming up</h2>
-                <p className="text-slate-400 text-xs mt-1">Bigger = mentioned more often across your dumps</p>
-            </div>
+            {/* ── Active (Frequency-based) ───────────────────────────────── */}
+            <section className="mb-12">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Active</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
+                    {active.map(item => {
+                        // Calculate size based on frequency
+                        const ratio = item.mentionCount / maxMentionCount;
+                        const isLarge = ratio > 0.6 && item.mentionCount > 1;
+                        return (
+                            <ItemTile 
+                                key={item.id} 
+                                item={item} 
+                                isExpanded={expandedItemId === item.id}
+                                excerpts={excerpts[item.id] || []}
+                                onToggle={() => toggleExpand(item.id)}
+                                onFlag={(e) => handleToggleFlag(e, item)}
+                                onComplete={(e) => handleToggleComplete(e, item)}
+                                size={isLarge ? 'lg' : 'md'}
+                                className={isLarge ? 'col-span-2' : ''}
+                            />
+                        );
+                    })}
+                </div>
+            </section>
 
-            {/* Tile grid */}
-            <div className="grid grid-cols-2 gap-2">
-                {tiles.map((tile, i) => {
-                    const size = tileSize(tile.count, maxCount);
-                    const opacity = tileOpacity(tile.count, maxCount);
-                    const isXL = size === 'xl';
-                    const textSize = size === 'sm' || size === 'md' ? 'text-xs' : 'text-sm';
-
-                    return (
-                        <div
-                            key={i}
-                            style={{ opacity }}
-                            className={`relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col gap-1.5 ${isXL ? 'col-span-2 py-4' : ''}`}
-                        >
-                            <button
-                                onClick={() => handleDismiss(tile.id)}
-                                className="absolute top-2 right-2 text-slate-300 hover:text-slate-500 transition-colors p-0.5 rounded-full"
-                                aria-label="Dismiss"
-                            >
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                    <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                </svg>
-                            </button>
-
-                            <p className={`font-medium text-slate-800 leading-snug pr-4 ${textSize}`}>
-                                {tile.text}
-                            </p>
-
-                            <span className="inline-block rounded-full px-2 py-0.5 w-fit text-indigo-700 bg-indigo-50 text-[10px] font-semibold">
-                                {tile.count}×
-                            </span>
-
-                            {isXL && tile.count >= 4 && (
-                                <p className="text-[10px] text-slate-400 italic mt-1 border-t border-slate-100 pt-2 leading-snug">
-                                    This keeps showing up. What's making it hard to start?
-                                </p>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            <p className="text-center text-slate-300 text-[10px] mt-5">
-                Things not seen in 14 days fade away
-            </p>
+            {/* ── Completed / Faded ──────────────────────────────────────── */}
+            {(completed.length > 0 || faded.length > 0) && (
+                <section>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-4 ml-1">Resolved & Faded</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
+                        {[...completed, ...faded].map(item => (
+                            <ItemTile 
+                                key={item.id} 
+                                item={item} 
+                                isExpanded={expandedItemId === item.id}
+                                excerpts={excerpts[item.id] || []}
+                                onToggle={() => toggleExpand(item.id)}
+                                onFlag={(e) => handleToggleFlag(e, item)}
+                                onComplete={(e) => handleToggleComplete(e, item)}
+                                size="sm"
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
         </div>
     );
 };
+
+interface ItemTileProps {
+    item: Item;
+    isExpanded: boolean;
+    excerpts: DumpItem[];
+    onToggle: () => void;
+    onFlag: (e: React.MouseEvent) => void;
+    onComplete: (e: React.MouseEvent) => void;
+    size: 'flagged' | 'lg' | 'md' | 'sm';
+    className?: string;
+}
+
+const ItemTile: React.FC<ItemTileProps> = ({ 
+    item, isExpanded, excerpts, onToggle, onFlag, onComplete, size, className 
+}) => {
+    const isFlaggedSection = size === 'flagged';
+    const isSmall = size === 'sm';
+    
+    return (
+        <div 
+            onClick={onToggle}
+            className={`
+                relative cursor-pointer transition-all duration-300 group
+                bg-white border text-left
+                ${isExpanded ? 'ring-2 ring-slate-900 border-transparent z-20' : 'border-slate-100/80 hover:border-slate-300'}
+                ${isFlaggedSection ? 'rounded-2xl p-5 bg-slate-50' : 'rounded-xl p-4'}
+                ${isSmall ? 'py-3' : ''}
+                ${isExpanded ? 'scale-[1.02] shadow-xl col-span-full' : ''}
+                ${className}
+            `}
+        >
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                    <p className={`
+                        font-medium leading-tight
+                        ${isFlaggedSection ? 'text-lg text-slate-900 font-bold' : 'text-slate-800'}
+                        ${isSmall ? 'text-xs text-slate-400' : 'text-sm'}
+                        ${item.isCompleted ? 'line-through opacity-60' : ''}
+                    `}>
+                        {item.label}
+                    </p>
+                    {item.mentionCount > 1 && !isSmall && !isExpanded && (
+                        <span className="text-[10px] font-black text-slate-300 mt-1 uppercase tracking-widest">
+                            Seen {item.mentionCount}×
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={onFlag} className="p-1.5 rounded-full hover:bg-slate-100">
+                        {item.isFlagged ? <FlagSolid className="w-4 h-4 text-amber-500" /> : <FlagOutline className="w-4 h-4 text-slate-300" />}
+                    </button>
+                    <button onClick={onComplete} className="p-1.5 rounded-full hover:bg-slate-100">
+                        {item.isCompleted ? <CheckSolid className="w-4 h-4 text-emerald-500" /> : <CheckOutline className="w-4 h-4 text-slate-300" />}
+                    </button>
+                </div>
+            </div>
+
+            {isExpanded && (
+                <div className="mt-6 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-6 mb-4 pb-4 border-b border-slate-100">
+                        <div>
+                            <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Mentioned</span>
+                            <span className="text-sm font-bold text-slate-900">{item.mentionCount} times</span>
+                        </div>
+                        <div>
+                            <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Last Activity</span>
+                            <span className="text-sm font-bold text-slate-900">{new Date(item.lastMentionedAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">In your words...</span>
+                        {excerpts.length > 0 ? excerpts.map((ex, i) => (
+                            <div key={ex.id} className="bg-slate-50 rounded-lg p-3 italic text-slate-600 text-sm leading-relaxed">
+                                "{ex.rawExcerpt}"
+                            </div>
+                        )) : (
+                            <p className="text-xs text-slate-300 italic">No excerpts captured yet.</p>
+                        )}
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-2 text-xs">
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+                            className="text-slate-400 hover:text-slate-600 font-bold px-3 py-1"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
