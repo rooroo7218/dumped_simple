@@ -143,9 +143,5 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
             <ToastList toasts={toasts} dismissToast={dismissToast} />
             <ConfirmDialog {...confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
-        </>
-    );
-};
-   </>
     );
 };
