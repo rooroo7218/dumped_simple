@@ -317,13 +317,13 @@ const ItemTile: React.FC<ItemTileProps> = ({
     const textureStyle = getTextureStyle(itemStyle.texture);
 
     const borderRadius = '14px';
-    const padding = '10px';
+    const padding = '14px';
 
     return (
         <LiquidGlassCard
             className={`
-                group select-none text-left
-                ${isExpanded ? 'ring-2 ring-slate-900/10 z-20 col-span-full' : ''}
+                group select-none text-left flex flex-col justify-between
+                ${isExpanded ? 'ring-2 ring-slate-900/10 z-20 col-span-full' : 'h-full min-h-[140px]'}
                 ${isDragOver && canDrop ? 'ring-2 ring-slate-900/30' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
@@ -341,56 +341,64 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDragEnd={onDragEnd}
             onClick={onToggle}
         >
-            {/* ── Corner Actions (Absolute) ── */}
-            {!isSmall && !isExpanded && (
-                <>
-                    {/* Top-Left: Complete */}
+            <div className="flex flex-col gap-2">
+                {/* ── Top: Title + repeat badge ── */}
+                <p className={`
+                    tracking-tight text-slate-950 font-medium leading-[1.4]
+                    ${isSmall ? 'text-[12px]' : 'text-[17px]'}
+                    ${item.isCompleted ? 'line-through opacity-40' : ''}
+                `}>
+                    {item.label}
+                </p>
+
+                {item.mentionCount > 1 && !isExpanded && (
+                    <div className="flex items-center gap-1.5">
+                        <div
+                            className="h-1 w-1 rounded-full shrink-0"
+                            style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
+                        />
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.12em]">
+                            {item.mentionCount}×
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Bottom: Icons grouped ── */}
+            {!isExpanded && (
+                <div className="flex items-center gap-1 mt-auto -ml-1.5">
+                    {/* Complete Button */}
                     <button
                         onClick={onComplete}
-                        className={`absolute top-2 left-2 w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-95 z-30 ${
-                            item.isCompleted
-                                ? 'bg-emerald-500/15 text-emerald-600'
-                                : 'text-slate-400 hover:text-emerald-500 opacity-30 group-hover:opacity-100'
+                        className={`p-1.5 rounded-xl transition-all active:scale-95 ${
+                            item.isCompleted ? 'text-emerald-600' : 'text-slate-950'
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
-                        {item.isCompleted ? <CheckSolid className="w-4 h-4" /> : <CheckOutline className="w-4 h-4" />}
+                        {item.isCompleted ? <CheckSolid className="w-5 h-5" /> : <CheckOutline className="w-5 h-5" />}
                     </button>
 
-                    {/* Top-Right: Delete */}
-                    <button
-                        onClick={onDelete}
-                        className="absolute top-2 right-2 p-2 rounded-xl text-slate-400 hover:text-slate-900 opacity-30 group-hover:opacity-100 transition-all active:scale-90 z-30"
-                        title="Delete"
-                    >
-                        <XMarkIcon className="w-4 h-4" />
-                    </button>
-
-                    {/* Bottom-Right: Flag */}
+                    {/* Flag Button */}
                     <button
                         onClick={onFlag}
-                        className={`absolute bottom-2 right-2 p-2 rounded-xl transition-all active:scale-90 z-30 ${
-                            item.isFlagged
-                                ? 'text-amber-500 bg-amber-500/10'
-                                : 'text-slate-400 hover:text-amber-500 opacity-30 group-hover:opacity-100'
+                        className={`p-1.5 rounded-xl transition-all active:scale-90 ${
+                            item.isFlagged ? 'text-amber-600' : 'text-slate-950'
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
-                        {item.isFlagged ? <FlagSolid className="w-4 h-4" /> : <FlagOutline className="w-4 h-4" />}
+                        {item.isFlagged ? <FlagSolid className="w-5 h-5" /> : <FlagOutline className="w-5 h-5" />}
                     </button>
-                    
-                    {/* Bottom-Left: Style picker */}
-                    <div className="absolute bottom-2 left-2 z-30" ref={stylerRef}>
+
+                    {/* Style Button */}
+                    <div className="relative" ref={stylerRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
-                            className={`p-2 rounded-xl transition-all active:scale-90 ${
-                                stylerOpen
-                                    ? 'bg-slate-900/10 text-slate-700'
-                                    : 'text-slate-400 hover:text-slate-600 opacity-30 group-hover:opacity-100'
+                            className={`p-1.5 rounded-xl transition-all active:scale-90 ${
+                                stylerOpen ? 'bg-slate-900/10 text-slate-950' : 'text-slate-950'
                             }`}
                             title="Style"
                         >
-                            <SwatchIcon className="w-4 h-4" />
+                            <SwatchIcon className="w-5 h-5" />
                         </button>
 
                         {stylerOpen && (
@@ -437,46 +445,14 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             </div>
                         )}
                     </div>
-                </>
-            )}
-            {/* ── Title + repeat badge ── */}
-            <div className={`flex flex-col h-full ${!isExpanded ? 'pt-10 pb-8 px-6' : ''}`}>
-                <p className={`
-                    tracking-tight
-                    ${isFlagged ? 'text-[17px] text-[#1a1a1a] font-medium leading-[1.75]' : 'text-[17px] text-[#1a1a1a] font-medium leading-[1.75]'}
-                    ${isSmall ? 'text-[12px] text-slate-600 font-medium leading-normal' : ''}
-                    ${item.isCompleted ? 'line-through opacity-40' : ''}
-                `}>
-                    {item.label}
-                </p>
 
-                {item.mentionCount > 1 && !isExpanded && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                        <div
-                            className="h-1 w-1 rounded-full shrink-0"
-                            style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
-                        />
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.12em]">
-                            {item.mentionCount}×
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* Small tile: just a compact complete button in the corner */}
-            {isSmall && (
-                <div className="flex justify-end mt-1.5" onClick={(e) => e.stopPropagation()}>
+                    {/* Delete Button (grouped last) */}
                     <button
-                        onClick={onComplete}
-                        className={`p-1.5 rounded-lg transition-all active:scale-90 ${
-                            item.isCompleted ? 'text-emerald-500' : 'text-slate-500 hover:text-emerald-500'
-                        }`}
-                        title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                        onClick={onDelete}
+                        className="p-1.5 rounded-xl text-slate-950 hover:text-red-600 transition-all active:scale-90"
+                        title="Delete"
                     >
-                        {item.isCompleted
-                            ? <CheckSolid className="w-3.5 h-3.5" />
-                            : <CheckOutline className="w-3.5 h-3.5" />
-                        }
+                        <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
             )}
@@ -508,7 +484,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     <div className="mt-8 flex items-center justify-between">
                         <button
                             onClick={onDelete}
-                            className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-700 transition-colors"
+                            className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
                         >
                             Delete Forever
                         </button>
