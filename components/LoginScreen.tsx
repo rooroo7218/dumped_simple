@@ -12,7 +12,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
     return (
         <AuroraBackground className="p-6 text-center" showRadialGradient={false}>
             <>
-                <div className="w-full max-w-sm mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 px-8 py-10 flex flex-col items-center gap-3 text-center">
+                <div className="w-full max-w-sm mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border-2 border-white/60 px-8 py-10 flex flex-col items-center gap-3 text-center">
 
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-0">Dumped.</h1>
                 <p className="text-sm text-slate-400 mb-4">Clear your head. Own your day.</p>

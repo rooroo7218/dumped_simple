@@ -96,8 +96,8 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
     const themeClasses = {
         bg: 'bg-transparent',
-        panel: 'bg-white/70 backdrop-blur-xl border border-white/20 rounded-[32px] shadow-2xl transition-all duration-700',
-        card: 'bg-white/60 backdrop-blur-md border border-white/20 rounded-2xl',
+        panel: 'bg-white/70 backdrop-blur-xl border-2 border-white/20 rounded-[32px] shadow-2xl transition-all duration-700',
+        card: 'bg-white/60 backdrop-blur-md border-2 border-white/20 rounded-2xl',
         text: 'text-slate-900',
         header: 'bg-white/40 backdrop-blur-3xl border-b border-white/10',
         navActive: 'bg-slate-950 text-white shadow-lg',

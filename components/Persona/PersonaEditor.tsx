@@ -128,7 +128,7 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                     {onRerunOnboarding && (
                         <button
                             onClick={() => onRerunOnboarding()}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-500 text-[11px] font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-400 active:scale-95 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-300 text-slate-500 text-[11px] font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-400 active:scale-95 transition-all"
                         >
                             Redo Setup
                         </button>
@@ -268,7 +268,7 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                     {(p.coreValues || []).map((v, i) => (
                         <div
                             key={i}
-                            className="flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full border text-[12px] font-semibold bg-white border-slate-200 text-slate-700"
+                            className="flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full border-2 text-[12px] font-semibold bg-white border-slate-200 text-slate-700"
                         >
                             <input
                                 className="bg-transparent outline-none min-w-[60px] max-w-[140px] font-semibold"
@@ -324,7 +324,7 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                                     const daysAgo = Math.floor((Date.now() - insight.generatedAt) / 86400000);
                                     const when = daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
                                     return (
-                                        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
+                                        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-50 border-2 border-amber-100">
                                             <SparklesIcon className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                                             <p className="text-[13px] text-amber-800 leading-relaxed flex-1">{insight.text}</p>
                                             <span className="text-[10px] text-amber-400 shrink-0 mt-0.5">{when}</span>

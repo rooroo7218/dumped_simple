@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowPathIcon, Squares2X2Icon, MicrophoneIcon, PhotoIcon, StopIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, Squares2X2Icon, MicrophoneIcon, PhotoIcon, StopIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 import { extractImageText } from '../services/geminiService';
 
 interface BrainDumpHubProps {
@@ -26,6 +27,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
     const [fadeOpacity, setFadeOpacity] = useState(1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isManualOpen, setIsManualOpen] = useState(false);
 
     // Track keyboard height via visualViewport
     useEffect(() => {
@@ -111,18 +113,17 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
 
     // Shared tool button style
     const toolBtn = (active = false): React.CSSProperties => ({
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        background: active ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.80)',
-        backdropFilter: 'blur(12px)',
-        border: active ? '1.5px solid rgba(239,68,68,0.5)' : '1.5px solid rgba(15,23,42,0.55)',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        background: active ? 'rgba(239,68,68,0.10)' : 'transparent',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        transition: 'background 0.2s, border-color 0.2s',
+        transition: 'background 0.2s',
+        border: 'none',
     });
 
     return (
@@ -187,73 +188,68 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     />
                 </div>
 
-                {/* Bottom action bar — mic + upload + submit */}
+                {/* Bottom action bar — horizontal pill tools */}
                 <div
                     onClick={(e) => e.stopPropagation()}
+                    className="fixed z-40 transition-all duration-300 w-full left-0 right-0 px-4"
                     style={{
-                        position: 'fixed',
-                        left: '20px',
-                        right: '20px',
                         bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        zIndex: 40,
                     }}
                 >
-                    {/* Mic button */}
-                    <button
-                        onClick={handleMic}
-                        disabled={isProcessing}
-                        style={toolBtn(isListening)}
-                        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-                    >
-                        {isListening
-                            ? <StopIcon style={{ width: 18, height: 18, color: '#ef4444' }} />
-                            : <MicrophoneIcon style={{ width: 18, height: 18, color: '#94a3b8' }} />
-                        }
-                    </button>
+                    <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-1.5 py-1 flex items-center justify-center gap-0.5 min-h-[42px] w-fit mx-auto overflow-hidden transition-all duration-300">
+                        <AnimatePresence mode="wait">
+                            {!hasText ? (
+                                <motion.div
+                                    key="tools"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex items-center"
+                                >
+                                    {/* Mic button */}
+                                    <button
+                                        onClick={handleMic}
+                                        disabled={isProcessing}
+                                        style={toolBtn(isListening)}
+                                        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+                                    >
+                                        {isListening
+                                            ? <StopIcon style={{ width: 19, height: 19, color: '#ef4444' }} />
+                                            : <MicrophoneIcon style={{ width: 19, height: 19, color: '#94a3b8' }} />
+                                        }
+                                    </button>
 
-                    {/* Upload / scan button */}
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isProcessing || isAnalyzing}
-                        style={toolBtn(isAnalyzing)}
-                        aria-label="Scan image or checklist"
-                    >
-                        {isAnalyzing
-                            ? <ArrowPathIcon style={{ width: 18, height: 18, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                            : <PhotoIcon style={{ width: 18, height: 18, color: '#94a3b8' }} />
-                        }
-                    </button>
-
-                    {/* Submit button — grows to fill remaining space, hides when empty */}
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isProcessing || !hasText}
-                        style={{
-                            flex: 1,
-                            height: 48,
-                            borderRadius: 24,
-                            background: 'rgba(255,255,255,0.85)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1.5px solid rgba(15,23,42,0.60)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: hasText ? 1 : 0,
-                            pointerEvents: hasText ? 'auto' : 'none',
-                            transition: 'opacity 0.25s ease',
-                        }}
-                    >
-                        {isProcessing
-                            ? <ArrowPathIcon style={{ width: 16, height: 16, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                            : <span style={{ fontSize: '13px', fontWeight: 500, color: '#1a1a1a', letterSpacing: '0.02em' }}>
-                                put it all down
-                            </span>
-                        }
-                    </button>
+                                    {/* Upload / scan button */}
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isProcessing || isAnalyzing}
+                                        style={toolBtn(isAnalyzing)}
+                                        aria-label="Scan image or checklist"
+                                    >
+                                        {isAnalyzing
+                                            ? <ArrowPathIcon style={{ width: 19, height: 19, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
+                                            : <PhotoIcon style={{ width: 19, height: 19, color: '#94a3b8' }} />
+                                        }
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                <motion.button
+                                    key="submit"
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    onClick={handleSubmit}
+                                    disabled={isProcessing}
+                                    className="flex-1 flex items-center justify-center px-6 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95"
+                                >
+                                    {isProcessing
+                                        ? <ArrowPathIcon style={{ width: 16, height: 16, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
+                                        : 'put it all down'
+                                    }
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* Listening indicator */}

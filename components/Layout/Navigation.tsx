@@ -105,9 +105,9 @@ export const Navigation: React.FC<NavigationProps> = ({
 
     const ctrlBtn: string = 'p-1.5 rounded-xl transition-all active:scale-90 text-slate-500 hover:bg-white/50';
 
-    const divider: string = 'h-5 w-px shrink-0 mx-1 bg-white/30';
+    const divider: string = 'h-5 w-[2px] shrink-0 mx-1 bg-white/30';
 
-    const dropdown: string = 'absolute top-full mt-2 right-0 z-[200] shadow-2xl rounded-2xl bg-white border border-slate-200';
+    const dropdown: string = 'absolute top-full mt-2 right-0 z-[200] shadow-2xl rounded-2xl bg-white border-2 border-slate-200';
 
     // ── Render ───────────────────────────────────────────────────────────────
 
@@ -196,7 +196,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             className={`group relative aspect-video rounded-xl overflow-hidden hover:scale-[1.04] transition-all duration-200 ${
                                                 persona.brutalistBackground === scene.id
                                                     ? 'ring-2 ring-slate-800 ring-offset-1'
-                                                    : 'border border-slate-100'
+                                                    : 'border-2 border-slate-100'
                                             }`}
                                         >
                                             {scene.url ? (
@@ -230,7 +230,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl transition-all hover:bg-black/5 active:scale-95"
                         >
                             {user.picture ? (
-                                <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full object-cover shrink-0 border border-slate-200" />
+                                <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full object-cover shrink-0 border-2 border-slate-200" />
                             ) : (
                                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-slate-100 text-slate-600">
                                     {user.name?.charAt(0).toUpperCase() ?? 'U'}
@@ -260,22 +260,23 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </div>
             </div>
 
-            {/* ── MOBILE: Fixed Bottom Bar ── */}
-            <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 backdrop-blur-sm border-t transition-all duration-1000 ease-in-out ${
-                isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/95 border-t-2 border-slate-950/70`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
+            {/* ── MOBILE: Floating Bottom Bar ── */}
+            <div className={`md:hidden fixed z-[90] transition-all duration-1000 ease-in-out w-fit mx-auto ${
+                isZenMode ? 'translate-y-24 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+            }`} style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))', left: '1rem', right: '1rem' }}>
+                <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-3 py-[6px] flex items-center justify-between max-w-[320px] mx-auto">
 
 
 
                 {/* Mobile Menu Popover */}
                 {isMobileMenuOpen && (
-                    <div ref={mobileMenuRef} className="absolute bottom-full right-3 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
+                    <div ref={mobileMenuRef} className="absolute bottom-[calc(100%+16px)] right-0 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-black shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
                         
                         {/* 1. User Profile */}
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-3">
                                 {user.picture ? (
-                                    <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                                    <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full object-cover border-2 border-slate-200" />
                                 ) : (
                                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-slate-100 text-slate-600">
                                         {user.name?.charAt(0).toUpperCase() ?? 'U'}
@@ -295,7 +296,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             </button>
                         </div>
                         
-                        <div className="h-px w-full bg-slate-100" />
+                        <div className="h-[2px] w-full bg-slate-100" />
 
                         {/* 2. Scenery */}
                         <div className="flex flex-col gap-2">
@@ -308,7 +309,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                         className={`group relative aspect-video rounded-xl overflow-hidden hover:scale-[1.04] transition-all duration-200 ${
                                             persona.brutalistBackground === scene.id
                                                 ? 'ring-2 ring-slate-800 ring-offset-1'
-                                                : 'border border-slate-100'
+                                                : 'border-2 border-slate-100'
                                         }`}
                                     >
                                         {scene.url ? (
@@ -326,7 +327,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             </div>
                         </div>
 
-                        <div className="h-px w-full bg-slate-100" />
+                        <div className="h-[2px] w-full bg-slate-100" />
 
                         {/* 3. Music */}
                         <div className="flex flex-col gap-2">
@@ -364,7 +365,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 )}
 
                 {/* Single-row: tabs + music button */}
-                <nav className="flex items-center justify-around">
+                <nav className="flex items-center justify-between w-full">
                     {MAIN_TABS.map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = isActive ? tab.solidIcon : tab.icon;
@@ -372,39 +373,34 @@ export const Navigation: React.FC<NavigationProps> = ({
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
+                                className={`flex items-center justify-center transition-all active:scale-90 rounded-full h-[40px] ${isActive ? 'bg-slate-900 w-[64px] shadow-sm' : 'w-[40px]'}`}
                             >
-                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-[#1a1a1a]' : 'text-slate-400'}`} />
-                                <span className={`text-[11px] font-medium tracking-tight transition-colors ${isActive ? 'text-[#1a1a1a]' : 'text-slate-400'}`}>
-                                    {tab.mobileLabel}
-                                </span>
+                                <Icon className={`w-[22px] h-[22px] transition-colors ${isActive ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`} />
                             </button>
                         );
                     })}
 
                     {/* Divider */}
-                    <div className="w-px h-6 bg-slate-200/80 shrink-0" />
+                    <div className="w-[2px] h-6 bg-slate-200/80 shrink-0 mx-1" />
 
                     {/* Menu button */}
                     <button
                         ref={mobileButtonRef}
                         onClick={() => setIsMobileMenuOpen(p => !p)}
-                        className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
+                        className="flex items-center justify-center p-2 transition-all active:scale-90"
                     >
                         {player.isPlaying ? (
-                            <div className="flex gap-px items-end h-5 w-5 justify-center">
+                            <div className="flex gap-[1.5px] items-end h-[22px] w-[22px] justify-center">
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-1" />
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-2" />
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
                         ) : (
-                            <UserIcon className="w-5 h-5 text-slate-500" />
+                            <UserIcon className="w-[22px] h-[22px] text-slate-500" />
                         )}
-                        <span className={`text-[11px] font-medium tracking-tight ${player.isPlaying ? 'text-[#1a1a1a]' : 'text-slate-400'}`}>
-                            Menu
-                        </span>
                     </button>
                 </nav>
+                </div>
             </div>
 
             <style>{`

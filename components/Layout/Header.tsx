@@ -63,14 +63,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="relative">
                     <button
                         onClick={() => setIsSceneryOpen(!isSceneryOpen)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all hover:scale-[1.02] active:scale-95 bg-white/40 backdrop-blur-md border border-white/40 text-slate-600 shadow-sm hover:bg-white/60"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all hover:scale-[1.02] active:scale-95 bg-white/40 backdrop-blur-md border-2 border-white/40 text-slate-600 shadow-sm hover:bg-white/60"
                     >
                         <PhotoIcon className="w-3.5 h-3.5" />
                         Scenery
                     </button>
 
                     {isSceneryOpen && (
-                        <div className="absolute top-full right-0 mt-3 w-72 max-h-[400px] overflow-y-auto p-4 z-[100] shadow-2xl rounded-2xl bg-white/70 border border-white/40 backdrop-blur-2xl">
+                        <div className="absolute top-full right-0 mt-3 w-72 max-h-[400px] overflow-y-auto p-4 z-[100] shadow-2xl rounded-2xl bg-white/70 border-2 border-white/40 backdrop-blur-2xl">
                             <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 pb-2 border-b text-slate-500 border-slate-100">
                                 Select scenery
                             </p>
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
                                         className={`group relative aspect-video rounded-xl overflow-hidden hover:scale-[1.04] transition-all duration-200 ${
                                             persona.brutalistBackground === scene.id
                                                 ? 'ring-2 ring-slate-800 ring-offset-1'
-                                                : 'border border-slate-100'
+                                                : 'border-2 border-slate-100'
                                         }`}
                                     >
                                         {scene.url ? (
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={toggleFullScreen}
                     title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                    className="p-1.5 rounded-xl transition-all active:scale-95 bg-white/40 backdrop-blur-md border border-white/40 text-slate-500 shadow-sm hover:bg-white/60"
+                    className="p-1.5 rounded-xl transition-all active:scale-95 bg-white/40 backdrop-blur-md border-2 border-white/40 text-slate-500 shadow-sm hover:bg-white/60"
                 >
                     {isFullscreen
                         ? <ArrowsPointingInIcon className="w-4 h-4" />
@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <img
                                 src={user.picture}
                                 alt={user.name}
-                                className="w-7 h-7 rounded-full object-cover border border-slate-200"
+                                className="w-7 h-7 rounded-full object-cover border-2 border-slate-200"
                             />
                         ) : (
                             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold bg-slate-100 text-slate-600">
@@ -140,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
 
                     {isMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 z-[100] min-w-[140px] rounded-2xl shadow-xl overflow-hidden bg-white border border-slate-100">
+                        <div className="absolute top-full right-0 mt-2 z-[100] min-w-[140px] rounded-2xl shadow-xl overflow-hidden bg-white border-2 border-slate-100">
                             <div className="px-4 py-2.5 border-b border-slate-50">
                                 <p className="text-[11px] font-semibold text-slate-700 truncate">{user.name}</p>
                                 <p className="text-[10px] text-slate-500 truncate">{user.email}</p>

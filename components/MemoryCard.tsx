@@ -17,10 +17,10 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory }) => {
     <div className="glass-panel bento-card p-6 mb-5 relative group bg-white/80">
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-2">
-          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${priorityStyles[memory.priority]}`}>
+          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 ${priorityStyles[memory.priority]}`}>
             {memory.priority}
           </span>
-          <span className="text-[10px] bg-slate-100 text-slate-500 font-black uppercase tracking-widest px-3 py-1 rounded-full border border-slate-200">
+          <span className="text-[10px] bg-slate-100 text-slate-500 font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 border-slate-200">
             {memory.category}
           </span>
         </div>
@@ -33,12 +33,12 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory }) => {
       </p>
       <div className="flex flex-wrap gap-2 items-center">
         {memory.tags.map(tag => (
-          <span key={tag} className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100">
+          <span key={tag} className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border-2 border-indigo-100">
             #{tag}
           </span>
         ))}
         {memory.mood && (
-          <span className="text-[11px] font-bold text-slate-500 px-3 py-1 rounded-lg border border-slate-100 ml-auto uppercase tracking-tighter">
+          <span className="text-[11px] font-bold text-slate-500 px-3 py-1 rounded-lg border-2 border-slate-100 ml-auto uppercase tracking-tighter">
             mood: {memory.mood}
           </span>
         )}

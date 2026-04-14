@@ -159,7 +159,7 @@ export const GradientCard = () => {
           }}
         />
 
-        {/* Enhanced bottom border glow for premium look */}
+        {/* Enhanced bottom border-2 glow for premium look */}
         <motion.div
             // @ts-ignore 
           className="absolute bottom-0 left-0 right-0 h-[2px] z-25"

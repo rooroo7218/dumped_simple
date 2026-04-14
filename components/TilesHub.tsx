@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Item, DumpItem } from '../types';
 import { databaseService } from '../services/databaseService';
-import { LiquidGlassCard } from './ui/liquid-weather-glass';
+
 import {
     FlagIcon as FlagOutline,
     CheckCircleIcon as CheckOutline,
@@ -11,6 +11,7 @@ import {
 import {
     FlagIcon as FlagSolid,
     CheckCircleIcon as CheckSolid,
+    SparklesIcon,
 } from '@heroicons/react/24/solid';
 
 // ── Style system ────────────────────────────────────────────────────────────
@@ -229,7 +230,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         );
     }
 
-    const maxMentionCount = Math.max(...active.map(i => i.mentionCount), 1);
+    const maxMentionCount = Math.max(...[...active, ...flagged].map(i => i.mentionCount), 1);
 
     const tileProps = (item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => ({
         item,
@@ -252,16 +253,37 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
                 <section className="mb-12">
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Flagged</h3>
-                    <div className="grid grid-cols-1 gap-2">
-                        {flagged.map(item => <ItemTile key={item.id} {...tileProps(item, 'flagged')} />)}
+                    <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                        <div className="flex items-center gap-2 mb-1">
+                            <SparklesIcon className="w-4 h-4 text-rose-400" />
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Flagged ({flagged.length})</span>
+                        </div>
+                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
+                        {flagged.map(item => {
+                            const ratio = item.mentionCount / maxMentionCount;
+                            const isLarge = ratio > 0.6 && item.mentionCount > 1;
+                            return (
+                                <ItemTile
+                                    key={item.id}
+                                    {...tileProps(item, isLarge ? 'lg' : 'md', isLarge ? 'col-span-2' : '')}
+                                />
+                            );
+                        })}
                     </div>
                 </section>
             )}
 
             {/* ── Active — grouped by mentionCount, draggable within group ── */}
             <section className="mb-12">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Active</h3>
+                <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                    <div className="flex items-center gap-2 mb-1">
+                        <SparklesIcon className="w-4 h-4 text-amber-400" />
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tasks ({active.length})</span>
+                    </div>
+                    <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
+                </div>
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
                         <div key={count} className={`grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min transition-opacity duration-200 ${draggedGroup !== null && draggedGroup !== count ? 'opacity-30' : ''}`}>
@@ -290,7 +312,13 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
                 <section>
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Resolved & Faded</h3>
+                    <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60 opacity-50 grayscale">
+                        <div className="flex items-center gap-2 mb-1">
+                            <SparklesIcon className="w-4 h-4 text-slate-400" />
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Resolved ({completed.length + faded.length})</span>
+                        </div>
+                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Done and dusted.</h2>
+                    </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
                         {[...completed, ...faded].map(item => (
                             <ItemTile key={item.id} {...tileProps(item, 'sm')} />
@@ -374,19 +402,16 @@ const ItemTile: React.FC<ItemTileProps> = ({
     const padding = '14px';
 
     return (
-        <LiquidGlassCard
+        <div
             className={`
-                group select-none text-left flex flex-col justify-between
-                ${isExpanded ? 'ring-2 ring-slate-950/20 z-20 col-span-full' : 'h-full min-h-[140px] ring-1 ring-slate-950/[0.14]'}
-                ${isDragOver && canDrop ? 'ring-2 ring-slate-950/40' : ''}
+                relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
+                ${isExpanded ? 'border-2 border-black z-20 col-span-full shadow-lg' : 'h-full min-h-[140px] border-2 border-black shadow-sm'}
+                ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+                rounded-[14px] bg-white text-slate-900
                 ${className ?? ''}
             `}
-            borderRadius={borderRadius}
-            blurIntensity="xl"
-            shadowIntensity={isFlagged ? 'md' : 'sm'}
-            glowIntensity="xs"
             style={{ background: colorBg, ...textureStyle, padding }}
             draggable={draggable}
             onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(); } : undefined}
@@ -394,8 +419,6 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDrop={onDrop ? (e) => { e.stopPropagation(); onDrop(); } : undefined}
             onDragEnd={onDragEnd}
             onClick={onToggle}
-            overflowVisible={stylerOpen}
-            isAurora={itemStyle.color === 'aurora'}
         >
             <div className="flex flex-col gap-2">
                 {/* ── Top: Title (editable when expanded) ── */}
@@ -409,7 +432,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         rows={2}
                         className={`
                             w-full bg-transparent border-none resize-none
-                            tracking-tight font-normal leading-[1.75] text-[17px]
+                            tracking-tight font-normal leading-[1.75] text-[15px]
                             ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
                             focus:outline-none focus:ring-0
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
@@ -418,9 +441,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     />
                 ) : (
                     <p className={`
-                        tracking-tight font-normal leading-[1.75]
-                        ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
-                        ${isSmall ? 'text-[12px]' : 'text-[17px]'}
+                        tracking-tight font-semibold leading-snug
+                        ${itemStyle.color === 'aurora' ? 'text-white' : 'text-slate-800'}
+                        ${isSmall ? 'text-[12px]' : 'text-[13px]'}
                         ${item.isCompleted ? 'line-through opacity-40' : ''}
                     `}>
                         {item.label}
@@ -430,7 +453,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 {/* ── Mention Count Pill (Airy style) ── */}
                 {item.mentionCount > 1 && !isExpanded && (
                     <div className="flex items-center mt-1">
-                        <div className={`backdrop-blur-sm border px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.color === 'aurora' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.color === 'aurora' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
@@ -445,11 +468,11 @@ const ItemTile: React.FC<ItemTileProps> = ({
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (
-                <div className="absolute bottom-3 left-3 flex items-center gap-0.5 -ml-1">
+                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0">
                     {/* Complete Button */}
                     <button
                         onClick={onComplete}
-                        className={`p-2 rounded-xl transition-all active:scale-95 ${
+                        className={`p-1.5 rounded-xl transition-all active:scale-95 ${
                             item.isCompleted
                                 ? (itemStyle.color === 'aurora' ? 'text-emerald-400' : 'text-emerald-600')
                                 : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
@@ -462,7 +485,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
-                        className={`p-2 rounded-xl transition-all active:scale-90 ${
+                        className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                             item.isFlagged
                                 ? (itemStyle.color === 'aurora' ? 'text-amber-400' : 'text-amber-600')
                                 : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
@@ -476,7 +499,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     <div className="relative" ref={stylerRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
-                            className={`p-2 rounded-xl transition-all active:scale-90 ${
+                            className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                                 stylerOpen
                                     ? (itemStyle.color === 'aurora' ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]')
                                     : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
@@ -489,7 +512,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         {stylerOpen && (
                             <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border border-white/40"
+                                className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40"
                                 style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', minWidth: 188 }}
                             >
                                 <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest">Color</p>
@@ -515,7 +538,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Delete Button (grouped last) */}
                     <button
                         onClick={onDelete}
-                        className={`p-2 rounded-xl transition-all active:scale-90 ${
+                        className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                             itemStyle.color === 'aurora' ? 'text-white/40 hover:text-red-400' : 'text-[#1a1a1a]/30 hover:text-red-500'
                         }`}
                         title="Delete"
@@ -565,6 +588,6 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     </div>
                 </div>
             )}
-        </LiquidGlassCard>
+        </div>
     );
 };

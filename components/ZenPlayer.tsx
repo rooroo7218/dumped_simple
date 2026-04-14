@@ -50,7 +50,7 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
             >
                 {/* Selector Popover */}
                 {isExpanded && (
-                    <div className="w-64 mb-2 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/70 backdrop-blur-md border border-white/20 rounded-[28px] shadow-2xl">
+                    <div className="w-64 mb-2 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/70 backdrop-blur-md border-2 border-white/20 rounded-[28px] shadow-2xl">
                         <h4 className="text-[11px] font-medium uppercase tracking-wider mb-4 opacity-50 text-[#1a1a1a]">Select Your Vibe</h4>
                         <div className="space-y-2">
                             {TRACKS.map((track, idx) => (
@@ -77,7 +77,7 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                 )}
 
                 {/* Main Controller Bubble */}
-                <div className={`flex items-center gap-2 p-2 transition-all ${isExpanded ? 'scale-105' : 'hover:scale-105'} bg-white/70 backdrop-blur-md border border-white/20 rounded-full shadow-xl`}>
+                <div className={`flex items-center gap-2 p-2 transition-all ${isExpanded ? 'scale-105' : 'hover:scale-105'} bg-white/70 backdrop-blur-md border-2 border-white/20 rounded-full shadow-xl`}>
                     {isPlaying && (
                         <div className="px-3 py-1 flex flex-col overflow-hidden max-w-[120px]">
                             <span className="text-[8px] font-medium uppercase truncate text-[#1a1a1a]">{currentTrack.title}</span>

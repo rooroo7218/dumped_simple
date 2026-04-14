@@ -230,7 +230,7 @@ export const SquishyMascotMockups: React.FC = () => {
             <section className="mb-14">
                 <div className="flex items-center gap-3 mb-6">
                     <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Screen Mascots</h2>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-[2px] flex-1 bg-slate-200" />
                     <span className="text-[10px] text-slate-300">88 × 88 px</span>
                 </div>
                 <div className="flex flex-wrap gap-4">
@@ -244,7 +244,7 @@ export const SquishyMascotMockups: React.FC = () => {
             <section className="mb-14">
                 <div className="flex items-center gap-3 mb-6">
                     <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Mood Chips</h2>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-[2px] flex-1 bg-slate-200" />
                     <span className="text-[10px] text-slate-300">56 × 56 px</span>
                 </div>
                 <div className="flex flex-wrap gap-4">
@@ -258,7 +258,7 @@ export const SquishyMascotMockups: React.FC = () => {
             <section>
                 <div className="flex items-center gap-3 mb-6">
                     <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Animation Reference</h2>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-[2px] flex-1 bg-slate-200" />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {Object.entries({
@@ -270,7 +270,7 @@ export const SquishyMascotMockups: React.FC = () => {
                         heartbeat: { feel: 'Warm, calm, alive',              ms: 550 },
                         pop:       { feel: 'Explosive joy, surprise',        ms: 480 },
                     }).map(([name, { feel, ms }]) => (
-                        <div key={name} className="p-3 rounded-xl border border-slate-200 bg-white/70">
+                        <div key={name} className="p-3 rounded-xl border-2 border-slate-200 bg-white/70">
                             <span className="text-[11px] font-black text-slate-700 block mb-0.5">{name}</span>
                             <span className="text-[10px] text-slate-400 block">{feel}</span>
                             <span className="text-[9px] font-semibold text-slate-300 mt-1 block">{ms}ms</span>

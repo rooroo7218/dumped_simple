@@ -25,7 +25,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             />
 
             {/* Dialog */}
-            <div className="relative w-full max-w-sm animate-in zoom-in-95 fade-in duration-200 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl p-6">
+            <div className="relative w-full max-w-sm animate-in zoom-in-95 fade-in duration-200 bg-white/95 backdrop-blur-md border-2 border-slate-200 rounded-2xl shadow-xl p-6">
                 {destructive && (
                     <div className="flex justify-center mb-4">
                         <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center">
@@ -47,7 +47,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 <div className="flex gap-2 mt-5">
                     <button
                         onClick={onCancel}
-                        className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                        className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
                     >
                         Cancel
                     </button>

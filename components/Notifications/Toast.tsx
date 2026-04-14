@@ -21,7 +21,7 @@ export const ToastList: React.FC<ToastListProps> = ({ toasts, onDismiss }) => {
             {toasts.map(toast => (
                 <div
                     key={toast.id}
-                    className="pointer-events-auto w-full max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl shadow-lg px-4 py-3 flex items-start gap-3"
+                    className="pointer-events-auto w-full max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/90 backdrop-blur-md border-2 border-slate-200 rounded-2xl shadow-lg px-4 py-3 flex items-start gap-3"
                 >
                     {ICONS[toast.variant]}
                     <div className="flex-1 min-w-0">
