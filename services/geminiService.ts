@@ -118,6 +118,19 @@ export async function processBrainDump(
   }
 }
 
+export async function processBrainDumpV3(
+  input: string,
+  activeItems: { id: string; label: string }[]
+): Promise<{ results: { action: string; item_id?: string; label?: string; raw_excerpt: string }[] }> {
+  try {
+    const userId = await getCurrentUserId();
+    return await postToApi('brain-dump', { userId, input, activeItems });
+  } catch (error: any) {
+    console.error("❌ Brain Dump V3 Processing Error:", error);
+    return { results: [] };
+  }
+}
+
 export async function synthesizeLifeContext(history: MemoryItem[], persona: UserPersona) {
   try {
     const userId = await getCurrentUserId();
@@ -245,6 +258,12 @@ export async function reprioritizeTasks(
       strategySummary: `Failed to sync with strategic center. Error: ${errorMessage}`
     };
   }
+}
+
+export async function extractImageText(imageData: string, mimeType: string): Promise<string> {
+  const userId = await getCurrentUserId();
+  const data = await postToApi('extract-image', { userId, imageData, mimeType }, 1, 1000);
+  return data.text ?? '';
 }
 
 export async function findDuplicateTasks(allTasks: ActionItem[]): Promise<DuplicateGroup[]> {

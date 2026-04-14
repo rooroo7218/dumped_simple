@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:full": "vercel dev",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -21,9 +22,12 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "@vercel/node": "^5.6.18",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.36.0",
     "jwt-decode": "4.0.0",
+    "lucide-react": "^1.8.0",
     "matter-js": "^0.20.0",
+    "motion": "^12.38.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-error-boundary": "^6.1.1",

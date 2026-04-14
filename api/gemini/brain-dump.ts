@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { SchemaType } from '@google/generative-ai';
-import { ASSISTANT_INSTRUCTION, verifyAuth, checkRateLimit, fetchUserContext, generateWithFallback, extractText, getTimeContext } from '../_shared.js';
+import { ASSISTANT_INSTRUCTION, verifyAuth, checkRateLimit, generateWithFallback, extractText, getTimeContext } from '../_shared.js';
 
 export const config = { maxDuration: 60 };
 
@@ -11,8 +11,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const userId = await verifyAuth(req);
         if (!await checkRateLimit(userId, res)) return;
         const { input, imageAttachment, activeItems = [] } = req.body;
-        const { persona } = await fetchUserContext(userId, req.body.persona);
-
         const activeItemsJson = JSON.stringify(activeItems.map((item: any) => ({ id: item.id, label: item.label })));
 
         const promptText = `

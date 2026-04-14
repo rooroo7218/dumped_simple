@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { MemoryItem, ActionItem, UserPersona } from '../types';
-import { processBrainDump } from '../services/geminiService';
+import { processBrainDump, processBrainDumpV3 } from '../services/geminiService';
 import { databaseService } from '../services/databaseService';
 
 export const useBrainDump = (
@@ -23,14 +23,15 @@ export const useBrainDump = (
         const dumpId = crypto.randomUUID();
         const timestamp = Date.now();
 
-        // 1. CLEAR IMMEDIATELY (v3 Ritual)
+        // 1. CLEAR + NAVIGATE IMMEDIATELY — don't make user wait for AI
         setInput('');
-        setIsProcessing(true);
         setAiStatus('processing');
         setLastAiError(null);
+        onCommitSuccess(); // navigate to grid now
 
+        setIsProcessing(true);
         try {
-            // 2. SAVE RAW DUMP FIRST
+            // 2. SAVE RAW DUMP
             const rawDump: MemoryItem = {
                 id: dumpId,
                 timestamp,
@@ -48,26 +49,16 @@ export const useBrainDump = (
             const uncompletedItems = activeItems.filter(i => !i.isCompleted);
 
             // 4. CALL AI FOR DEDUPLICATION
-            const response = await fetch('/api/gemini/brain-dump', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    input: currentInput,
-                    activeItems: uncompletedItems
-                })
-            });
-
-            if (!response.ok) throw new Error('AI processing failed');
-            const result = await response.json();
+            const result = await processBrainDumpV3(
+                currentInput,
+                uncompletedItems.map(i => ({ id: i.id, label: i.label }))
+            );
 
             // 5. PROCESS RESULTS (Assign/Create)
             await databaseService.processDumpResult(dumpId, result.results);
 
             setAiStatus('success');
             setTimeout(() => setAiStatus('idle'), 3000);
-            
-            // Notify UI to refresh (e.g. MemoryGrid)
-            onCommitSuccess();
 
         } catch (e: any) {
             console.error("❌ Brain Dump processing failed:", e);

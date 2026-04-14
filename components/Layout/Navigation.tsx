@@ -6,6 +6,7 @@ import {
     ArrowRightStartOnRectangleIcon,
     MusicalNoteIcon,
     Squares2X2Icon,
+    FireIcon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
@@ -13,6 +14,7 @@ import {
     PlusIcon as PlusIconSolid,
     UserIcon as UserIconSolid,
     Squares2X2Icon as Squares2X2IconSolid,
+    FireIcon as FireIconSolid,
 } from '@heroicons/react/24/solid';
 
 import { UserProfile, UserPersona } from '../../types';
@@ -48,6 +50,7 @@ interface NavigationProps {
 const MAIN_TABS = [
     { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
     { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Patterns',   mobileLabel: 'Patterns' },
+    { id: 'streak',       icon: FireIcon,             solidIcon: FireIconSolid,             label: 'Streak',     mobileLabel: 'Streak' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -127,17 +130,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar ml-2">
                     {MAIN_TABS.map((tab) => {
                         const isActive = activeTab === tab.id;
+                        const Icon = isActive ? tab.solidIcon : tab.icon;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-bold ${
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-semibold tracking-tight ${
                                     isActive
                                         ? themeClasses.navActive
                                         : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'
                                 }`}
                             >
-                                <tab.icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
                                 <span>{tab.label}</span>
                             </button>
                         );
@@ -256,9 +260,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </div>
             </div>
 
-            {/* ── MOBILE: Fixed Bottom Bar ── */}
+            {/* ── MOBILE: Fixed Bottom Bar (hidden on dump tab) ── */}
             <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pb-5 pt-1 backdrop-blur-xl border-t transition-all duration-1000 ease-in-out ${
-                isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+                isZenMode || activeTab === 'dump' ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
             } bg-white/75 border-white/40`}>
 
 
@@ -307,39 +311,37 @@ export const Navigation: React.FC<NavigationProps> = ({
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className="flex flex-col items-center gap-[3px] py-1 flex-1 transition-all active:scale-90"
+                                className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
                             >
-                                <Icon className={`w-6 h-6 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
-                                <span className={`text-[9px] transition-colors ${isActive ? 'text-slate-900 font-semibold' : 'text-slate-500 font-medium'}`}>
+                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-400'}`} />
+                                <span className={`text-[10px] font-semibold tracking-tight transition-colors ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
                                     {tab.mobileLabel}
                                 </span>
                             </button>
                         );
                     })}
 
-
-
                     {/* Divider */}
-                    <div className="w-px h-7 bg-slate-200/80 shrink-0" />
+                    <div className="w-px h-6 bg-slate-200/80 shrink-0" />
 
-                    {/* Music button */}
+                    {/* Music button — same structure as tab buttons */}
                     <button
                         ref={musicButtonRef}
                         onClick={() => setIsMusicSelectorOpen(p => !p)}
-                        className={`flex flex-col items-center gap-[3px] py-1 flex-1 transition-all active:scale-90 ${
-                            player.isPlaying ? 'text-slate-900' : 'text-slate-500'
-                        }`}
+                        className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
                     >
                         {player.isPlaying ? (
-                            <div className="flex gap-px items-end h-6 w-6 justify-center">
-                                <div className="w-1 bg-current rounded-sm animate-music-bar-1" />
-                                <div className="w-1 bg-current rounded-sm animate-music-bar-2" />
-                                <div className="w-1 bg-current rounded-sm animate-music-bar-3" />
+                            <div className="flex gap-px items-end h-5 w-5 justify-center">
+                                <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-1" />
+                                <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-2" />
+                                <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
                         ) : (
-                            <MusicalNoteIcon className="w-6 h-6" />
+                            <MusicalNoteIcon className="w-5 h-5 text-slate-400" />
                         )}
-                        <span className={`text-[9px] font-medium`}>Music</span>
+                        <span className={`text-[10px] font-semibold tracking-tight ${player.isPlaying ? 'text-slate-900' : 'text-slate-400'}`}>
+                            Music
+                        </span>
                     </button>
                 </nav>
             </div>

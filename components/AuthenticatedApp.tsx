@@ -16,6 +16,7 @@ import { ZenPlayer } from './ZenPlayer';
 // Modular Hubs
 import { BrainDumpHub } from './BrainDumpHub';
 import { MemoryGridHub } from './MemoryGridHub';
+import { StreakHub } from './StreakHub';
 
 // Modals & Notifications
 import { ToastList } from './Notifications/Toast';
@@ -104,28 +105,25 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
 
     return (
         <>
-            {/* Show Navigation only on non-dump tabs for that v3 "minimalist ritual" feel */}
-            {activeTab !== 'dump' && (
-                <Navigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    themeClasses={themeClasses}
-                    isZenMode={isZenMode}
-                    isCollapsed={isSidebarCollapsed}
-                    setIsCollapsed={setIsSidebarCollapsed}
-                    user={user}
-                    handleSignOut={handleSignOut}
-                    persona={persona}
-                    updateBrutalistBackground={data.updateBrutalistBackground}
-                    backgroundScenes={BACKGROUND_SCENES}
-                    player={player}
-                    onAddTask={data.handleAddManualTask}
-                    allCategories={allCategories}
-                    syncStatus={data.syncStatus}
-                />
-            )}
+            <Navigation
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                themeClasses={themeClasses}
+                isZenMode={isZenMode}
+                isCollapsed={isSidebarCollapsed}
+                setIsCollapsed={setIsSidebarCollapsed}
+                user={user}
+                handleSignOut={handleSignOut}
+                persona={persona}
+                updateBrutalistBackground={data.updateBrutalistBackground}
+                backgroundScenes={BACKGROUND_SCENES}
+                player={player}
+                onAddTask={data.handleAddManualTask}
+                allCategories={allCategories}
+                syncStatus={data.syncStatus}
+            />
 
-            <div className={`min-h-screen ${themeClasses.text} ${themeClasses.bg} font-['Plus_Jakarta_Sans'] overflow-x-hidden transition-all duration-500 relative`}>
+            <div className={`min-h-screen ${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative`}>
                 <ZenBackground
                     url={selectedBackground?.url || null}
                     sceneId={selectedBackground?.id || 'slate'}
@@ -133,19 +131,27 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                     isFocusActive={isZenMode}
                 />
                 
-                <main className={`flex-1 w-full relative z-10 ${activeTab === 'dump' ? 'p-0' : 'px-5 md:px-16 pt-8 md:pt-16 pb-32'}`}>
-                    {activeTab === 'dump' && (
-                        <BrainDumpHub 
-                            {...dump} 
-                            onNavigateToGrid={() => setActiveTab('patterns')}
-                        />
-                    )}
-                    {activeTab === 'patterns' && (
+                {activeTab === 'patterns' && (
+                    <main className="flex-1 w-full relative z-10 px-5 md:px-16 pt-8 md:pt-16 pb-48">
                         <div className="space-y-8">
                             <MemoryGridHub setActiveTab={setActiveTab} />
                         </div>
-                    )}
-                </main>
+                    </main>
+                )}
+
+                {activeTab === 'streak' && (
+                    <main className="flex-1 w-full relative z-10 pt-8 md:pt-16">
+                        <StreakHub />
+                    </main>
+                )}
+
+                {/* Dump screen renders outside the scrollable layout — it owns the full viewport */}
+                {activeTab === 'dump' && (
+                    <BrainDumpHub
+                        {...dump}
+                        onNavigateToGrid={() => setActiveTab('patterns')}
+                    />
+                )}
             </div>
 
             <ZenPlayer player={player} />

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    @apply font-sans;
+  }
+}
+
 /* Slow figure-8 drift for sparkle backgrounds */
 @keyframes sparkle-drift {
     0%   { background-position: 20% 20%; }

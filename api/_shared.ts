@@ -66,6 +66,14 @@ Address the user naturally as "you" and maintain a friendly, personal connection
 export async function verifyAuth(req: VercelRequest): Promise<string> {
     verifyConfig();
     const token = req.headers.authorization?.replace('Bearer ', '');
+
+    // Dev-only bypass: accept userId from request body when no token is present
+    if (!token && process.env.NODE_ENV !== 'production') {
+        const userId = req.body?.userId;
+        if (userId) return userId;
+        throw new Error('Unauthorized: no token provided');
+    }
+
     if (!token) throw new Error('Unauthorized: no token provided');
     const { data: { user }, error } = await supabaseAdmin!.auth.getUser(token);
     if (error || !user) throw new Error('Unauthorized: invalid token');
@@ -92,8 +100,8 @@ export async function retryWithBackoff<T>(
     }
 }
 
-const PRIMARY_MODEL = 'models/gemini-flash-latest';
-const FALLBACK_MODEL = 'models/gemini-pro-latest';
+const PRIMARY_MODEL = 'gemini-2.0-flash';
+const FALLBACK_MODEL = 'gemini-1.5-flash';
 
 export async function generateWithFallback(config: any, payload: any): Promise<any> {
     verifyConfig();
@@ -142,8 +150,19 @@ export async function extractText(response: any): Promise<string> {
 
 // ── Data Fetching ─────────────────────────────────────────────────────────────
 
+const BYPASS_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 export async function fetchUserContext(userId: string, personaOverride: any = null) {
     verifyConfig();
+
+    // Skip DB lookups for bypass/local dev users — nothing to fetch
+    if (!userId || userId === BYPASS_USER_ID) {
+        return {
+            persona: personaOverride || { writingStyle: 'Casual', longTermGoals: [], coreValues: [] },
+            history: [],
+        };
+    }
+
     try {
         const [authRes, dbMemories, dbProfile] = await Promise.all([
             supabaseAdmin!.auth.admin.getUserById(userId).catch(() => ({ data: { user: null } })),

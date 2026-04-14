@@ -13,7 +13,7 @@ const App: React.FC = () => {
   );
 
   // --- Auth State ---
-  const { user, handleSignOut, signInWithGoogle } = useAuth();
+  const { user, handleSignOut, signInWithGoogle, handleBypassLogin } = useAuth();
 
   const handleLandingComplete = (): void => {
     localStorage.setItem('seen_landing', 'true');
@@ -29,6 +29,7 @@ const App: React.FC = () => {
       {!user ? (
         <LoginScreen
           signInWithGoogle={signInWithGoogle}
+          handleBypassLogin={handleBypassLogin}
         />
       ) : (
         <AuthenticatedApp

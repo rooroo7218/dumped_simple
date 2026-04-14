@@ -178,35 +178,37 @@ export const databaseService = {
         }
         localStorage.setItem('dumped_memories', JSON.stringify(localMemories));
 
-        // 1. Save memory to database
-        let { error: memError } = await supabase.from('memories').upsert({
-            id: memory.id,
-            timestamp: memory.timestamp,
-            content: memory.content,
-            source: memory.source,
-            priority: memory.priority,
-            tags: memory.tags,
-            processed: memory.processed,
-            category: memory.category,
-            mood: memory.mood,
-            life_context_insight: memory.lifeContextInsight,
-            user_id: (await supabase.auth.getUser()).data.user?.id || (JSON.parse(localStorage.getItem('dumped_user') || '{}').id)
-        });
+        // 1. Save memory to database (only when a real Supabase session exists)
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.id) {
+            let { error: memError } = await supabase.from('memories').upsert({
+                id: memory.id,
+                timestamp: memory.timestamp,
+                content: memory.content,
+                source: memory.source,
+                priority: memory.priority,
+                tags: memory.tags,
+                processed: memory.processed,
+                category: memory.category,
+                mood: memory.mood,
+                life_context_insight: memory.lifeContextInsight,
+                user_id: authUser.id
+            });
 
-        if (memError) {
+            if (memError) {
+                emitSync('local-only');
+                console.error('⚠️ Supabase memory save failed:', memError.message);
+            }
+        } else {
             emitSync('local-only');
-            console.error('⚠️ Supabase memory save failed:', memError.message);
         }
 
-        // 2. Save actions
-        if (memory.actions && memory.actions.length > 0) {
+        // 2. Save actions (only when a real Supabase session exists)
+        if (memory.actions && memory.actions.length > 0 && authUser?.id) {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                const userId = user?.id;
-
                 const actionsToSave = memory.actions.map(action => ({
                     id: action.id,
-                    user_id: userId,
+                    user_id: authUser.id,
                     memory_id: memory.id,
                     text: action.text,
                     urgency: action.urgency,
@@ -341,7 +343,10 @@ export const databaseService = {
     // --- DUMPED v3: Items & Excerpts ---
     async loadItems(): Promise<Item[]> {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
+        if (!user) {
+            // Bypass/local mode: return from localStorage
+            return JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        }
 
         const { data, error } = await supabase
             .from('items')
@@ -371,6 +376,12 @@ export const databaseService = {
     },
 
     async loadItemExcerpts(itemId: string): Promise<DumpItem[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            const all: DumpItem[] = JSON.parse(localStorage.getItem('dumped_dump_items') || '[]');
+            return all.filter(d => d.itemId === itemId).slice(0, 3);
+        }
+
         const { data, error } = await supabase
             .from('dump_items')
             .select('*')
@@ -390,7 +401,53 @@ export const databaseService = {
 
     async processDumpResult(dumpId: string, results: { action: 'assign' | 'create', item_id?: string, label?: string, raw_excerpt: string }[]) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+
+        // Bypass/local mode: save to localStorage
+        if (!user) {
+            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+            const dumpItems: DumpItem[] = JSON.parse(localStorage.getItem('dumped_dump_items') || '[]');
+            const now = Date.now();
+
+            for (const res of results) {
+                let itemId = res.item_id;
+
+                if (res.action === 'create' && res.label) {
+                    const newItem: Item = {
+                        id: crypto.randomUUID(),
+                        userId: 'local',
+                        label: res.label,
+                        mentionCount: 1,
+                        lastMentionedAt: now,
+                        firstMentionedAt: now,
+                        isFlagged: false,
+                        isCompleted: false,
+                        createdAt: now
+                    };
+                    items.push(newItem);
+                    itemId = newItem.id;
+                } else if (res.action === 'assign' && itemId) {
+                    const existing = items.find(i => i.id === itemId);
+                    if (existing) {
+                        existing.mentionCount += 1;
+                        existing.lastMentionedAt = now;
+                    }
+                }
+
+                if (itemId) {
+                    dumpItems.push({
+                        id: crypto.randomUUID(),
+                        dumpId,
+                        itemId,
+                        rawExcerpt: res.raw_excerpt,
+                        createdAt: now
+                    });
+                }
+            }
+
+            localStorage.setItem('dumped_items', JSON.stringify(items));
+            localStorage.setItem('dumped_dump_items', JSON.stringify(dumpItems));
+            return;
+        }
 
         for (const res of results) {
             let itemId = res.item_id;
@@ -442,17 +499,80 @@ export const databaseService = {
     },
 
     async toggleFlag(itemId: string, isFlagged: boolean) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+            const item = items.find(i => i.id === itemId);
+            if (item) { item.isFlagged = isFlagged; localStorage.setItem('dumped_items', JSON.stringify(items)); }
+            return;
+        }
         await supabase.from('items').update({ is_flagged: isFlagged }).eq('id', itemId);
     },
 
     async toggleComplete(itemId: string, isCompleted: boolean) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                item.isCompleted = isCompleted;
+                item.completedAt = isCompleted ? Date.now() : undefined;
+                if (isCompleted) item.mentionCount = 0;
+                localStorage.setItem('dumped_items', JSON.stringify(items));
+            }
+            return;
+        }
         const updates: any = { is_completed: isCompleted };
         if (isCompleted) {
             updates.completed_at = new Date().toISOString();
-            updates.mention_count = 0; // Reset on completion as per spec
+            updates.mention_count = 0;
         } else {
             updates.completed_at = null;
         }
+        await supabase.from('items').update(updates).eq('id', itemId);
+    },
+
+    async deleteItem(itemId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+            localStorage.setItem('dumped_items', JSON.stringify(items.filter(i => i.id !== itemId)));
+            return;
+        }
+        await supabase.from('items').delete().eq('id', itemId);
+    },
+
+    async fetchDumpCalendarData(): Promise<{ date: string; count: number }[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            // localStorage fallback: parse dumped_dump_items for dates
+            const dumpItems: DumpItem[] = JSON.parse(localStorage.getItem('dumped_dump_items') || '[]');
+            const countsByDate: Record<string, number> = {};
+            dumpItems.forEach(item => {
+                const date = new Date(item.createdAt || 0).toISOString().split('T')[0];
+                countsByDate[date] = (countsByDate[date] || 0) + 1;
+            });
+            return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
+        }
+
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        const { data, error } = await supabase
+            .from('memories')
+            .select('timestamp')
+            .eq('user_id', user.id)
+            .gte('timestamp', oneYearAgo.getTime());
+
+        if (error || !data) return [];
+
+        const countsByDate: Record<string, number> = {};
+        data.forEach(row => {
+            const date = new Date(row.timestamp).toISOString().split('T')[0];
+            countsByDate[date] = (countsByDate[date] || 0) + 1;
+        });
+
+        return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
     },
 
     async fetchHabitData(): Promise<boolean[]> {
