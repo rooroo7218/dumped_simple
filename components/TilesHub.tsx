@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Item, DumpItem } from '../types';
 import { databaseService } from '../services/databaseService';
 import { LiquidGlassCard } from './ui/liquid-weather-glass';
@@ -15,7 +15,7 @@ import {
 
 // ── Style system ────────────────────────────────────────────────────────────
 
-type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
+type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate' | 'aurora';
 type TextureKey = 'none' | 'dots' | 'mesh' | 'linen';
 
 interface ItemStyle { color: ColorKey; texture: TextureKey }
@@ -28,6 +28,7 @@ const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[]
     { key: 'violet',  label: 'Violet',  bg: 'rgba(221,214,254,0.55)',  dot: '#c4b5fd' },
     { key: 'sky',     label: 'Sky',     bg: 'rgba(186,230,253,0.55)',  dot: '#7dd3fc' },
     { key: 'slate',   label: 'Slate',   bg: 'rgba(203,213,225,0.55)',  dot: '#94a3b8' },
+    { key: 'aurora',  label: 'Aurora',  bg: '#0e131f',                 dot: 'linear-gradient(135deg, #ac5cff, #38bdf8)' },
 ];
 
 const TEXTURE_OPTIONS: { key: TextureKey; label: string; pattern: React.CSSProperties }[] = [
@@ -70,6 +71,14 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const [draggedGroup, setDraggedGroup] = useState<number | null>(null);
     const [dragOverId, setDragOverId] = useState<string | null>(null);
 
+    // Undo-delete state
+    const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
+    const pendingDeleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+    useEffect(() => {
+        return () => { pendingDeleteTimers.current.forEach(clearTimeout); };
+    }, []);
+
     // Per-group custom order, persisted in localStorage
     const [itemOrder, setItemOrder] = useState<Record<string, string[]>>(() => {
         try { return JSON.parse(localStorage.getItem('dumped_item_order') || '{}'); }
@@ -111,11 +120,33 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         load();
     };
 
-    const handleDelete = async (e: React.MouseEvent, item: Item) => {
+    const handleDelete = useCallback((e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
-        await databaseService.deleteItem(item.id);
-        load();
-    };
+        if (pendingDeleteTimers.current.has(item.id)) {
+            clearTimeout(pendingDeleteTimers.current.get(item.id)!);
+        }
+        const timer = setTimeout(async () => {
+            await databaseService.deleteItem(item.id);
+            pendingDeleteTimers.current.delete(item.id);
+            setPendingDeletes(prev => { const next = new Map(prev); next.delete(item.id); return next; });
+            setItems(prev => prev.filter(i => i.id !== item.id));
+        }, 5000);
+        pendingDeleteTimers.current.set(item.id, timer);
+        setPendingDeletes(prev => new Map(prev).set(item.id, { item }));
+        setExpandedItemId(null);
+    }, []);
+
+    const handleUndoDelete = useCallback((itemId: string) => {
+        if (pendingDeleteTimers.current.has(itemId)) {
+            clearTimeout(pendingDeleteTimers.current.get(itemId)!);
+            pendingDeleteTimers.current.delete(itemId);
+        }
+        setPendingDeletes(prev => { const next = new Map(prev); next.delete(itemId); return next; });
+    }, []);
+
+    const handleLabelChange = useCallback((itemId: string, newLabel: string) => {
+        setItems(prev => prev.map(i => i.id === itemId ? { ...i, label: newLabel } : i));
+    }, []);
 
     const handleStyleChange = (itemId: string, patch: Partial<ItemStyle>) => {
         const next = { ...itemStyles, [itemId]: { color: 'default', texture: 'none', ...itemStyles[itemId], ...patch } as ItemStyle };
@@ -159,10 +190,11 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const now = Date.now();
     const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
 
-    const flagged   = items.filter(i => !i.isCompleted && i.isFlagged);
-    const active    = items.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt < fourteenDaysMs));
-    const completed = items.filter(i => i.isCompleted);
-    const faded     = items.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt >= fourteenDaysMs));
+    const displayItems = items.filter(i => !pendingDeletes.has(i.id));
+    const flagged   = displayItems.filter(i => !i.isCompleted && i.isFlagged);
+    const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt < fourteenDaysMs));
+    const completed = displayItems.filter(i => i.isCompleted);
+    const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt >= fourteenDaysMs));
 
     const activeGroups = useMemo(() => {
         const map = new Map<number, Item[]>();
@@ -207,6 +239,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
         onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
         onDelete: (e: React.MouseEvent) => handleDelete(e, item),
+        onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
         onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
         style: itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey },
         size,
@@ -231,7 +264,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                 <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Active</h3>
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
-                        <div key={count} className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
+                        <div key={count} className={`grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min transition-opacity duration-200 ${draggedGroup !== null && draggedGroup !== count ? 'opacity-30' : ''}`}>
                             {groupItems.map(item => {
                                 const ratio = item.mentionCount / maxMentionCount;
                                 const isLarge = ratio > 0.6 && item.mentionCount > 1;
@@ -265,6 +298,20 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                     </div>
                 </section>
             )}
+            {/* Undo-delete toast */}
+            {pendingDeletes.size > 0 && (
+                <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-950/90 text-white shadow-xl backdrop-blur-sm animate-in slide-in-from-bottom-4 fade-in duration-300 whitespace-nowrap">
+                    <span className="text-[13px] font-medium">
+                        {pendingDeletes.size === 1 ? 'Item deleted' : `${pendingDeletes.size} items deleted`}
+                    </span>
+                    <button
+                        onClick={() => [...pendingDeletes.keys()].forEach(handleUndoDelete)}
+                        className="text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
+                        Undo
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
@@ -279,6 +326,7 @@ interface ItemTileProps {
     onFlag: (e: React.MouseEvent) => void;
     onComplete: (e: React.MouseEvent) => void;
     onDelete: (e: React.MouseEvent) => void;
+    onLabelChange?: (newLabel: string) => void;
     onStyleChange: (patch: Partial<ItemStyle>) => void;
     style: ItemStyle;
     size: 'flagged' | 'lg' | 'md' | 'sm';
@@ -294,7 +342,7 @@ interface ItemTileProps {
 
 const ItemTile: React.FC<ItemTileProps> = ({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
-    onStyleChange, style: itemStyle, size, className,
+    onLabelChange, onStyleChange, style: itemStyle, size, className,
     isDragging, isDragOver, canDrop,
     onDragStart, onDragOver, onDrop, onDragEnd,
 }) => {
@@ -303,6 +351,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
     const draggable = !!onDragStart;
     const [stylerOpen, setStylerOpen] = useState(false);
     const stylerRef = useRef<HTMLDivElement>(null);
+    const [draftLabel, setDraftLabel] = useState(item.label);
+
+    useEffect(() => { setDraftLabel(item.label); }, [item.label]);
 
     // Close styler when clicking outside
     useEffect(() => {
@@ -344,26 +395,47 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDragEnd={onDragEnd}
             onClick={onToggle}
             overflowVisible={stylerOpen}
+            isAurora={itemStyle.color === 'aurora'}
         >
             <div className="flex flex-col gap-2">
-                {/* ── Top: Title ── */}
-                <p className={`
-                    tracking-tight text-[#1a1a1a] font-normal leading-[1.75]
-                    ${isSmall ? 'text-[12px]' : 'text-[17px]'}
-                    ${item.isCompleted ? 'line-through opacity-40' : ''}
-                `}>
-                    {item.label}
-                </p>
+                {/* ── Top: Title (editable when expanded) ── */}
+                {isExpanded ? (
+                    <textarea
+                        value={draftLabel}
+                        onChange={e => setDraftLabel(e.target.value)}
+                        onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) onLabelChange?.(draftLabel.trim()); }}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                        onClick={e => e.stopPropagation()}
+                        rows={2}
+                        className={`
+                            w-full bg-transparent border-none resize-none
+                            tracking-tight font-normal leading-[1.75] text-[17px]
+                            ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
+                            focus:outline-none focus:ring-0
+                            ${item.isCompleted ? 'line-through opacity-40' : ''}
+                        `}
+                        style={{ padding: 0 }}
+                    />
+                ) : (
+                    <p className={`
+                        tracking-tight font-normal leading-[1.75]
+                        ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
+                        ${isSmall ? 'text-[12px]' : 'text-[17px]'}
+                        ${item.isCompleted ? 'line-through opacity-40' : ''}
+                    `}>
+                        {item.label}
+                    </p>
+                )}
 
                 {/* ── Mention Count Pill (Airy style) ── */}
                 {item.mentionCount > 1 && !isExpanded && (
                     <div className="flex items-center mt-1">
-                        <div className="bg-white/40 backdrop-blur-sm border border-black/5 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                        <div className={`backdrop-blur-sm border px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.color === 'aurora' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
                             />
-                            <span className="text-[10px] font-medium text-[#1a1a1a]/60 tracking-tight">
+                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.color === 'aurora' ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>
                                 {item.mentionCount}×
                             </span>
                         </div>
@@ -377,8 +449,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Complete Button */}
                     <button
                         onClick={onComplete}
-                        className={`p-1 rounded-xl transition-all active:scale-95 ${
-                            item.isCompleted ? 'text-emerald-600' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
+                        className={`p-2 rounded-xl transition-all active:scale-95 ${
+                            item.isCompleted
+                                ? (itemStyle.color === 'aurora' ? 'text-emerald-400' : 'text-emerald-600')
+                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -388,8 +462,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
-                        className={`p-1 rounded-xl transition-all active:scale-90 ${
-                            item.isFlagged ? 'text-amber-600' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
+                        className={`p-2 rounded-xl transition-all active:scale-90 ${
+                            item.isFlagged
+                                ? (itemStyle.color === 'aurora' ? 'text-amber-400' : 'text-amber-600')
+                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
@@ -400,8 +476,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     <div className="relative" ref={stylerRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
-                            className={`p-1 rounded-xl transition-all active:scale-90 ${
-                                stylerOpen ? 'bg-[#1a1a1a]/10 text-[#1a1a1a]' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
+                            className={`p-2 rounded-xl transition-all active:scale-90 ${
+                                stylerOpen
+                                    ? (itemStyle.color === 'aurora' ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]')
+                                    : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
                             }`}
                             title="Style"
                         >
@@ -437,7 +515,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Delete Button (grouped last) */}
                     <button
                         onClick={onDelete}
-                        className="p-1 rounded-xl text-[#1a1a1a]/30 hover:text-red-500 transition-all active:scale-90"
+                        className={`p-2 rounded-xl transition-all active:scale-90 ${
+                            itemStyle.color === 'aurora' ? 'text-white/40 hover:text-red-400' : 'text-[#1a1a1a]/30 hover:text-red-500'
+                        }`}
                         title="Delete"
                     >
                         <TrashIcon className="w-4 h-4" />

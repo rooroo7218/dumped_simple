@@ -117,7 +117,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* ── DESKTOP: Single-row fixed header ── */}
             <div className={`hidden md:flex fixed top-0 left-0 right-0 z-40 items-center px-5 gap-2 transition-all duration-700 ease-in-out ${
                 isZenMode ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/35 backdrop-blur-xl border-b border-white/30`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
+            } bg-white/85 backdrop-blur-md border-b border-slate-200/60`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
                 <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
@@ -206,7 +206,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             ) : (
                                                 <div className="w-full h-full bg-slate-50 flex items-center justify-center text-[8px] font-medium text-slate-500">Default</div>
                                             )}
-                                            <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                            <div className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
                                                 {scene.name}
                                             </div>
                                         </button>
@@ -261,9 +261,9 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* ── MOBILE: Fixed Bottom Bar ── */}
-            <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 backdrop-blur-xl border-t transition-all duration-1000 ease-in-out ${
+            <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 backdrop-blur-sm border-t transition-all duration-1000 ease-in-out ${
                 isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/75 border-white/40`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
+            } bg-white/92 border-slate-200/70`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
 
 
 

@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
                                         ) : (
                                             <div className="w-full h-full bg-slate-50 flex items-center justify-center text-[8px] font-medium text-slate-500">Default</div>
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                        <div className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
                                             {scene.name}
                                         </div>
                                     </button>

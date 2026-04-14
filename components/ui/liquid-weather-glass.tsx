@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, type HTMLMotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,7 @@ interface LiquidGlassCardProps {
     onDragEnd?: React.DragEventHandler<HTMLDivElement>;
     draggable?: boolean; // HTML5 draggable attribute
     overflowVisible?: boolean;
+    isAurora?: boolean;
 }
 
 export const LiquidGlassCard = ({
@@ -46,9 +47,13 @@ export const LiquidGlassCard = ({
     onDragEnd,
     draggable,
     overflowVisible = false,
+    isAurora = false,
     ...rest
 }: LiquidGlassCardProps) => {
+    const cardRef = useRef<HTMLDivElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const [rotation, setRotation] = useState({ x: 0, y: 0 });
 
     const handleToggleExpansion = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!expandable) return;
@@ -56,6 +61,22 @@ export const LiquidGlassCard = ({
         if (target.closest('a, button, input, select, textarea')) return;
         setIsExpanded(!isExpanded);
         onClick?.(e);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isAurora || !cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const rotateX = -(y / rect.height) * 5; 
+        const rotateY = (x / rect.width) * 5; 
+        setRotation({ x: rotateX, y: rotateY });
+    };
+
+    const handleMouseLeave = () => {
+        if (!isAurora) return;
+        setIsHovered(false);
+        setRotation({ x: 0, y: 0 });
     };
 
     const blurClasses: Record<string, string> = {
@@ -97,28 +118,25 @@ export const LiquidGlassCard = ({
 
     return (
         <>
-            {/* SVG distortion filter — rendered once per card, hidden */}
-            <svg className="hidden" aria-hidden>
-                <defs>
-                    <filter id="glass-blur" x="0" y="0" width="100%" height="100%" filterUnits="objectBoundingBox">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.003 0.007" numOctaves="1" result="turbulence" />
-                        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="200" xChannelSelector="R" yChannelSelector="G" />
-                    </filter>
-                </defs>
-            </svg>
-
             <motion.div
+                ref={cardRef}
                 className={cn(`relative ${overflowVisible ? '' : 'overflow-hidden'}`, className)}
-                style={sharedStyle}
+                style={{
+                    ...sharedStyle,
+                    ...(isAurora ? { transformStyle: "preserve-3d", perspective: 1000 } : {})
+                }}
                 variants={expandable ? containerVariants : undefined}
-                animate={expandable ? (isExpanded ? 'expanded' : 'collapsed') : undefined}
+                animate={expandable ? (isExpanded ? 'expanded' : 'collapsed') : (isAurora ? { rotateX: rotation.x, rotateY: rotation.y } : undefined)}
                 onClick={expandable ? handleToggleExpansion : onClick}
+                onMouseEnter={() => isAurora && setIsHovered(true)}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
                 drag={motionDrag}
                 dragConstraints={motionDrag ? { left: 0, right: 0, top: 0, bottom: 0 } : undefined}
                 dragElastic={motionDrag ? 0.3 : undefined}
                 dragTransition={motionDrag ? { bounceStiffness: 300, bounceDamping: 10, power: 0.3 } : undefined}
                 whileDrag={motionDrag ? { scale: 1.02 } : undefined}
-                whileHover={{ scale: 1.005 }}
+                whileHover={isAurora ? undefined : { scale: 1.005 }}
                 // HTML5 drag passthrough
                 draggable={draggable}
                 onDragStart={onDragStart}
@@ -136,13 +154,47 @@ export const LiquidGlassCard = ({
                     className="absolute inset-0 z-10"
                     style={{ borderRadius, boxShadow: glowStyles[glowIntensity] }}
                 />
+                
+                {/* ── Aurora Specific Layers ── */}
+                {isAurora && (
+                    <>
+                        <motion.div
+                            className="absolute inset-0 z-12 pointer-events-none"
+                            style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.05) 100%)", borderRadius }}
+                            animate={{ opacity: isHovered ? 0.7 : 0.5 }}
+                            transition={{ duration: 0.4 }}
+                        />
+                        <div className="absolute inset-0 z-13 opacity-30 mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`, borderRadius }} />
+                        <div className="absolute inset-0 z-14 opacity-10 mix-blend-soft-light pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='smudge'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.01' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeGaussianBlur stdDeviation='10'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23smudge)'/%3E%3C/svg%3E")`, borderRadius }} />
+                        
+                        <motion.div
+                            className="absolute bottom-0 left-0 right-0 h-2/3 z-15 pointer-events-none overflow-hidden"
+                            style={{ borderRadius, background: `radial-gradient(ellipse at bottom right, rgba(172, 92, 255, 0.4) -10%, rgba(79, 70, 229, 0) 70%), radial-gradient(ellipse at bottom left, rgba(56, 189, 248, 0.4) -10%, rgba(79, 70, 229, 0) 70%)` }}
+                            animate={{ opacity: isHovered ? 0.9 : 0.6 }}
+                            transition={{ duration: 0.4 }}
+                        />
+                        <motion.div
+                            className="absolute bottom-0 left-0 right-0 h-2/3 z-16 pointer-events-none overflow-hidden"
+                            style={{ borderRadius, background: `radial-gradient(circle at bottom center, rgba(161, 58, 229, 0.4) -20%, rgba(79, 70, 229, 0) 60%)` }}
+                            animate={{ opacity: isHovered ? 0.85 : 0.5 }}
+                            transition={{ duration: 0.4 }}
+                        />
+                    </>
+                )}
+
                 {/* Edge layer — inner highlights */}
                 <div
                     className="absolute inset-0 z-20"
                     style={{ borderRadius, boxShadow: shadowStyles[shadowIntensity] }}
                 />
                 {/* Content */}
-                <div className="relative z-30 h-full w-full">{children}</div>
+                <motion.div 
+                    className="relative z-30 h-full w-full"
+                    animate={isAurora ? { z: 5, rotateX: isHovered ? -rotation.x * 0.3 : 0, rotateY: isHovered ? -rotation.y * 0.3 : 0 } : undefined}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                >
+                    {children}
+                </motion.div>
             </motion.div>
         </>
     );

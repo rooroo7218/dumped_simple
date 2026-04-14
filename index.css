@@ -6,6 +6,15 @@
   html {
     @apply font-sans;
   }
+  /* Restore visible focus rings for keyboard users */
+  :focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 /* Slow figure-8 drift for sparkle backgrounds */

@@ -130,10 +130,10 @@
 .dumped-anim-squish   { animation: dumped-squish   0.50s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards; }
 .dumped-anim-jelly    { animation: dumped-jelly     0.52s ease forwards; }
 .dumped-anim-wiggle   { animation: dumped-wiggle    0.42s ease forwards; }
-.dumped-anim-bounce   { animation: dumped-bounce    0.50s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.dumped-anim-spin-pop { animation: dumped-spin-pop  0.52s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.dumped-anim-bounce   { animation: dumped-bounce    0.50s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dumped-anim-spin-pop { animation: dumped-spin-pop  0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .dumped-anim-heartbeat{ animation: dumped-heartbeat 0.55s ease forwards; }
-.dumped-anim-pop      { animation: dumped-pop       0.48s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.dumped-anim-pop      { animation: dumped-pop       0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 
 /* ── Particle burst container ────────────────────────────── */

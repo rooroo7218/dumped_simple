@@ -93,7 +93,7 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                             {isMuted ? <SpeakerXMarkIcon className="w-4 h-4" /> : <SpeakerWaveIcon className="w-4 h-4" />}
                         </button>
                         <button onClick={() => setIsExpanded(!isExpanded)} className="p-2 rounded-full transition-all text-slate-400 hover:text-black hover:bg-slate-50">
-                            <MusicalNoteIcon className={`w-4 h-4 ${isPlaying && !isMuted ? 'animate-bounce' : ''}`} />
+                            <MusicalNoteIcon className={`w-4 h-4 ${isPlaying && !isMuted ? 'opacity-100' : 'opacity-60'}`} />
                         </button>
                     </div>
                 </div>
