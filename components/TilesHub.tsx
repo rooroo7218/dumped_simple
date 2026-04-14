@@ -52,13 +52,13 @@ function saveStyles(s: Record<string, ItemStyle>) {
     localStorage.setItem('dumped_item_styles', JSON.stringify(s));
 }
 
-// ── MemoryGridHub ───────────────────────────────────────────────────────────
+// ── TilesHub ───────────────────────────────────────────────────────────
 
-interface MemoryGridHubProps {
+interface TilesHubProps {
     setActiveTab: (tab: string) => void;
 }
 
-export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) => {
+export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const [items, setItems] = useState<Item[]>([]);
     const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
     const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
@@ -344,7 +344,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
             <div className="flex flex-col gap-2">
                 {/* ── Top: Title + repeat badge ── */}
                 <p className={`
-                    tracking-tight text-slate-950 font-medium leading-[1.4]
+                    tracking-tight text-slate-950 font-normal leading-[1.75]
                     ${isSmall ? 'text-[12px]' : 'text-[17px]'}
                     ${item.isCompleted ? 'line-through opacity-40' : ''}
                 `}>

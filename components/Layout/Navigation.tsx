@@ -6,7 +6,7 @@ import {
     ArrowRightStartOnRectangleIcon,
     MusicalNoteIcon,
     Squares2X2Icon,
-    FireIcon,
+    SunIcon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
@@ -14,7 +14,7 @@ import {
     PlusIcon as PlusIconSolid,
     UserIcon as UserIconSolid,
     Squares2X2Icon as Squares2X2IconSolid,
-    FireIcon as FireIconSolid,
+    SunIcon as SunIconSolid,
 } from '@heroicons/react/24/solid';
 
 import { UserProfile, UserPersona } from '../../types';
@@ -49,8 +49,8 @@ interface NavigationProps {
 
 const MAIN_TABS = [
     { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
-    { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Patterns',   mobileLabel: 'Patterns' },
-    { id: 'streak',       icon: FireIcon,             solidIcon: FireIconSolid,             label: 'Streak',     mobileLabel: 'Streak' },
+    { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Tiles',      mobileLabel: 'Tiles' },
+    { id: 'streak',       icon: SunIcon,             solidIcon: SunIconSolid,             label: 'Pattern',    mobileLabel: 'Pattern' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────

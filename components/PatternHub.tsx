@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { databaseService } from '../services/databaseService';
 import { DumpCalendar } from './ui/dump-calendar';
 
-export const StreakHub: React.FC = () => {
+export const PatternHub: React.FC = () => {
     const [calendarData, setCalendarData] = useState<{ date: string; count: number }[]>([]);
 
     useEffect(() => {
