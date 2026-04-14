@@ -186,7 +186,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) =>
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-                <p className="text-slate-400 font-medium mb-4">Your head is empty (for now).</p>
+                <p className="text-slate-600 font-medium mb-4">Your head is empty (for now).</p>
                 <button onClick={() => setActiveTab('dump')} className="text-slate-900 font-bold border-b-2 border-slate-900 pb-1">
                     Start a dump
                 </button>
@@ -216,7 +216,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) =>
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
                 <section className="mb-12">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Flagged</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 ml-1">Flagged</h3>
                     <div className="grid grid-cols-1 gap-2">
                         {flagged.map(item => <ItemTile key={item.id} {...tileProps(item, 'flagged')} />)}
                     </div>
@@ -225,7 +225,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) =>
 
             {/* ── Active — grouped by mentionCount, draggable within group ── */}
             <section className="mb-12">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Active</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 ml-1">Active</h3>
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
                         <div key={count} className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
@@ -254,7 +254,7 @@ export const MemoryGridHub: React.FC<MemoryGridHubProps> = ({ setActiveTab }) =>
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
                 <section>
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-4 ml-1">Resolved & Faded</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 ml-1">Resolved & Faded</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
                         {[...completed, ...faded].map(item => (
                             <ItemTile key={item.id} {...tileProps(item, 'sm')} />
@@ -444,7 +444,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 <p className={`
                     tracking-tight
                     ${isFlagged ? 'text-[17px] text-[#1a1a1a] font-medium leading-[1.75]' : 'text-[17px] text-[#1a1a1a] font-medium leading-[1.75]'}
-                    ${isSmall ? 'text-[12px] text-slate-500 font-medium leading-normal' : ''}
+                    ${isSmall ? 'text-[12px] text-slate-600 font-medium leading-normal' : ''}
                     ${item.isCompleted ? 'line-through opacity-40' : ''}
                 `}>
                     {item.label}
@@ -456,7 +456,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             className="h-1 w-1 rounded-full shrink-0"
                             style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
                         />
-                        <span className="text-[10px] font-black text-slate-400/50 uppercase tracking-[0.12em]">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.12em]">
                             {item.mentionCount}×
                         </span>
                     </div>
@@ -469,7 +469,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     <button
                         onClick={onComplete}
                         className={`p-1.5 rounded-lg transition-all active:scale-90 ${
-                            item.isCompleted ? 'text-emerald-500' : 'text-slate-300 hover:text-emerald-500'
+                            item.isCompleted ? 'text-emerald-500' : 'text-slate-500 hover:text-emerald-500'
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -486,23 +486,23 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-10 mb-6 pb-5 border-b border-slate-100/60">
                         <div>
-                            <span className="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Frequency</span>
+                            <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1">Frequency</span>
                             <span className="text-base font-black text-slate-950">{item.mentionCount} sightings</span>
                         </div>
                         <div>
-                            <span className="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Last Noted</span>
+                            <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1">Last Noted</span>
                             <span className="text-base font-black text-slate-950">{new Date(item.lastMentionedAt).toLocaleDateString()}</span>
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <span className="block text-[9px] font-black uppercase text-slate-900/25 tracking-[0.18em] mb-2">Original Thoughts</span>
+                        <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-2">Original Thoughts</span>
                         {excerpts.length > 0 ? excerpts.map(ex => (
-                            <div key={ex.id} className="rounded-2xl p-4 italic text-slate-600 text-[14px] leading-relaxed relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.35)' }}>
+                            <div key={ex.id} className="rounded-2xl p-4 italic text-slate-800 text-[14px] leading-relaxed relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.35)' }}>
                                 <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-slate-900/10" />
                                 "{ex.rawExcerpt}"
                             </div>
                         )) : (
-                            <p className="text-sm text-slate-300 italic px-2">No excerpts yet.</p>
+                            <p className="text-sm text-slate-500 italic px-2">No excerpts yet.</p>
                         )}
                     </div>
                     <div className="mt-8 flex items-center justify-between">

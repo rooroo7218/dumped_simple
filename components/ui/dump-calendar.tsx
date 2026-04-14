@@ -120,7 +120,7 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                             fontWeight: 800,
                             letterSpacing: '0.08em',
                             textTransform: 'uppercase',
-                            color: 'rgba(15,23,42,0.3)',
+                            color: 'rgba(15,23,42,0.6)',
                                                         userSelect: 'none',
                         }}
                     >
@@ -144,7 +144,7 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                 fontWeight: 800,
                                 letterSpacing: '0.07em',
                                 textTransform: 'uppercase',
-                                color: 'rgba(15,23,42,0.28)',
+                                color: 'rgba(15,23,42,0.55)',
                                                                 userSelect: 'none',
                                 whiteSpace: 'nowrap',
                             }}>

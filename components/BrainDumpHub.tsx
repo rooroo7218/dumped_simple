@@ -146,7 +146,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     aria-label="Open grid"
                 >
                     <Squares2X2Icon className="w-4 h-4 text-slate-500" />
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                         My Grid
                     </span>
                 </button>
@@ -246,7 +246,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     >
                         {isProcessing
                             ? <ArrowPathIcon style={{ width: 16, height: 16, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                            : <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', letterSpacing: '0.02em' }}>
+                            : <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', letterSpacing: '0.02em' }}>
                                 put it all down
                             </span>
                         }
@@ -306,7 +306,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
             </div>
 
             <style>{`
-                textarea::placeholder { color: rgba(0,0,0,0.2); }
+                textarea::placeholder { color: rgba(0,0,0,0.4); }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 @keyframes pulse {
                     0%, 100% { opacity: 1; transform: scale(1); }

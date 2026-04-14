@@ -138,10 +138,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-semibold tracking-tight ${
                                     isActive
                                         ? themeClasses.navActive
-                                        : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'
+                                        : 'text-slate-600 hover:bg-slate-100/50 hover:text-slate-900'
                                 }`}
                             >
-                                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-500'}`} />
                                 <span>{tab.label}</span>
                             </button>
                         );
@@ -154,7 +154,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 {/* ── Sync status indicator ── */}
                 {syncStatus === 'saving' && (
                     <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 mr-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
                         Saving…
                     </span>
                 )}
@@ -185,7 +185,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                         </button>
                         {isSceneryOpen && (
                             <div className={`${dropdown} w-72 max-h-[400px] overflow-y-auto p-4`}>
-                                <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 pb-2 border-b text-slate-500 border-slate-100">
+                                <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 pb-2 border-b text-slate-600 border-slate-100">
                                     Select scenery
                                 </p>
                                 <div className="grid grid-cols-2 gap-2">
@@ -245,7 +245,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             <div className={`${dropdown} min-w-[160px]`}>
                                 <div className="px-4 py-2.5 border-b border-slate-50">
                                     <p className="text-[11px] font-semibold text-slate-700 truncate">{user.name}</p>
-                                    <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                                    <p className="text-[10px] text-slate-600 truncate">{user.email}</p>
                                 </div>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
@@ -313,8 +313,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
                             >
-                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-400'}`} />
-                                <span className={`text-[10px] font-semibold tracking-tight transition-colors ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
+                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
+                                <span className={`text-[10px] font-semibold tracking-tight transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
                                     {tab.mobileLabel}
                                 </span>
                             </button>
@@ -337,9 +337,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
                         ) : (
-                            <MusicalNoteIcon className="w-5 h-5 text-slate-400" />
+                            <MusicalNoteIcon className="w-5 h-5 text-slate-500" />
                         )}
-                        <span className={`text-[10px] font-semibold tracking-tight ${player.isPlaying ? 'text-slate-900' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-semibold tracking-tight ${player.isPlaying ? 'text-slate-900' : 'text-slate-500'}`}>
                             Music
                         </span>
                     </button>
