@@ -149,7 +149,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     aria-label="Open grid"
                 >
                     <Squares2X2Icon className="w-4 h-4 text-slate-500" />
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#1a1a1a' }}>
                         My Grid
                     </span>
                 </button>
@@ -173,7 +173,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             transition: 'opacity 0.18s ease',
                             width: '100%',
                             minHeight: '100dvh',
-                            padding: '72px 28px 180px',
+                            padding: 'calc(72px + env(safe-area-inset-top)) 28px calc(180px + env(safe-area-inset-bottom))',
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
@@ -249,7 +249,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     >
                         {isProcessing
                             ? <ArrowPathIcon style={{ width: 16, height: 16, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                            : <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', letterSpacing: '0.02em' }}>
+                            : <span style={{ fontSize: '13px', fontWeight: 500, color: '#1a1a1a', letterSpacing: '0.02em' }}>
                                 put it all down
                             </span>
                         }

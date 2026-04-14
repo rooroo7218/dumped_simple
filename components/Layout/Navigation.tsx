@@ -115,9 +115,9 @@ export const Navigation: React.FC<NavigationProps> = ({
         <>
 
             {/* ── DESKTOP: Single-row fixed header ── */}
-            <div className={`hidden md:flex fixed top-0 left-0 right-0 z-40 items-center h-12 px-5 gap-2 transition-all duration-700 ease-in-out ${
+            <div className={`hidden md:flex fixed top-0 left-0 right-0 z-40 items-center px-5 gap-2 transition-all duration-700 ease-in-out ${
                 isZenMode ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/35 backdrop-blur-xl border-b border-white/30`}>
+            } bg-white/35 backdrop-blur-xl border-b border-white/30`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
                 <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
@@ -135,13 +135,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-semibold tracking-tight ${
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all whitespace-nowrap text-[12px] font-medium tracking-tight ${
                                     isActive
-                                        ? themeClasses.navActive
-                                        : 'text-slate-600 hover:bg-slate-100/50 hover:text-slate-900'
+                                        ? 'bg-[#1a1a1a] text-white shadow-lg'
+                                        : 'text-slate-600 hover:bg-slate-100/50 hover:text-[#1a1a1a]'
                                 }`}
                             >
-                                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
                                 <span>{tab.label}</span>
                             </button>
                         );
@@ -261,9 +261,9 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* ── MOBILE: Fixed Bottom Bar ── */}
-            <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pb-5 pt-1 backdrop-blur-xl border-t transition-all duration-1000 ease-in-out ${
+            <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 backdrop-blur-xl border-t transition-all duration-1000 ease-in-out ${
                 isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/75 border-white/40`}>
+            } bg-white/75 border-white/40`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
 
 
 
@@ -313,8 +313,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
                             >
-                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
-                                <span className={`text-[10px] font-semibold tracking-tight transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
+                                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-[#1a1a1a]' : 'text-slate-400'}`} />
+                                <span className={`text-[11px] font-medium tracking-tight transition-colors ${isActive ? 'text-[#1a1a1a]' : 'text-slate-400'}`}>
                                     {tab.mobileLabel}
                                 </span>
                             </button>
@@ -339,7 +339,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                         ) : (
                             <MusicalNoteIcon className="w-5 h-5 text-slate-500" />
                         )}
-                        <span className={`text-[10px] font-semibold tracking-tight ${player.isPlaying ? 'text-slate-900' : 'text-slate-500'}`}>
+                        <span className={`text-[11px] font-medium tracking-tight ${player.isPlaying ? 'text-[#1a1a1a]' : 'text-slate-400'}`}>
                             Music
                         </span>
                     </button>

@@ -51,7 +51,7 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                 {/* Selector Popover */}
                 {isExpanded && (
                     <div className="w-64 mb-2 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300 bg-white/70 backdrop-blur-md border border-white/20 rounded-[28px] shadow-2xl">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-40 text-slate-500">Select Your Vibe</h4>
+                        <h4 className="text-[11px] font-medium uppercase tracking-wider mb-4 opacity-50 text-[#1a1a1a]">Select Your Vibe</h4>
                         <div className="space-y-2">
                             {TRACKS.map((track, idx) => (
                                 <button
@@ -60,8 +60,8 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                                     className={`w-full flex items-center justify-between p-3 transition-all group rounded-2xl ${currentTrackIndex === idx ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
                                 >
                                     <div className="text-left">
-                                        <div className="text-[10px] font-black uppercase tracking-tight">{track.title}</div>
-                                        <div className={`text-[8px] font-bold uppercase opacity-50 ${currentTrackIndex === idx ? 'opacity-70' : ''}`}>{track.genre}</div>
+                                        <div className="text-[10px] font-medium uppercase tracking-tight">{track.title}</div>
+                                        <div className={`text-[8px] font-medium uppercase opacity-50 ${currentTrackIndex === idx ? 'opacity-70' : ''}`}>{track.genre}</div>
                                     </div>
                                     {currentTrackIndex === idx && isPlaying && (
                                         <div className="flex gap-0.5 items-end h-3">
@@ -80,8 +80,8 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
                 <div className={`flex items-center gap-2 p-2 transition-all ${isExpanded ? 'scale-105' : 'hover:scale-105'} bg-white/70 backdrop-blur-md border border-white/20 rounded-full shadow-xl`}>
                     {isPlaying && (
                         <div className="px-3 py-1 flex flex-col overflow-hidden max-w-[120px]">
-                            <span className="text-[8px] font-black uppercase truncate text-slate-800">{currentTrack.title}</span>
-                            <span className="text-[6px] font-bold uppercase opacity-40 whitespace-nowrap">Now Playing</span>
+                            <span className="text-[8px] font-medium uppercase truncate text-[#1a1a1a]">{currentTrack.title}</span>
+                            <span className="text-[6px] font-medium uppercase opacity-40 whitespace-nowrap text-[#1a1a1a]">Now Playing</span>
                         </div>
                     )}
 

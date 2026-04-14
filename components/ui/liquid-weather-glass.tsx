@@ -22,6 +22,7 @@ interface LiquidGlassCardProps {
     onDrop?: React.DragEventHandler<HTMLDivElement>;
     onDragEnd?: React.DragEventHandler<HTMLDivElement>;
     draggable?: boolean; // HTML5 draggable attribute
+    overflowVisible?: boolean;
 }
 
 export const LiquidGlassCard = ({
@@ -44,6 +45,7 @@ export const LiquidGlassCard = ({
     onDrop,
     onDragEnd,
     draggable,
+    overflowVisible = false,
     ...rest
 }: LiquidGlassCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -106,7 +108,7 @@ export const LiquidGlassCard = ({
             </svg>
 
             <motion.div
-                className={cn('relative overflow-hidden', className)}
+                className={cn(`relative ${overflowVisible ? '' : 'overflow-hidden'}`, className)}
                 style={sharedStyle}
                 variants={expandable ? containerVariants : undefined}
                 animate={expandable ? (isExpanded ? 'expanded' : 'collapsed') : undefined}
@@ -140,7 +142,7 @@ export const LiquidGlassCard = ({
                     style={{ borderRadius, boxShadow: shadowStyles[shadowIntensity] }}
                 />
                 {/* Content */}
-                <div className="relative z-30">{children}</div>
+                <div className="relative z-30 h-full w-full">{children}</div>
             </motion.div>
         </>
     );

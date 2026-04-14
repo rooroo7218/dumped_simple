@@ -132,7 +132,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 />
                 
                 {activeTab === 'patterns' && (
-                    <main className="flex-1 w-full relative z-10 px-5 md:px-16 pt-8 md:pt-16 pb-48">
+                    <main className="flex-1 w-full relative z-10 px-5 md:px-16 pb-48" style={{ paddingTop: 'calc(2rem + env(safe-area-inset-top))' }}>
                         <div className="space-y-8">
                             <TilesHub setActiveTab={setActiveTab} />
                         </div>
@@ -140,7 +140,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 )}
 
                 {activeTab === 'streak' && (
-                    <main className="flex-1 w-full relative z-10 pt-8 md:pt-16">
+                    <main className="flex-1 w-full relative z-10" style={{ paddingTop: 'calc(2rem + env(safe-area-inset-top))', paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
                         <PatternHub />
                     </main>
                 )}

@@ -477,10 +477,11 @@ export const databaseService = {
 
                 // Fallback if RPC isn't defined yet
                 if (updateError) {
+                    const { data: current } = await supabase.from('items').select('mention_count').eq('id', itemId).single();
                     await supabase
                         .from('items')
                         .update({ 
-                            mention_count: supabase.rpc('increment'), // Note: raw increment might not work via update, better use RPC or manual fetch-update
+                            mention_count: (current?.mention_count || 1) + 1,
                             last_mentioned_at: new Date().toISOString() 
                         })
                         .eq('id', itemId);

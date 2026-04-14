@@ -5,7 +5,7 @@ import { LiquidGlassCard } from './ui/liquid-weather-glass';
 import {
     FlagIcon as FlagOutline,
     CheckCircleIcon as CheckOutline,
-    XMarkIcon,
+    TrashIcon,
     SwatchIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -186,8 +186,11 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-                <p className="text-slate-600 font-medium mb-4">Your head is empty (for now).</p>
-                <button onClick={() => setActiveTab('dump')} className="text-slate-900 font-bold border-b-2 border-slate-900 pb-1">
+                <p className="text-[#1a1a1a] font-normal text-[17px] leading-[1.75] mb-4">Your head is empty (for now).</p>
+                <button
+                    onClick={() => setActiveTab('dump')}
+                    className="text-[#1a1a1a] font-bold text-[17px] leading-[1.75] border-b border-[#1a1a1a] pb-0.5 hover:opacity-70 transition-opacity"
+                >
                     Start a dump
                 </button>
             </div>
@@ -216,7 +219,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
                 <section className="mb-12">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 ml-1">Flagged</h3>
+                    <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Flagged</h3>
                     <div className="grid grid-cols-1 gap-2">
                         {flagged.map(item => <ItemTile key={item.id} {...tileProps(item, 'flagged')} />)}
                     </div>
@@ -225,7 +228,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
             {/* ── Active — grouped by mentionCount, draggable within group ── */}
             <section className="mb-12">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 ml-1">Active</h3>
+                <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Active</h3>
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
                         <div key={count} className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
@@ -254,7 +257,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
                 <section>
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 ml-1">Resolved & Faded</h3>
+                    <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Resolved & Faded</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
                         {[...completed, ...faded].map(item => (
                             <ItemTile key={item.id} {...tileProps(item, 'sm')} />
@@ -340,65 +343,69 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDrop={onDrop ? (e) => { e.stopPropagation(); onDrop(); } : undefined}
             onDragEnd={onDragEnd}
             onClick={onToggle}
+            overflowVisible={stylerOpen}
         >
             <div className="flex flex-col gap-2">
-                {/* ── Top: Title + repeat badge ── */}
+                {/* ── Top: Title ── */}
                 <p className={`
-                    tracking-tight text-slate-950 font-normal leading-[1.75]
+                    tracking-tight text-[#1a1a1a] font-normal leading-[1.75]
                     ${isSmall ? 'text-[12px]' : 'text-[17px]'}
                     ${item.isCompleted ? 'line-through opacity-40' : ''}
                 `}>
                     {item.label}
                 </p>
 
+                {/* ── Mention Count Pill (Airy style) ── */}
                 {item.mentionCount > 1 && !isExpanded && (
-                    <div className="flex items-center gap-1.5">
-                        <div
-                            className="h-1 w-1 rounded-full shrink-0"
-                            style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
-                        />
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.12em]">
-                            {item.mentionCount}×
-                        </span>
+                    <div className="flex items-center mt-1">
+                        <div className="bg-white/40 backdrop-blur-sm border border-black/5 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                            <div
+                                className="h-1 w-1 rounded-full shrink-0"
+                                style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
+                            />
+                            <span className="text-[10px] font-medium text-[#1a1a1a]/60 tracking-tight">
+                                {item.mentionCount}×
+                            </span>
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* ── Bottom: Icons grouped ── */}
+            {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (
-                <div className="flex items-center gap-1 mt-auto -ml-1.5">
+                <div className="absolute bottom-3 left-3 flex items-center gap-0.5 -ml-1">
                     {/* Complete Button */}
                     <button
                         onClick={onComplete}
-                        className={`p-1.5 rounded-xl transition-all active:scale-95 ${
-                            item.isCompleted ? 'text-emerald-600' : 'text-slate-950'
+                        className={`p-1 rounded-xl transition-all active:scale-95 ${
+                            item.isCompleted ? 'text-emerald-600' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
-                        {item.isCompleted ? <CheckSolid className="w-5 h-5" /> : <CheckOutline className="w-5 h-5" />}
+                        {item.isCompleted ? <CheckSolid className="w-4 h-4" /> : <CheckOutline className="w-4 h-4" />}
                     </button>
 
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
-                        className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            item.isFlagged ? 'text-amber-600' : 'text-slate-950'
+                        className={`p-1 rounded-xl transition-all active:scale-90 ${
+                            item.isFlagged ? 'text-amber-600' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
-                        {item.isFlagged ? <FlagSolid className="w-5 h-5" /> : <FlagOutline className="w-5 h-5" />}
+                        {item.isFlagged ? <FlagSolid className="w-4 h-4" /> : <FlagOutline className="w-4 h-4" />}
                     </button>
 
                     {/* Style Button */}
                     <div className="relative" ref={stylerRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
-                            className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                                stylerOpen ? 'bg-slate-900/10 text-slate-950' : 'text-slate-950'
+                            className={`p-1 rounded-xl transition-all active:scale-90 ${
+                                stylerOpen ? 'bg-[#1a1a1a]/10 text-[#1a1a1a]' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
                             }`}
                             title="Style"
                         >
-                            <SwatchIcon className="w-5 h-5" />
+                            <SwatchIcon className="w-4 h-4" />
                         </button>
 
                         {stylerOpen && (
@@ -407,7 +414,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                                 className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border border-white/40"
                                 style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', minWidth: 188 }}
                             >
-                                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400 mb-2">Color</p>
+                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest">Color</p>
                                 <div className="flex gap-1.5 flex-wrap mb-3">
                                     {COLOR_OPTIONS.map(c => (
                                         <button
@@ -417,29 +424,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                                             className="w-6 h-6 rounded-full transition-all active:scale-90 hover:scale-110"
                                             style={{
                                                 background: c.dot,
-                                                outline: itemStyle.color === c.key ? '2px solid #0f172a' : '2px solid transparent',
+                                                outline: itemStyle.color === c.key ? '2px solid #1a1a1a' : '2px solid transparent',
                                                 outlineOffset: 2,
                                             }}
                                         />
-                                    ))}
-                                </div>
-                                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400 mb-2">Texture</p>
-                                <div className="flex gap-1.5">
-                                    {TEXTURE_OPTIONS.map(t => (
-                                        <button
-                                            key={t.key}
-                                            onClick={() => onStyleChange({ texture: t.key })}
-                                            title={t.label}
-                                            className="w-9 h-7 rounded-lg text-[10px] font-bold text-slate-500 transition-all active:scale-90"
-                                            style={{
-                                                ...t.pattern,
-                                                background: t.key === 'none' ? 'rgba(255,255,255,0.8)' : undefined,
-                                                outline: itemStyle.texture === t.key ? '2px solid #0f172a' : '2px solid rgba(15,23,42,0.10)',
-                                                outlineOffset: 1,
-                                            }}
-                                        >
-                                            {t.key === 'none' ? '—' : ''}
-                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -449,10 +437,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Delete Button (grouped last) */}
                     <button
                         onClick={onDelete}
-                        className="p-1.5 rounded-xl text-slate-950 hover:text-red-600 transition-all active:scale-90"
+                        className="p-1 rounded-xl text-[#1a1a1a]/30 hover:text-red-500 transition-all active:scale-90"
                         title="Delete"
                     >
-                        <XMarkIcon className="w-5 h-5" />
+                        <TrashIcon className="w-4 h-4" />
                     </button>
                 </div>
             )}
@@ -462,35 +450,35 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-10 mb-6 pb-5 border-b border-slate-100/60">
                         <div>
-                            <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1">Frequency</span>
-                            <span className="text-base font-black text-slate-950">{item.mentionCount} sightings</span>
+                            <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-1">Frequency</span>
+                            <span className="text-base font-medium text-[#1a1a1a]">{item.mentionCount} sightings</span>
                         </div>
                         <div>
-                            <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1">Last Noted</span>
-                            <span className="text-base font-black text-slate-950">{new Date(item.lastMentionedAt).toLocaleDateString()}</span>
+                            <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-1">Last Noted</span>
+                            <span className="text-base font-medium text-[#1a1a1a]">{new Date(item.lastMentionedAt).toLocaleDateString()}</span>
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <span className="block text-[9px] font-black uppercase text-slate-500 tracking-widest mb-2">Original Thoughts</span>
+                        <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-2">Original Thoughts</span>
                         {excerpts.length > 0 ? excerpts.map(ex => (
-                            <div key={ex.id} className="rounded-2xl p-4 italic text-slate-800 text-[14px] leading-relaxed relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.35)' }}>
+                            <div key={ex.id} className="rounded-2xl p-4 italic text-[#1a1a1a] text-[14px] leading-relaxed relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(15,23,42,0.1)' }}>
                                 <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-slate-900/10" />
                                 "{ex.rawExcerpt}"
                             </div>
                         )) : (
-                            <p className="text-sm text-slate-500 italic px-2">No excerpts yet.</p>
+                            <p className="text-sm text-slate-400 italic px-2">No excerpts yet.</p>
                         )}
                     </div>
                     <div className="mt-8 flex items-center justify-between">
                         <button
                             onClick={onDelete}
-                            className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
+                            className="text-[10px] font-medium uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
                         >
                             Delete Forever
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); onToggle(); }}
-                            className="bg-black/[0.05] text-slate-600 hover:bg-black/[0.09] font-bold text-[11px] uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all active:scale-95"
+                            className="bg-black/[0.05] text-[#1a1a1a]/60 hover:bg-black/[0.09] font-medium text-[11px] uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all active:scale-95"
                         >
                             Close
                         </button>
