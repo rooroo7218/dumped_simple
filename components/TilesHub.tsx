@@ -252,7 +252,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
                 <section className="mb-12">
-                    <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Flagged</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Flagged</h3>
                     <div className="grid grid-cols-1 gap-2">
                         {flagged.map(item => <ItemTile key={item.id} {...tileProps(item, 'flagged')} />)}
                     </div>
@@ -261,7 +261,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
             {/* ── Active — grouped by mentionCount, draggable within group ── */}
             <section className="mb-12">
-                <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Active</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Active</h3>
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
                         <div key={count} className={`grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min transition-opacity duration-200 ${draggedGroup !== null && draggedGroup !== count ? 'opacity-30' : ''}`}>
@@ -290,7 +290,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
                 <section>
-                    <h3 className="text-[17px] font-medium text-[#1a1a1a] leading-[1.75] mb-4 ml-1 opacity-50">Resolved & Faded</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950 pb-2 mb-4 border-b-2 border-slate-950/70">Resolved & Faded</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
                         {[...completed, ...faded].map(item => (
                             <ItemTile key={item.id} {...tileProps(item, 'sm')} />
@@ -377,8 +377,8 @@ const ItemTile: React.FC<ItemTileProps> = ({
         <LiquidGlassCard
             className={`
                 group select-none text-left flex flex-col justify-between
-                ${isExpanded ? 'ring-2 ring-slate-900/10 z-20 col-span-full' : 'h-full min-h-[140px]'}
-                ${isDragOver && canDrop ? 'ring-2 ring-slate-900/30' : ''}
+                ${isExpanded ? 'ring-2 ring-slate-950/20 z-20 col-span-full' : 'h-full min-h-[140px] ring-1 ring-slate-950/[0.14]'}
+                ${isDragOver && canDrop ? 'ring-2 ring-slate-950/40' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
                 ${className ?? ''}

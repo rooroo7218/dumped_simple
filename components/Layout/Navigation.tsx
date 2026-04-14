@@ -117,7 +117,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* ── DESKTOP: Single-row fixed header ── */}
             <div className={`hidden md:flex fixed top-0 left-0 right-0 z-40 items-center px-5 gap-2 transition-all duration-700 ease-in-out ${
                 isZenMode ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/85 backdrop-blur-md border-b border-slate-200/60`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
+            } bg-white/90 backdrop-blur-md border-b-2 border-slate-950/70`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
                 <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
@@ -263,7 +263,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* ── MOBILE: Fixed Bottom Bar ── */}
             <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 backdrop-blur-sm border-t transition-all duration-1000 ease-in-out ${
                 isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-white/92 border-slate-200/70`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
+            } bg-white/95 border-t-2 border-slate-950/70`} style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
 
 
 
