@@ -12,7 +12,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         age: undefined,
         jobTitle: "",
         lifestyle: "",
-        brutalistBackground: 'miyazaki_meadow',
+        brutalistBackground: 'aurora_dream',
         customCategories: ['Career', 'Health', 'Finance', 'Household', 'Creativity', 'Learning', 'Experiment', 'Social', 'Maintenance']
     });
     const [aiStatus, setAiStatus] = useState<'idle' | 'processing' | 'error' | 'success'>('idle');

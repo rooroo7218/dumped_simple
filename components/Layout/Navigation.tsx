@@ -260,9 +260,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </div>
             </div>
 
-            {/* ── MOBILE: Fixed Bottom Bar (hidden on dump tab) ── */}
+            {/* ── MOBILE: Fixed Bottom Bar ── */}
             <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pb-5 pt-1 backdrop-blur-xl border-t transition-all duration-1000 ease-in-out ${
-                isZenMode || activeTab === 'dump' ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+                isZenMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
             } bg-white/75 border-white/40`}>
 
 

@@ -23,7 +23,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [submitBottom, setSubmitBottom] = useState(16);
+    const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
     const [fadeOpacity, setFadeOpacity] = useState(1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -33,7 +33,10 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         if (!vv) return;
         const update = () => {
             const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-            setSubmitBottom(Math.max(keyboardHeight, 0) + 16);
+            // On mobile, if keyboard is UP, nav bar might be hidden or we might want different spacing.
+            // But for safety, we push it up.
+            const baseOffset = window.innerWidth < 768 ? 84 : 16;
+            setSubmitBottom(Math.max(keyboardHeight, 0) + baseOffset);
         };
         vv.addEventListener('resize', update);
         vv.addEventListener('scroll', update);

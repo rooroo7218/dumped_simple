@@ -28,7 +28,8 @@ Dump text:
 "${input}"
 
 RULES:
-- Labels: 2–5 words, lowercase, plain language
+- Labels: 2–5 words, sentence case (First word capitalized). NEVER use all lowercase.
+- CAPITALIZATION: Preserve capitalization for personal pronouns (e.g., "I") and all-caps acronyms (e.g., "API", "GSD", "ROI").
 - Assign when semantic overlap is clear (e.g., "milk" and "buy milk" are the same)
 - Create only when genuinely new
 - raw_excerpt must be the user's ACTUAL words from the dump, never paraphrased.
@@ -40,7 +41,7 @@ RULES:
 ${promptText}
 
       GUIDELINES:
-      - CLEANUP: Rephrase slightly if needed for clarity/grammar (e.g. "milk" -> "Buy milk").
+      - CLEANUP: Help correct simple grammar/typos while keeping the essence (e.g. "Fix api" -> "Fix API").
       - ATOMIC: Keep items distinct and simple.
       - CATEGORIZE: Group into "Career", "Health", "Finance", "Household", "Social", or "General".
       - URGENCY (1-10): 5 is neutral, 8+ is time sensitive, 1-3 is low priority.`
