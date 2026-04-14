@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: 'https://dumped-simple.vercel.app',
+          changeOrigin: true,
+          secure: true,
+        }
+      }
     },
     css: {
       postcss: {
@@ -26,6 +33,8 @@ export default defineConfig(({ mode }) => {
           name: 'Dumped',
           short_name: 'Dumped',
           description: 'AI-powered personal operating system for your brain.',
+          display: 'standalone',
+          background_color: '#ffffff',
           theme_color: '#ffffff',
           icons: [
             {

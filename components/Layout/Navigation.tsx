@@ -63,22 +63,22 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
     const [isSceneryOpen,       setIsSceneryOpen]       = useState(false);
     const [isUserMenuOpen,      setIsUserMenuOpen]      = useState(false);
-    const [isMusicSelectorOpen, setIsMusicSelectorOpen] = useState(false);
+    const [isMobileMenuOpen,    setIsMobileMenuOpen]    = useState(false);
     const [isFullscreen,        setIsFullscreen]        = useState(false);
-    const musicPopoverRef = useRef<HTMLDivElement>(null);
-    const musicButtonRef  = useRef<HTMLButtonElement>(null);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
+    const mobileButtonRef  = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
-        if (!isMusicSelectorOpen) return;
+        if (!isMobileMenuOpen) return;
         const handler = (e: MouseEvent): void => {
-            if (musicButtonRef.current?.contains(e.target as Node)) return;
-            if (musicPopoverRef.current && !musicPopoverRef.current.contains(e.target as Node)) {
-                setIsMusicSelectorOpen(false);
+            if (mobileButtonRef.current?.contains(e.target as Node)) return;
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+                setIsMobileMenuOpen(false);
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [isMusicSelectorOpen]);
+    }, [isMobileMenuOpen]);
     const toggleFullScreen = (): void => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen()
@@ -267,39 +267,100 @@ export const Navigation: React.FC<NavigationProps> = ({
 
 
 
-                {/* Track selector popover */}
-                {isMusicSelectorOpen && (
-                    <div ref={musicPopoverRef} className="absolute bottom-full right-3 mb-2 w-56 p-3 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
-                            {/* Controls */}
-                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+                {/* Mobile Menu Popover */}
+                {isMobileMenuOpen && (
+                    <div ref={mobileMenuRef} className="absolute bottom-full right-3 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
+                        
+                        {/* 1. User Profile */}
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-3">
+                                {user.picture ? (
+                                    <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-slate-100 text-slate-600">
+                                        {user.name?.charAt(0).toUpperCase() ?? 'U'}
+                                    </div>
+                                )}
+                                <div className="flex flex-col flex-1 overflow-hidden">
+                                    <span className="text-[13px] font-semibold text-slate-800 truncate">{user.name}</span>
+                                    <span className="text-[11px] text-slate-500 truncate">{user.email}</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
+                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[12px] font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors active:scale-95"
+                            >
+                                <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
+                                Sign Out
+                            </button>
+                        </div>
+                        
+                        <div className="h-px w-full bg-slate-100" />
+
+                        {/* 2. Scenery */}
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Background</span>
+                            <div className="grid grid-cols-2 gap-2">
+                                {backgroundScenes.map((scene) => (
+                                    <button
+                                        key={scene.id}
+                                        onClick={() => { updateBrutalistBackground(scene.id); setIsMobileMenuOpen(false); }}
+                                        className={`group relative aspect-video rounded-xl overflow-hidden hover:scale-[1.04] transition-all duration-200 ${
+                                            persona.brutalistBackground === scene.id
+                                                ? 'ring-2 ring-slate-800 ring-offset-1'
+                                                : 'border border-slate-100'
+                                        }`}
+                                    >
+                                        {scene.url ? (
+                                            <img src={scene.url} alt={scene.name} className="w-full h-full object-cover" />
+                                        ) : scene.preview ? (
+                                            <div className="w-full h-full" style={{ background: scene.preview }} />
+                                        ) : (
+                                            <div className="w-full h-full bg-slate-50 flex items-center justify-center text-[8px] font-medium text-slate-500">Default</div>
+                                        )}
+                                        <div className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                            {scene.name}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="h-px w-full bg-slate-100" />
+
+                        {/* 3. Music */}
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Music</span>
+                            <div className="flex items-center gap-2 mb-1 pb-2 border-b border-slate-50">
                                 <button onClick={player.togglePlay} className="p-1.5 rounded-full bg-slate-800 text-white active:scale-90 transition-all">
                                     {player.isPlaying ? <PauseIcon className="w-3.5 h-3.5" /> : <PlayIcon className="w-3.5 h-3.5 ml-px" />}
                                 </button>
-                                <span className="flex-1 text-[10px] font-semibold text-slate-600 truncate">
+                                <span className="flex-1 text-[11px] font-semibold text-slate-600 truncate">
                                     {player.isPlaying ? player.currentTrack.title : 'Not playing'}
                                 </span>
                                 <button onClick={player.toggleMute} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 transition-all">
                                     {player.isMuted ? <SpeakerXMarkIcon className="w-3.5 h-3.5" /> : <SpeakerWaveIcon className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
-                            {/* Track list */}
-                            <div className="grid grid-cols-2 gap-1">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {TRACKS.map((track, idx) => (
                                     <button
                                         key={track.id}
-                                        onClick={() => { player.selectTrack(idx); setIsMusicSelectorOpen(false); }}
-                                        className={`px-2.5 py-1.5 rounded-xl text-left transition-all ${
+                                        onClick={() => { player.selectTrack(idx); setIsMobileMenuOpen(false); }}
+                                        className={`px-3 py-2 rounded-xl text-left transition-all ${
                                             idx === player.currentTrackIndex
                                                 ? 'bg-slate-800 text-white'
-                                                : 'text-slate-600 hover:bg-slate-100'
+                                                : 'text-slate-600 bg-slate-50 hover:bg-slate-100'
                                         }`}
                                     >
-                                        <div className="text-[9px] font-semibold truncate">{track.title}</div>
-                                        <div className="text-[7px] opacity-50">{track.genre}</div>
+                                        <div className="text-[10px] font-semibold truncate">{track.title}</div>
+                                        <div className="text-[8px] opacity-60 mt-0.5">{track.genre}</div>
                                     </button>
                                 ))}
                             </div>
                         </div>
+
+                    </div>
                 )}
 
                 {/* Single-row: tabs + music button */}
@@ -324,10 +385,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                     {/* Divider */}
                     <div className="w-px h-6 bg-slate-200/80 shrink-0" />
 
-                    {/* Music button — same structure as tab buttons */}
+                    {/* Menu button */}
                     <button
-                        ref={musicButtonRef}
-                        onClick={() => setIsMusicSelectorOpen(p => !p)}
+                        ref={mobileButtonRef}
+                        onClick={() => setIsMobileMenuOpen(p => !p)}
                         className="flex flex-col items-center gap-1 py-1 flex-1 transition-all active:scale-90"
                     >
                         {player.isPlaying ? (
@@ -337,10 +398,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
                         ) : (
-                            <MusicalNoteIcon className="w-5 h-5 text-slate-500" />
+                            <UserIcon className="w-5 h-5 text-slate-500" />
                         )}
                         <span className={`text-[11px] font-medium tracking-tight ${player.isPlaying ? 'text-[#1a1a1a]' : 'text-slate-400'}`}>
-                            Music
+                            Menu
                         </span>
                     </button>
                 </nav>
