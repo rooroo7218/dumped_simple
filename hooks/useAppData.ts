@@ -44,6 +44,13 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
             }
         };
         initDb();
+
+        // Push any localStorage tasks to Supabase after a short delay so the
+        // Supabase session has time to fully restore before we try to write.
+        const syncTimer = setTimeout(() => {
+            databaseService.pushLocalItemsToCloud();
+        }, 2000);
+        return () => clearTimeout(syncTimer);
     }, [userId]);
 
     // Data Update Handlers

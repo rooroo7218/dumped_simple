@@ -341,6 +341,42 @@ export const databaseService = {
     },
 
     // --- DUMPED v3: Items & Excerpts ---
+    async pushLocalItemsToCloud(): Promise<void> {
+        const localItems: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        if (localItems.length === 0) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch what's already in Supabase to avoid duplicates
+        const { data: existing } = await supabase
+            .from('items')
+            .select('id')
+            .eq('user_id', user.id);
+
+        const remoteIds = new Set((existing || []).map((r: any) => r.id));
+        const unsynced = localItems.filter(i => !remoteIds.has(i.id));
+        if (unsynced.length === 0) return;
+
+        const rows = unsynced.map(i => ({
+            id: i.id,
+            user_id: user.id,
+            label: i.label,
+            mention_count: i.mentionCount ?? 1,
+            last_mentioned_at: i.lastMentionedAt ? new Date(i.lastMentionedAt).toISOString() : new Date().toISOString(),
+            first_mentioned_at: i.firstMentionedAt ? new Date(i.firstMentionedAt).toISOString() : new Date().toISOString(),
+            is_flagged: i.isFlagged ?? false,
+            is_completed: i.isCompleted ?? false,
+        }));
+
+        const { error } = await supabase.from('items').upsert(rows, { onConflict: 'id' });
+        if (error) {
+            console.error('pushLocalItemsToCloud failed:', error.message);
+        } else {
+            console.log(`✅ Pushed ${rows.length} local items to Supabase`);
+        }
+    },
+
     async loadItems(): Promise<Item[]> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
