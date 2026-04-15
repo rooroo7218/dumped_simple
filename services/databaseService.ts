@@ -545,13 +545,26 @@ export const databaseService = {
 
     async fetchDumpCalendarData(): Promise<{ date: string; count: number }[]> {
         const { data: { user } } = await supabase.auth.getUser();
+
+        // ── Helper: turn a timestamp (ms) into a local YYYY-MM-DD string ──────
+        const toLocalDate = (ms: number): string => {
+            const d = new Date(ms);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+
         if (!user) {
-            // localStorage fallback: parse dumped_dump_items for dates
-            const dumpItems: DumpItem[] = JSON.parse(localStorage.getItem('dumped_dump_items') || '[]');
+            // Local mode: saveMemory writes to 'dumped_memories', one entry per dump session
+            const raw = localStorage.getItem('dumped_memories') || '[]';
+            const memories: Array<{ id: string; timestamp: number }> = JSON.parse(raw);
             const countsByDate: Record<string, number> = {};
-            dumpItems.forEach(item => {
-                const date = new Date(item.createdAt || 0).toISOString().split('T')[0];
-                countsByDate[date] = (countsByDate[date] || 0) + 1;
+            memories.forEach(m => {
+                if (m.timestamp) {
+                    const date = toLocalDate(m.timestamp);
+                    countsByDate[date] = (countsByDate[date] || 0) + 1;
+                }
             });
             return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
         }
@@ -559,18 +572,48 @@ export const databaseService = {
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-        const { data, error } = await supabase
+        // Primary source: memories table (one row per dump session, timestamp is BIGINT ms)
+        const { data: memData, error: memError } = await supabase
             .from('memories')
             .select('timestamp')
             .eq('user_id', user.id)
             .gte('timestamp', oneYearAgo.getTime());
 
-        if (error || !data) return [];
+        if (!memError && memData && memData.length > 0) {
+            const countsByDate: Record<string, number> = {};
+            memData.forEach(row => {
+                const date = toLocalDate(row.timestamp);
+                countsByDate[date] = (countsByDate[date] || 0) + 1;
+            });
+            return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
+        }
 
+        // Fallback: infer from items table (first_mentioned_at / last_mentioned_at)
+        // Each unique date where an item was first created counts as a dump day
+        const { data: itemData } = await supabase
+            .from('items')
+            .select('first_mentioned_at, last_mentioned_at')
+            .eq('user_id', user.id);
+
+        if (!itemData || itemData.length === 0) return [];
+
+        const dumpDays = new Set<string>();
         const countsByDate: Record<string, number> = {};
-        data.forEach(row => {
-            const date = new Date(row.timestamp).toISOString().split('T')[0];
-            countsByDate[date] = (countsByDate[date] || 0) + 1;
+
+        itemData.forEach(row => {
+            if (row.first_mentioned_at) {
+                const date = toLocalDate(new Date(row.first_mentioned_at).getTime());
+                dumpDays.add(date);
+                countsByDate[date] = (countsByDate[date] || 0) + 1;
+            }
+            // last_mentioned_at may differ from first — count it too if distinct
+            if (row.last_mentioned_at) {
+                const date = toLocalDate(new Date(row.last_mentioned_at).getTime());
+                if (!dumpDays.has(date)) {
+                    dumpDays.add(date);
+                    countsByDate[date] = (countsByDate[date] || 0) + 1;
+                }
+            }
         });
 
         return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));

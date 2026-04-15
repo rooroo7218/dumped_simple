@@ -232,20 +232,42 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
     const maxMentionCount = Math.max(...[...active, ...flagged].map(i => i.mentionCount), 1);
 
-    const tileProps = (item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => ({
-        item,
-        isExpanded: expandedItemId === item.id,
-        excerpts: excerpts[item.id] || [],
-        onToggle: () => toggleExpand(item.id),
-        onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
-        onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
-        onDelete: (e: React.MouseEvent) => handleDelete(e, item),
-        onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
-        onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
-        style: itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey },
-        size,
-        className: extraClass,
-    });
+    const tileProps = (item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
+        // Frequency-based sizing logic (Keeping Vercel font size/pos)
+        let colSpan = 'col-span-1';
+        let minHeight = 120; // Default for 1x (fits 3-4 lines + icons)
+        const count = item.mentionCount;
+
+        if (count === 1) { 
+            minHeight = 120; 
+            colSpan = 'col-span-1'; 
+        } else if (count === 2) { 
+            minHeight = 240; // 6 lines equivalent
+            colSpan = 'col-span-1'; 
+        } else if (count === 3) { 
+            minHeight = 240; 
+            colSpan = 'col-span-2'; 
+        } else { 
+            minHeight = 360; 
+            colSpan = 'col-span-2'; 
+        }
+
+        return {
+            item,
+            isExpanded: expandedItemId === item.id,
+            excerpts: excerpts[item.id] || [],
+            onToggle: () => toggleExpand(item.id),
+            onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
+            onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
+            onDelete: (e: React.MouseEvent) => handleDelete(e, item),
+            onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
+            onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
+            style: itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey },
+            size,
+            minHeight,
+            className: `${colSpan} ${extraClass ?? ''}`,
+        };
+    };
 
     return (
         <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700">
@@ -261,16 +283,12 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                         <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
-                        {flagged.map(item => {
-                            const ratio = item.mentionCount / maxMentionCount;
-                            const isLarge = ratio > 0.6 && item.mentionCount > 1;
-                            return (
-                                <ItemTile
-                                    key={item.id}
-                                    {...tileProps(item, isLarge ? 'lg' : 'md', isLarge ? 'col-span-2' : '')}
-                                />
-                            );
-                        })}
+                        {flagged.map(item => (
+                            <ItemTile
+                                key={item.id}
+                                {...tileProps(item, 'md')}
+                            />
+                        ))}
                     </div>
                 </section>
             )}
@@ -287,13 +305,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                 <div className="flex flex-col gap-3">
                     {activeGroups.map(({ count, items: groupItems }) => (
                         <div key={count} className={`grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min transition-opacity duration-200 ${draggedGroup !== null && draggedGroup !== count ? 'opacity-30' : ''}`}>
-                            {groupItems.map(item => {
-                                const ratio = item.mentionCount / maxMentionCount;
-                                const isLarge = ratio > 0.6 && item.mentionCount > 1;
-                                return (
+                                {groupItems.map(item => (
                                     <ItemTile
                                         key={item.id}
-                                        {...tileProps(item, isLarge ? 'lg' : 'md', isLarge ? 'col-span-2' : '')}
+                                        {...tileProps(item, 'md')}
                                         isDragging={draggedId === item.id}
                                         isDragOver={dragOverId === item.id}
                                         canDrop={draggedGroup === item.mentionCount}
@@ -302,8 +317,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                                         onDrop={() => handleDrop(item.id, item.mentionCount)}
                                         onDragEnd={handleDragEnd}
                                     />
-                                );
-                            })}
+                                ))}
                         </div>
                     ))}
                 </div>
@@ -358,6 +372,7 @@ interface ItemTileProps {
     onStyleChange: (patch: Partial<ItemStyle>) => void;
     style: ItemStyle;
     size: 'flagged' | 'lg' | 'md' | 'sm';
+    minHeight: number;
     className?: string;
     isDragging?: boolean;
     isDragOver?: boolean;
@@ -370,7 +385,7 @@ interface ItemTileProps {
 
 const ItemTile: React.FC<ItemTileProps> = ({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
-    onLabelChange, onStyleChange, style: itemStyle, size, className,
+    onLabelChange, onStyleChange, style: itemStyle, size, minHeight, className,
     isDragging, isDragOver, canDrop,
     onDragStart, onDragOver, onDrop, onDragEnd,
 }) => {
@@ -405,14 +420,19 @@ const ItemTile: React.FC<ItemTileProps> = ({
         <div
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
-                ${isExpanded ? 'border-2 border-black z-20 col-span-full shadow-lg' : 'h-full min-h-[140px] border-2 border-black shadow-sm'}
+                ${isExpanded ? 'border-2 border-black z-20 col-span-full shadow-lg' : 'border-2 border-black shadow-sm'}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
                 rounded-[14px] bg-white text-slate-900
                 ${className ?? ''}
             `}
-            style={{ background: colorBg, ...textureStyle, padding }}
+            style={{
+                background: colorBg,
+                ...textureStyle,
+                padding,
+                minHeight: isExpanded ? 'auto' : `${minHeight}px`
+            }}
             draggable={draggable}
             onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(); } : undefined}
             onDragOver={onDragOver ? (e) => { e.stopPropagation(); onDragOver(e); } : undefined}
