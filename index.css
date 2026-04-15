@@ -57,3 +57,13 @@
         animation: none;
     }
 }
+
+/* Responsive top padding: no top nav on mobile, fixed header on desktop */
+.main-content-pad-top {
+    padding-top: env(safe-area-inset-top);
+}
+@media (min-width: 768px) {
+    .main-content-pad-top {
+        padding-top: calc(3.25rem + env(safe-area-inset-top));
+    }
+}
