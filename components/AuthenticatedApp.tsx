@@ -123,7 +123,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 syncStatus={data.syncStatus}
             />
 
-            <div className={`min-h-screen ${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative`}>
+            <div className={`${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative`} style={{ minHeight: '100dvh' }}>
                 <ZenBackground
                     url={selectedBackground?.url || null}
                     sceneId={selectedBackground?.id || 'slate'}
