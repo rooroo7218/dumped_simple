@@ -344,7 +344,6 @@ export const databaseService = {
     async loadItems(): Promise<Item[]> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            // Bypass/local mode: return from localStorage
             return JSON.parse(localStorage.getItem('dumped_items') || '[]');
         }
 
@@ -356,10 +355,10 @@ export const databaseService = {
 
         if (error) {
             console.error("Error loading v3 items:", error);
-            return [];
+            return JSON.parse(localStorage.getItem('dumped_items') || '[]');
         }
 
-        return (data || []).map(d => ({
+        const remoteItems = (data || []).map(d => ({
             id: d.id,
             userId: d.user_id,
             label: d.label,
@@ -373,6 +372,31 @@ export const databaseService = {
             fadedAt: d.faded_at ? new Date(d.faded_at).getTime() : undefined,
             createdAt: new Date(d.created_at).getTime()
         }));
+
+        // One-time migration: push any localStorage items that aren't in Supabase yet
+        const localItems: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const remoteIds = new Set(remoteItems.map(i => i.id));
+        const unsynced = localItems.filter(i => !remoteIds.has(i.id) && !i.isCompleted);
+
+        if (unsynced.length > 0) {
+            const rows = unsynced.map(i => ({
+                id: i.id,
+                user_id: user.id,
+                label: i.label,
+                mention_count: i.mentionCount,
+                last_mentioned_at: new Date(i.lastMentionedAt).toISOString(),
+                first_mentioned_at: new Date(i.firstMentionedAt).toISOString(),
+                is_flagged: i.isFlagged ?? false,
+                is_completed: i.isCompleted ?? false,
+            }));
+            const { error: upErr } = await supabase.from('items').upsert(rows, { onConflict: 'id' });
+            if (upErr) console.error('Item migration failed:', upErr.message);
+        }
+
+        // Return remote items merged with any still-local ones (covers migration failures)
+        const allIds = new Set(remoteItems.map(i => i.id));
+        const localOnly = localItems.filter(i => !allIds.has(i.id));
+        return [...remoteItems, ...localOnly];
     },
 
     async loadItemExcerpts(itemId: string): Promise<DumpItem[]> {
@@ -449,11 +473,16 @@ export const databaseService = {
             return;
         }
 
+        // Also maintain localStorage mirror so tasks survive any Supabase hiccup
+        const localItems: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const localDumpItems: DumpItem[] = JSON.parse(localStorage.getItem('dumped_dump_items') || '[]');
+        const now = Date.now();
+        let localDirty = false;
+
         for (const res of results) {
             let itemId = res.item_id;
 
             if (res.action === 'create' && res.label) {
-                // Create new item
                 const { data: newItem, error: createError } = await supabase
                     .from('items')
                     .insert({
@@ -463,39 +492,63 @@ export const databaseService = {
                     })
                     .select()
                     .single();
-                
+
                 if (createError) {
                     console.error("Error creating v3 item:", createError);
-                    continue;
+                    // Still save locally so the user sees it immediately
+                    const fallbackId = crypto.randomUUID();
+                    localItems.push({
+                        id: fallbackId, userId: user.id, label: res.label,
+                        mentionCount: 1, lastMentionedAt: now, firstMentionedAt: now,
+                        isFlagged: false, isCompleted: false, createdAt: now
+                    });
+                    itemId = fallbackId;
+                    localDirty = true;
+                } else {
+                    itemId = newItem.id;
+                    // Mirror to localStorage
+                    localItems.push({
+                        id: newItem.id, userId: user.id, label: res.label,
+                        mentionCount: 1, lastMentionedAt: now, firstMentionedAt: now,
+                        isFlagged: false, isCompleted: false, createdAt: now
+                    });
+                    localDirty = true;
                 }
-                itemId = newItem.id;
             } else if (res.action === 'assign' && itemId) {
-                // Increment mention count
-                const { error: updateError } = await supabase.rpc('increment_item_mention', { 
-                    item_id_param: itemId 
+                const { error: updateError } = await supabase.rpc('increment_item_mention', {
+                    item_id_param: itemId
                 });
 
-                // Fallback if RPC isn't defined yet
                 if (updateError) {
                     const { data: current } = await supabase.from('items').select('mention_count').eq('id', itemId).single();
                     await supabase
                         .from('items')
-                        .update({ 
+                        .update({
                             mention_count: (current?.mention_count || 1) + 1,
-                            last_mentioned_at: new Date().toISOString() 
+                            last_mentioned_at: new Date().toISOString()
                         })
                         .eq('id', itemId);
                 }
+
+                // Mirror to localStorage
+                const local = localItems.find(i => i.id === itemId);
+                if (local) { local.mentionCount += 1; local.lastMentionedAt = now; localDirty = true; }
             }
 
             if (itemId) {
-                // Link to dump via excerpt
                 await supabase.from('dump_items').insert({
                     dump_id: dumpId,
                     item_id: itemId,
                     raw_excerpt: res.raw_excerpt
                 });
+                localDumpItems.push({ id: crypto.randomUUID(), dumpId, itemId, rawExcerpt: res.raw_excerpt, createdAt: now });
+                localDirty = true;
             }
+        }
+
+        if (localDirty) {
+            localStorage.setItem('dumped_items', JSON.stringify(localItems));
+            localStorage.setItem('dumped_dump_items', JSON.stringify(localDumpItems));
         }
     },
 
