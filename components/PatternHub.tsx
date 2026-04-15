@@ -11,9 +11,9 @@ export const PatternHub: React.FC = () => {
     }, []);
 
     return (
-        <div className="max-w-xl mx-auto w-full pt-10 pb-24 px-6 animate-in fade-in duration-700">
+        <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700">
             {/* Header Style matching TilesHub */}
-            <div className="mb-10 mx-1 pb-4 border-b border-slate-100/60">
+            <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
                 <div className="flex items-center gap-2 mb-1.5">
                     <SparklesIcon className="w-4 h-4 text-violet-400" />
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Activity</span>

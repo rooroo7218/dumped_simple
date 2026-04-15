@@ -5,7 +5,6 @@ import { databaseService } from '../services/databaseService';
 import {
     FlagIcon as FlagOutline,
     CheckCircleIcon as CheckOutline,
-    TrashIcon,
     SwatchIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -233,24 +232,13 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const maxMentionCount = Math.max(...[...active, ...flagged].map(i => i.mentionCount), 1);
 
     const tileProps = (item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
-        // Frequency-based sizing logic (Keeping Vercel font size/pos)
-        let colSpan = 'col-span-1';
-        let minHeight = 120; // Default for 1x (fits 3-4 lines + icons)
         const count = item.mentionCount;
+        let colSpan: string;
+        if (count === 1)      colSpan = 'col-span-3';
+        else if (count === 2) colSpan = 'col-span-6';
+        else                  colSpan = 'col-span-9';
 
-        if (count === 1) { 
-            minHeight = 120; 
-            colSpan = 'col-span-1'; 
-        } else if (count === 2) { 
-            minHeight = 240; // 6 lines equivalent
-            colSpan = 'col-span-1'; 
-        } else if (count === 3) { 
-            minHeight = 240; 
-            colSpan = 'col-span-2'; 
-        } else { 
-            minHeight = 360; 
-            colSpan = 'col-span-2'; 
-        }
+        const aspectRatio = count === 1 ? '1 / 1' : count === 2 ? '2 / 1' : '3 / 1';
 
         return {
             item,
@@ -264,7 +252,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
             style: itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey },
             size,
-            minHeight,
+            aspectRatio,
             className: `${colSpan} ${extraClass ?? ''}`,
         };
     };
@@ -282,7 +270,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                         </div>
                         <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min">
+                    <div className="grid grid-cols-9 gap-1 auto-rows-min">
                         {flagged.map(item => (
                             <ItemTile
                                 key={item.id}
@@ -302,24 +290,22 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                     </div>
                     <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
                 </div>
-                <div className="flex flex-col gap-3">
-                    {activeGroups.map(({ count, items: groupItems }) => (
-                        <div key={count} className={`grid grid-cols-2 md:grid-cols-3 gap-2 auto-rows-min transition-opacity duration-200 ${draggedGroup !== null && draggedGroup !== count ? 'opacity-30' : ''}`}>
-                                {groupItems.map(item => (
-                                    <ItemTile
-                                        key={item.id}
-                                        {...tileProps(item, 'md')}
-                                        isDragging={draggedId === item.id}
-                                        isDragOver={dragOverId === item.id}
-                                        canDrop={draggedGroup === item.mentionCount}
-                                        onDragStart={() => handleDragStart(item.id, item.mentionCount)}
-                                        onDragOver={(e: React.DragEvent) => handleDragOver(e, item.id, item.mentionCount)}
-                                        onDrop={() => handleDrop(item.id, item.mentionCount)}
-                                        onDragEnd={handleDragEnd}
-                                    />
-                                ))}
-                        </div>
-                    ))}
+                <div className="grid grid-cols-9 gap-1 auto-rows-min">
+                    {activeGroups.flatMap(({ items: groupItems }) =>
+                        groupItems.map(item => (
+                            <ItemTile
+                                key={item.id}
+                                {...tileProps(item, 'md')}
+                                isDragging={draggedId === item.id}
+                                isDragOver={dragOverId === item.id}
+                                canDrop={draggedGroup === item.mentionCount}
+                                onDragStart={() => handleDragStart(item.id, item.mentionCount)}
+                                onDragOver={(e: React.DragEvent) => handleDragOver(e, item.id, item.mentionCount)}
+                                onDrop={() => handleDrop(item.id, item.mentionCount)}
+                                onDragEnd={handleDragEnd}
+                            />
+                        ))
+                    )}
                 </div>
             </section>
 
@@ -333,7 +319,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                         </div>
                         <h2 className="text-xl font-medium tracking-tight text-slate-900">Done and dusted.</h2>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 opacity-50">
+                    <div className="grid grid-cols-9 gap-2 opacity-50">
                         {[...completed, ...faded].map(item => (
                             <ItemTile key={item.id} {...tileProps(item, 'sm')} />
                         ))}
@@ -372,7 +358,7 @@ interface ItemTileProps {
     onStyleChange: (patch: Partial<ItemStyle>) => void;
     style: ItemStyle;
     size: 'flagged' | 'lg' | 'md' | 'sm';
-    minHeight: number;
+    aspectRatio?: string;
     className?: string;
     isDragging?: boolean;
     isDragOver?: boolean;
@@ -385,7 +371,7 @@ interface ItemTileProps {
 
 const ItemTile: React.FC<ItemTileProps> = ({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
-    onLabelChange, onStyleChange, style: itemStyle, size, minHeight, className,
+    onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop,
     onDragStart, onDragOver, onDrop, onDragEnd,
 }) => {
@@ -413,25 +399,25 @@ const ItemTile: React.FC<ItemTileProps> = ({
     const colorBg = getColorBg(itemStyle.color);
     const textureStyle = getTextureStyle(itemStyle.texture);
 
-    const borderRadius = '14px';
-    const padding = '14px';
+    const borderRadius = '10px';
+    const padding = '8px';
 
     return (
         <div
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
-                ${isExpanded ? 'border-2 border-black z-20 col-span-full shadow-lg' : 'border-2 border-black shadow-sm'}
+                ${isExpanded ? 'border border-black/70 z-20 col-span-full shadow-lg' : 'border border-black/70 shadow-sm'}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[14px] bg-white text-slate-900
+                rounded-[10px] bg-white text-slate-900
                 ${className ?? ''}
             `}
             style={{
                 background: colorBg,
                 ...textureStyle,
                 padding,
-                minHeight: isExpanded ? 'auto' : `${minHeight}px`
+                ...(isExpanded ? {} : { aspectRatio })
             }}
             draggable={draggable}
             onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(); } : undefined}
@@ -440,35 +426,50 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDragEnd={onDragEnd}
             onClick={onToggle}
         >
+
             <div className="flex flex-col gap-2">
-                {/* ── Top: Title (editable when expanded) ── */}
-                {isExpanded ? (
-                    <textarea
-                        value={draftLabel}
-                        onChange={e => setDraftLabel(e.target.value)}
-                        onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) onLabelChange?.(draftLabel.trim()); }}
-                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
-                        onClick={e => e.stopPropagation()}
-                        rows={2}
-                        className={`
-                            w-full bg-transparent border-none resize-none
-                            tracking-tight font-normal leading-[1.75] text-[15px]
-                            ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
-                            focus:outline-none focus:ring-0
+                {/* ── Top: Complete button + Title ── */}
+                <div className="flex items-start gap-1.5">
+                    <button
+                        onClick={onComplete}
+                        className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
+                            item.isCompleted
+                                ? (itemStyle.color === 'aurora' ? 'text-emerald-400' : 'text-emerald-600')
+                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                        }`}
+                        title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                    >
+                        {item.isCompleted ? <CheckSolid className="w-3.5 h-3.5" /> : <CheckOutline className="w-3.5 h-3.5" />}
+                    </button>
+
+                    {isExpanded ? (
+                        <textarea
+                            value={draftLabel}
+                            onChange={e => setDraftLabel(e.target.value)}
+                            onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) onLabelChange?.(draftLabel.trim()); }}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                            onClick={e => e.stopPropagation()}
+                            rows={2}
+                            className={`
+                                w-full bg-transparent border-none resize-none
+                                tracking-tight font-normal leading-[1.75] text-[15px]
+                                ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
+                                focus:outline-none focus:ring-0
+                                ${item.isCompleted ? 'line-through opacity-40' : ''}
+                            `}
+                            style={{ padding: 0 }}
+                        />
+                    ) : (
+                        <p className={`
+                            tracking-tight font-semibold leading-snug
+                            ${itemStyle.color === 'aurora' ? 'text-white' : 'text-slate-800'}
+                            ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
-                        `}
-                        style={{ padding: 0 }}
-                    />
-                ) : (
-                    <p className={`
-                        tracking-tight font-semibold leading-snug
-                        ${itemStyle.color === 'aurora' ? 'text-white' : 'text-slate-800'}
-                        ${isSmall ? 'text-[12px]' : 'text-[13px]'}
-                        ${item.isCompleted ? 'line-through opacity-40' : ''}
-                    `}>
-                        {item.label}
-                    </p>
-                )}
+                        `}>
+                            {item.label}
+                        </p>
+                    )}
+                </div>
 
                 {/* ── Mention Count Pill (Airy style) ── */}
                 {item.mentionCount > 1 && !isExpanded && (
@@ -489,19 +490,6 @@ const ItemTile: React.FC<ItemTileProps> = ({
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (
                 <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0">
-                    {/* Complete Button */}
-                    <button
-                        onClick={onComplete}
-                        className={`p-1.5 rounded-xl transition-all active:scale-95 ${
-                            item.isCompleted
-                                ? (itemStyle.color === 'aurora' ? 'text-emerald-400' : 'text-emerald-600')
-                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
-                        }`}
-                        title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
-                    >
-                        {item.isCompleted ? <CheckSolid className="w-4 h-4" /> : <CheckOutline className="w-4 h-4" />}
-                    </button>
-
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
@@ -555,16 +543,6 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         )}
                     </div>
 
-                    {/* Delete Button (grouped last) */}
-                    <button
-                        onClick={onDelete}
-                        className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            itemStyle.color === 'aurora' ? 'text-white/40 hover:text-red-400' : 'text-[#1a1a1a]/30 hover:text-red-500'
-                        }`}
-                        title="Delete"
-                    >
-                        <TrashIcon className="w-4 h-4" />
-                    </button>
                 </div>
             )}
 

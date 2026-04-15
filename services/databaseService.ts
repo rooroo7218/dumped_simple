@@ -572,6 +572,18 @@ export const databaseService = {
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
+        const countsByDate: Record<string, number> = {};
+
+        // Always include localStorage data first (catches dumps that didn't sync to Supabase)
+        const localRaw = localStorage.getItem('dumped_memories') || '[]';
+        const localMemories: Array<{ id: string; timestamp: number }> = JSON.parse(localRaw);
+        localMemories.forEach(m => {
+            if (m.timestamp && m.timestamp >= oneYearAgo.getTime()) {
+                const date = toLocalDate(m.timestamp);
+                countsByDate[date] = (countsByDate[date] || 0) + 1;
+            }
+        });
+
         // Primary source: memories table (one row per dump session, timestamp is BIGINT ms)
         const { data: memData, error: memError } = await supabase
             .from('memories')
@@ -580,11 +592,19 @@ export const databaseService = {
             .gte('timestamp', oneYearAgo.getTime());
 
         if (!memError && memData && memData.length > 0) {
-            const countsByDate: Record<string, number> = {};
+            // Use a Set of dates already counted from localStorage to avoid double-counting
+            const localDates = new Set(Object.keys(countsByDate));
             memData.forEach(row => {
                 const date = toLocalDate(row.timestamp);
-                countsByDate[date] = (countsByDate[date] || 0) + 1;
+                if (!localDates.has(date)) {
+                    countsByDate[date] = (countsByDate[date] || 0) + 1;
+                }
             });
+            return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
+        }
+
+        // If Supabase returned data from localStorage only, return that
+        if (Object.keys(countsByDate).length > 0) {
             return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
         }
 
@@ -598,25 +618,25 @@ export const databaseService = {
         if (!itemData || itemData.length === 0) return [];
 
         const dumpDays = new Set<string>();
-        const countsByDate: Record<string, number> = {};
+        const itemCountsByDate: Record<string, number> = {};
 
         itemData.forEach(row => {
             if (row.first_mentioned_at) {
                 const date = toLocalDate(new Date(row.first_mentioned_at).getTime());
                 dumpDays.add(date);
-                countsByDate[date] = (countsByDate[date] || 0) + 1;
+                itemCountsByDate[date] = (itemCountsByDate[date] || 0) + 1;
             }
             // last_mentioned_at may differ from first — count it too if distinct
             if (row.last_mentioned_at) {
                 const date = toLocalDate(new Date(row.last_mentioned_at).getTime());
                 if (!dumpDays.has(date)) {
                     dumpDays.add(date);
-                    countsByDate[date] = (countsByDate[date] || 0) + 1;
+                    itemCountsByDate[date] = (itemCountsByDate[date] || 0) + 1;
                 }
             }
         });
 
-        return Object.entries(countsByDate).map(([date, count]) => ({ date, count }));
+        return Object.entries(itemCountsByDate).map(([date, count]) => ({ date, count }));
     },
 
     async fetchHabitData(): Promise<boolean[]> {

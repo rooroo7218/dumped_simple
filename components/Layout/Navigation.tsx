@@ -264,13 +264,13 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className={`md:hidden fixed z-[90] transition-all duration-1000 ease-in-out w-fit mx-auto ${
                 isZenMode ? 'translate-y-24 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
             }`} style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))', left: '1rem', right: '1rem' }}>
-                <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-3 py-[6px] flex items-center justify-between max-w-[320px] mx-auto">
+                <div className="bg-white/85 backdrop-blur-xl border border-black/70 shadow-2xl rounded-full px-3 py-[6px] flex items-center justify-between max-w-[320px] mx-auto">
 
 
 
                 {/* Mobile Menu Popover */}
                 {isMobileMenuOpen && (
-                    <div ref={mobileMenuRef} className="absolute bottom-[calc(100%+16px)] right-0 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-black shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
+                    <div ref={mobileMenuRef} className="absolute bottom-[calc(100%+16px)] right-0 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border border-black/70 shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
                         
                         {/* 1. User Profile */}
                         <div className="flex flex-col gap-3">

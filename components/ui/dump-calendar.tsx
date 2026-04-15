@@ -19,13 +19,12 @@ type CalendarData = {
     count: number;
 }[];
 
-// Slate monochrome — 5 levels from barely-there to near-black
 const LEVELS: Record<number, string> = {
-    0: 'rgba(15,23,42,0.07)',
-    1: 'rgba(15,23,42,0.22)',
-    2: 'rgba(15,23,42,0.42)',
-    3: 'rgba(15,23,42,0.65)',
-    4: 'rgba(15,23,42,0.88)',
+    0: 'rgba(15,23,42,0.03)',  // grey — no activity
+    1: '#c4b5fd',              // purple-300 — light
+    2: '#a78bfa',              // purple-400
+    3: '#7c3aed',              // purple-700
+    4: '#4c1d95',              // purple-900 — deep
 };
 
 function getLevel(count: number): 0 | 1 | 2 | 3 | 4 {
@@ -100,7 +99,35 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
     const end = endOfDay(new Date());
     const start = startOfDay(subYears(end, 1));
 
-    const weeks = useMemo(() => buildWeeks(data, start, end), [data]);
+    const weeks = useMemo(() => {
+        const built = buildWeeks(data, start, end);
+
+        // Reverse so most recent week is on top, then re-derive month/year labels
+        const reversed = [...built].reverse();
+        const seenMonths = new Set<string>();
+        const seenYears = new Set<string>();
+
+        reversed.forEach(week => {
+            week.monthLabel = null;
+            const realDays = week.days.filter(Boolean) as Activity[];
+            const firstReal = realDays[0];
+            if (!firstReal) return;
+
+            const monthKey = format(firstReal.date, 'yyyy-MM');
+            if (!seenMonths.has(monthKey)) {
+                seenMonths.add(monthKey);
+                const yearKey = format(firstReal.date, 'yy');
+                if (!seenYears.has(yearKey)) {
+                    seenYears.add(yearKey);
+                    week.monthLabel = format(firstReal.date, "MMM ''yy");
+                } else {
+                    week.monthLabel = format(firstReal.date, 'MMM');
+                }
+            }
+        });
+
+        return reversed;
+    }, [data]);
 
     return (
         <div style={{ width: '100%' }}>
@@ -162,8 +189,9 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                     title={day ? `${format(day.date, 'MMM d')}: ${day.count} dump${day.count !== 1 ? 's' : ''}` : ''}
                                     style={{
                                         aspectRatio: '1',
-                                        borderRadius: 3,
+                                        borderRadius: '50%',
                                         background: day ? LEVELS[day.level] : 'transparent',
+                                        outline: day ? '1px solid rgba(0,0,0,0.7)' : 'none',
                                         transition: 'background 0.15s',
                                     }}
                                 />
