@@ -90,7 +90,8 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const load = async () => {
         setIsLoading(true);
         const data = await databaseService.loadItems();
-        setItems(data);
+        // Always filter out items currently pending deletion so polls don't restore them
+        setItems(data.filter(i => !pendingDeleteTimers.current.has(i.id)));
         setIsLoading(false);
     };
 
@@ -136,7 +137,8 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             await databaseService.deleteItem(item.id);
             pendingDeleteTimers.current.delete(item.id);
             setPendingDeletes(prev => { const next = new Map(prev); next.delete(item.id); return next; });
-            setItems(prev => prev.filter(i => i.id !== item.id));
+            // Reload from Supabase after delete so the authoritative state is used
+            load();
         }, 5000);
         pendingDeleteTimers.current.set(item.id, timer);
         setPendingDeletes(prev => new Map(prev).set(item.id, { item }));
