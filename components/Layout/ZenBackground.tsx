@@ -54,10 +54,13 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     const isSunlight = sceneId === 'sunlight';
 
     return (
-        // z-[1] sits above the browser's default white canvas so the actual
-        // background renders at the physical top of the screen (behind the
-        // iOS status bar) with no separate gradient approximation needed.
-        <div className="fixed top-0 left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100dvh', backgroundColor: '#f7eaff' }}>
+        // Extend above safe-area-inset-top so the background reaches the
+        // physical screen top (behind the iOS status bar).
+        <div className="fixed left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{
+            top: 'calc(-1 * env(safe-area-inset-top))',
+            height: 'calc(100dvh + env(safe-area-inset-top))',
+            backgroundColor: '#f7eaff',
+        }}>
 
             {/* Image background (Zen scenes) */}
             <div
