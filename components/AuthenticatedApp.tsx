@@ -36,16 +36,12 @@ export type BackgroundScene = {
 };
 
 export const BACKGROUND_SCENES: BackgroundScene[] = [
-    { id: 'slate', name: 'Default', url: null, preview: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' },
-    { id: 'aurora', name: 'Aurora Light', url: null, preview: 'linear-gradient(100deg, #bfdbfe 0%, #e0e7ff 20%, #bae6fd 40%, #ddd6fe 60%, #c7d2fe 80%, #bfdbfe 100%)' },
-    { id: 'warp', name: 'Lava', url: null, preview: 'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)' },
-    { id: 'gradient', name: 'Galaxy Twilight', url: null, preview: 'radial-gradient(125% 125% at 50% 20%, #0A0A0A 35%, #2979FF 50%, #FF80AB 60%, #FF6D00 70%, #FFD600 80%, #00E676 90%, #3D5AFE 100%)' },
-    { id: 'aurora_dream', name: 'Aurora Dream', url: null, preview: 'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)' },
-    { id: 'sunlight', name: 'Sunlight', url: null, preview: 'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)' },
-    { id: 'girly_sparkles', name: 'Girly Pop ✦', url: '/assets/bg-sparkles.png', preview: 'linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #fce7f3 100%)' },
-    { id: 'miyazaki_meadow', name: 'Miyazaki Meadow', url: '/assets/backgrounds/u7641654266_Breathtaking_summer_meadow_in_the_style_of_Studio_4bdaec70-cf50-492c-886f-a10d45e517bc_1.png' },
-    { id: 'frog_spirits_pond', name: 'Frog Spirits Pond', url: '/assets/backgrounds/u7641654266_A_child_and_a_group_of_glowing_frog_spirits_sitti_aab274ad-9c34-4368-bd60-77354c76a6e5_2.png' },
-    { id: 'snowy_sledding', name: 'Snowy Sledding', url: '/assets/backgrounds/u7641654266_A_child_wrapped_in_a_thick_scarf_sledding_down_a__0a1b5130-0102-44d3-ba3f-cb2800f485d2_0.png' },
+    { id: 'slate',        name: 'Default',        url: null, preview: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' },
+    { id: 'aurora',       name: 'Aurora Light',   url: null, preview: 'linear-gradient(100deg, #bfdbfe 0%, #e0e7ff 20%, #bae6fd 40%, #ddd6fe 60%, #c7d2fe 80%, #bfdbfe 100%)' },
+    { id: 'aurora_dream', name: 'Aurora Dream',   url: null, preview: 'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)' },
+    { id: 'sunlight',     name: 'Sunlight',       url: null, preview: 'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)' },
+    { id: 'warp',         name: 'Lava',           url: null, preview: 'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)' },
+    { id: 'gradient',     name: 'Galaxy Twilight', url: null, preview: 'radial-gradient(125% 125% at 50% 20%, #0A0A0A 35%, #2979FF 50%, #FF80AB 60%, #FF6D00 70%, #FFD600 80%, #00E676 90%, #3D5AFE 100%)' },
 ];
 
 interface AuthenticatedAppProps {

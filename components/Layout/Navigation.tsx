@@ -274,56 +274,50 @@ export const Navigation: React.FC<NavigationProps> = ({
 
                 {/* Mobile Menu Popover */}
                 {isMobileMenuOpen && (
-                    <div ref={mobileMenuRef} className="absolute bottom-[calc(100%+16px)] right-0 mb-2 w-64 p-4 rounded-3xl bg-white/95 backdrop-blur-xl border border-black/70 shadow-2xl max-h-[75vh] flex flex-col gap-4 z-50 overflow-y-auto no-scrollbar">
-                        
-                        {/* 1. User Profile */}
-                        <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-3">
-                                {user.picture ? (
-                                    <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full object-cover border-2 border-slate-200" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-slate-100 text-slate-600">
-                                        {user.name?.charAt(0).toUpperCase() ?? 'U'}
-                                    </div>
-                                )}
-                                <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="text-[13px] font-semibold text-slate-800 truncate">{user.name}</span>
-                                    <span className="text-[11px] text-slate-500 truncate">{user.email}</span>
+                    <div ref={mobileMenuRef} className="absolute bottom-[calc(100%+12px)] left-0 w-72 rounded-2xl bg-white border border-black/70 shadow-2xl z-50 overflow-hidden">
+
+                        {/* User row */}
+                        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-black/10">
+                            {user.picture ? (
+                                <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                            ) : (
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-slate-100 text-slate-600">
+                                    {user.name?.charAt(0).toUpperCase() ?? 'U'}
                                 </div>
+                            )}
+                            <div className="flex flex-col flex-1 min-w-0">
+                                <span className="text-[12px] font-semibold text-[#1a1a1a] truncate">{user.name}</span>
+                                <span className="text-[10px] text-slate-400 truncate">{user.email}</span>
                             </div>
                             <button
                                 onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
-                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[12px] font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors active:scale-95"
+                                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-90"
+                                title="Sign out"
                             >
                                 <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
-                                Sign Out
                             </button>
                         </div>
-                        
-                        <div className="h-[2px] w-full bg-slate-100" />
 
-                        {/* 2. Scenery */}
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Background</span>
-                            <div className="grid grid-cols-2 gap-2">
+                        {/* Background */}
+                        <div className="px-4 py-3 border-b border-black/10">
+                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Background</span>
+                            <div className="grid grid-cols-3 gap-1.5">
                                 {backgroundScenes.map((scene) => (
                                     <button
                                         key={scene.id}
                                         onClick={() => { updateBrutalistBackground(scene.id); setIsMobileMenuOpen(false); }}
-                                        className={`group relative aspect-video rounded-xl overflow-hidden hover:scale-[1.04] transition-all duration-200 ${
+                                        className={`relative aspect-video rounded-lg overflow-hidden transition-all active:scale-95 ${
                                             persona.brutalistBackground === scene.id
-                                                ? 'ring-2 ring-slate-800 ring-offset-1'
-                                                : 'border-2 border-slate-100'
+                                                ? 'ring-2 ring-[#1a1a1a] ring-offset-1'
+                                                : 'border border-black/15'
                                         }`}
                                     >
-                                        {scene.url ? (
-                                            <img src={scene.url} alt={scene.name} className="w-full h-full object-cover" />
-                                        ) : scene.preview ? (
+                                        {scene.preview ? (
                                             <div className="w-full h-full" style={{ background: scene.preview }} />
                                         ) : (
-                                            <div className="w-full h-full bg-slate-50 flex items-center justify-center text-[8px] font-medium text-slate-500">Default</div>
+                                            <div className="w-full h-full bg-slate-50" />
                                         )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[8px] py-1 px-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                        <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-[7px] py-0.5 px-1 font-medium truncate">
                                             {scene.name}
                                         </div>
                                     </button>
@@ -331,35 +325,33 @@ export const Navigation: React.FC<NavigationProps> = ({
                             </div>
                         </div>
 
-                        <div className="h-[2px] w-full bg-slate-100" />
-
-                        {/* 3. Music */}
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Music</span>
-                            <div className="flex items-center gap-2 mb-1 pb-2 border-b border-slate-50">
-                                <button onClick={player.togglePlay} className="p-1.5 rounded-full bg-slate-800 text-white active:scale-90 transition-all">
-                                    {player.isPlaying ? <PauseIcon className="w-3.5 h-3.5" /> : <PlayIcon className="w-3.5 h-3.5 ml-px" />}
+                        {/* Music */}
+                        <div className="px-4 py-3">
+                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Music</span>
+                            <div className="flex items-center gap-2 mb-2">
+                                <button onClick={player.togglePlay} className="p-1.5 rounded-full bg-[#1a1a1a] text-white active:scale-90 transition-all shrink-0">
+                                    {player.isPlaying ? <PauseIcon className="w-3 h-3" /> : <PlayIcon className="w-3 h-3 ml-px" />}
                                 </button>
-                                <span className="flex-1 text-[11px] font-semibold text-slate-600 truncate">
+                                <span className="flex-1 text-[11px] font-medium text-slate-600 truncate">
                                     {player.isPlaying ? player.currentTrack.title : 'Not playing'}
                                 </span>
-                                <button onClick={player.toggleMute} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 transition-all">
+                                <button onClick={player.toggleMute} className="shrink-0 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 transition-all active:scale-90">
                                     {player.isMuted ? <SpeakerXMarkIcon className="w-3.5 h-3.5" /> : <SpeakerWaveIcon className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5">
+                            <div className="grid grid-cols-2 gap-1">
                                 {TRACKS.map((track, idx) => (
                                     <button
                                         key={track.id}
                                         onClick={() => { player.selectTrack(idx); setIsMobileMenuOpen(false); }}
-                                        className={`px-3 py-2 rounded-xl text-left transition-all ${
+                                        className={`px-2.5 py-1.5 rounded-lg text-left transition-all active:scale-95 border ${
                                             idx === player.currentTrackIndex
-                                                ? 'bg-slate-800 text-white'
-                                                : 'text-slate-600 bg-slate-50 hover:bg-slate-100'
+                                                ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
+                                                : 'text-slate-600 bg-white border-black/10 hover:bg-slate-50'
                                         }`}
                                     >
                                         <div className="text-[10px] font-semibold truncate">{track.title}</div>
-                                        <div className="text-[8px] opacity-60 mt-0.5">{track.genre}</div>
+                                        <div className="text-[8px] opacity-50 mt-0.5">{track.genre}</div>
                                     </button>
                                 ))}
                             </div>
