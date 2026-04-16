@@ -94,6 +94,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
     const bgUrl = persona.brutalistBackground;
     const selectedBackground = BACKGROUND_SCENES.find(s => s.id === bgUrl || s.url === bgUrl) || BACKGROUND_SCENES[0];
 
+
     const themeClasses = {
         bg: 'bg-transparent',
         panel: 'bg-white/70 backdrop-blur-xl border-2 border-white/20 rounded-[32px] shadow-2xl transition-all duration-700',
@@ -123,7 +124,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 syncStatus={data.syncStatus}
             />
 
-            <div className={`${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative`} style={{ minHeight: '100dvh' }}>
+            <div className={`${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative z-10`} style={{ minHeight: '100dvh' }}>
                 <ZenBackground
                     url={selectedBackground?.url || null}
                     sceneId={selectedBackground?.id || 'slate'}
