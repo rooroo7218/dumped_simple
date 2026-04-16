@@ -406,7 +406,8 @@ export const databaseService = {
             isCompleted: d.is_completed,
             completedAt: d.completed_at ? new Date(d.completed_at).getTime() : undefined,
             fadedAt: d.faded_at ? new Date(d.faded_at).getTime() : undefined,
-            createdAt: new Date(d.created_at).getTime()
+            createdAt: new Date(d.created_at).getTime(),
+            style: d.style ?? undefined,
         }));
 
         // One-time migration: push any localStorage items that aren't in Supabase yet
@@ -619,6 +620,15 @@ export const databaseService = {
             updates.completed_at = null;
         }
         await supabase.from('items').update(updates).eq('id', itemId);
+    },
+
+    async saveItemStyle(itemId: string, style: { color: string; texture: string }) {
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const item = items.find(i => i.id === itemId);
+        if (item) { item.style = style; localStorage.setItem('dumped_items', JSON.stringify(items)); }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('items').update({ style }).eq('id', itemId);
     },
 
     async deleteItem(itemId: string) {

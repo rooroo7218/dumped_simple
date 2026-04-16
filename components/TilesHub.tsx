@@ -99,7 +99,14 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         setIsLoading(true);
         const data = await databaseService.loadItems();
         // Always filter out items currently pending deletion so polls don't restore them
-        setItems(data.filter(i => !pendingDeleteTimers.current.has(i.id)));
+        const filtered = data.filter(i => !pendingDeleteTimers.current.has(i.id));
+        setItems(filtered);
+        // Seed itemStyles from Supabase — remote style wins over localStorage
+        setItemStyles(prev => {
+            const next = { ...prev };
+            filtered.forEach(i => { if (i.style) next[i.id] = i.style as ItemStyle; });
+            return next;
+        });
         setIsLoading(false);
     };
 
@@ -166,9 +173,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     }, []);
 
     const handleStyleChange = (itemId: string, patch: Partial<ItemStyle>) => {
-        const next = { ...itemStyles, [itemId]: { color: 'default', texture: 'none', ...itemStyles[itemId], ...patch } as ItemStyle };
-        setItemStyles(next);
-        saveStyles(next);
+        const merged = { color: 'default', texture: 'none', ...itemStyles[itemId], ...patch } as ItemStyle;
+        setItemStyles(prev => ({ ...prev, [itemId]: merged }));
+        saveStyles({ ...itemStyles, [itemId]: merged });
+        databaseService.saveItemStyle(itemId, merged);
     };
 
     // ── Drag handlers ────────────────────────────────────────────────────────

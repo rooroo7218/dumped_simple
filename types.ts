@@ -218,6 +218,7 @@ export interface Item {
   completedAt?: number;
   fadedAt?: number;
   createdAt: number;
+  style?: { color: string; texture: string };
   excerpts?: DumpItem[]; // Loaded on expansion
 }
 
