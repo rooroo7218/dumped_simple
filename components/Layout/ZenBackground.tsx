@@ -2,6 +2,12 @@ import React from 'react';
 import { WarpBackground } from '../ui/background-shaders';
 import AnimatedGradientBackground from '../ui/animated-gradient-background';
 import { SunlightGradientBackground } from '../ui/sunlight-gradient-background';
+import { BackgroundGradientGlow } from '../ui/background-gradient-glow';
+import { PeachySunriseBackground } from '../ui/peachy-sunrise-background';
+import { MeshGradientBackground } from '../ui/mesh-gradient-background';
+import { XenonTexture, NovatrixTexture, ZenithoTexture } from '../ui/uvcanvas-textures';
+import { SpotlightLamp } from '../ui/spotlight-lamp';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface ZenBackgroundProps {
     url: string | null;
@@ -52,6 +58,20 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     const isGradient = sceneId === 'gradient';
     const isAuroraDream = sceneId === 'aurora_dream';
     const isSunlight = sceneId === 'sunlight';
+    const isPeachy = sceneId === 'peachy';
+    const isShader = sceneId === 'shader';
+    const isXenon = sceneId === 'xenon';
+    const isNovatrix = sceneId === 'novatrix';
+    const isZenitho = sceneId === 'zenitho';
+    const isNeon = sceneId === 'neon';
+    const isLamp = sceneId === 'lamp' || sceneId === 'light';
+
+    const prefersReducedMotion = useReducedMotion();
+
+    // If reduced motion is active, we don't render heavy canvas animations
+    if (prefersReducedMotion && (isXenon || isNovatrix || isZenitho || isWarp || isShader || isNeon || isLamp)) {
+        return <div className="fixed inset-0 bg-slate-950 z-[1]" />;
+    }
 
     return (
         <div className="fixed top-0 left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100dvh' }}>
@@ -93,20 +113,28 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
             {isSunlight && <SunlightGradientBackground />}
 
             {/* Aurora Dream — soft pastel corner glows */}
-            {isAuroraDream && (
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        background: `
-                            radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175, 109, 255, 0.42), transparent 60%),
-                            radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255, 235, 170, 0.55), transparent 62%),
-                            radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255, 100, 180, 0.40), transparent 62%),
-                            radial-gradient(ellipse 70% 60% at 92% 92%, rgba(120, 190, 255, 0.45), transparent 62%),
-                            linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)
-                        `,
-                    }}
-                />
-            )}
+            {isAuroraDream && <BackgroundGradientGlow className="absolute inset-0 h-full w-full" />}
+
+            {/* Peachy Sunrise */}
+            {isPeachy && <PeachySunriseBackground className="absolute inset-0 h-full w-full" />}
+
+            {/* Deep Shader */}
+            {isShader && <MeshGradientBackground className="absolute inset-0 h-full w-full" />}
+
+            {/* Xenon Background */}
+            {isXenon && <XenonTexture />}
+
+            {/* Novatrix Background */}
+            {isNovatrix && <NovatrixTexture />}
+
+            {/* Zenitho Background */}
+            {isZenitho && <ZenithoTexture />}
+
+            {/* Neon Background */}
+            {isNeon && <div className="absolute inset-0 bg-black animate-neon-flicker" />}
+
+            {/* Spotlight / Light UI Background */}
+            {isLamp && <SpotlightLamp className="absolute inset-0 w-full h-full" />}
 
             {/* Tint overlay */}
             <div className={`absolute inset-0 ${isAurora ? 'bg-transparent' : 'bg-slate-50/5'} transition-colors duration-1000`} />

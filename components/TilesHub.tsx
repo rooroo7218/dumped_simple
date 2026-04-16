@@ -15,13 +15,16 @@ import {
 
 import { AnimatedDots } from './ui/animated-dots';
 import { ShineBorder } from './ui/shine-border';
-import { XenonTexture, NovatrixTexture } from './ui/uvcanvas-textures';
+import { XenonTexture, NovatrixTexture, ZenithoTexture } from './ui/uvcanvas-textures';
+import { SpotlightLamp } from './ui/spotlight-lamp';
+import { DitheringShader } from './ui/dithering-shader';
+import { HolographicTexture } from './ui/holographic-texture';
 import { cn } from '@/lib/utils';
 
 // ── Style system ────────────────────────────────────────────────────────────
 
 type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
-type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix';
+type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic';
 
 interface ItemStyle { color: ColorKey; texture: TextureKey }
 
@@ -50,6 +53,11 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
     ), pattern: {} },
     { key: 'xenon', label: 'Xe', pattern: {} },
     { key: 'novatrix', label: 'Nx', pattern: {} },
+    { key: 'lamp', label: 'Lm', pattern: {} },
+    { key: 'zenitho', label: 'Zn', pattern: {} },
+    { key: 'dithering-wave', label: 'Wv', pattern: {} },
+    { key: 'dithering-swirl', label: 'Sw', pattern: {} },
+    { key: 'holographic', label: 'Hl', pattern: {} },
 ];
 
 function getColorBg(key: ColorKey): string {
@@ -66,6 +74,59 @@ function loadStyles(): Record<string, ItemStyle> {
 function saveStyles(s: Record<string, ItemStyle>) {
     localStorage.setItem('dumped_item_styles', JSON.stringify(s));
 }
+
+// ── Onboarding Samples ───────────────────────────────────────────────────────
+
+const ONBOARDING_SAMPLES: Item[] = [
+    {
+        id: 'sample-1',
+        userId: 'onboarding',
+        label: 'Deep Work: Project Apollo docs',
+        mentionCount: 3,
+        lastMentionedAt: Date.now(),
+        firstMentionedAt: Date.now(),
+        isFlagged: false,
+        isCompleted: false,
+        createdAt: Date.now(),
+        style: { color: 'sky', texture: 'aurora' }
+    },
+    {
+        id: 'sample-2',
+        userId: 'onboarding',
+        label: 'Water the plants & succulents',
+        mentionCount: 2,
+        lastMentionedAt: Date.now(),
+        firstMentionedAt: Date.now(),
+        isFlagged: false,
+        isCompleted: false,
+        createdAt: Date.now(),
+        style: { color: 'emerald', texture: 'neon' }
+    },
+    {
+        id: 'sample-3',
+        userId: 'onboarding',
+        label: 'Buy coffee beans for the office',
+        mentionCount: 1,
+        lastMentionedAt: Date.now(),
+        firstMentionedAt: Date.now(),
+        isFlagged: false,
+        isCompleted: false,
+        createdAt: Date.now(),
+        style: { color: 'amber', texture: 'zenitho' }
+    },
+    {
+        id: 'sample-4',
+        userId: 'onboarding',
+        label: 'Urgent: DMV registration renewal',
+        mentionCount: 1,
+        lastMentionedAt: Date.now(),
+        firstMentionedAt: Date.now(),
+        isFlagged: true,
+        isCompleted: false,
+        createdAt: Date.now(),
+        style: { color: 'rose', texture: 'xenon' }
+    }
+];
 
 // ── TilesHub ───────────────────────────────────────────────────────────
 
@@ -111,9 +172,16 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
     const load = async () => {
         setIsLoading(true);
-        const data = await databaseService.loadItems();
+        let data = await databaseService.loadItems();
+        
         // Always filter out items currently pending deletion so polls don't restore them
-        const filtered = data.filter(i => !pendingDeleteTimers.current.has(i.id));
+        let filtered = data.filter(i => !pendingDeleteTimers.current.has(i.id));
+        
+        // If NO items exist at all, inject onboarding samples
+        if (filtered.length === 0 && !localStorage.getItem('onboarding_completed')) {
+            filtered = ONBOARDING_SAMPLES;
+        }
+
         setItems(filtered);
         // Seed itemStyles from Supabase — remote style wins over localStorage
         setItemStyles(prev => {
@@ -194,14 +262,30 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     };
 
     // ── Drag handlers ────────────────────────────────────────────────────────
-    const handleDragStart = (id: string, group: number) => {
+    const handleDragStart = (e: React.DragEvent, id: string, group: number) => {
         setDraggedId(id);
         setDraggedGroup(group);
+        if (e.dataTransfer) {
+            e.dataTransfer.setData('text/plain', id);
+            e.dataTransfer.effectAllowed = 'move';
+        }
     };
     const handleDragOver = (e: React.DragEvent, id: string, group: number) => {
         if (draggedGroup !== group) return;
         e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'move';
+        }
         if (dragOverId !== id) setDragOverId(id);
+    };
+    const handleDragEnter = (e: React.DragEvent, id: string, group: number) => {
+        if (draggedGroup !== group) return;
+        e.preventDefault();
+        setDragOverId(id);
+    };
+    const handleDragLeave = (e: React.DragEvent) => {
+        // Only clear if we're leaving the current target, but usually 
+        // handleDragOver handles setting the next one correctly.
     };
     const handleDrop = (targetId: string, targetGroup: number) => {
         if (!draggedId || draggedGroup !== targetGroup || draggedId === targetId) return;
@@ -338,8 +422,9 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                                 isDragging={draggedId === item.id}
                                 isDragOver={dragOverId === item.id}
                                 canDrop={draggedGroup === item.mentionCount}
-                                onDragStart={() => handleDragStart(item.id, item.mentionCount)}
-                                onDragOver={(e: React.DragEvent) => handleDragOver(e, item.id, item.mentionCount)}
+                                onDragStart={(e) => handleDragStart(e, item.id, item.mentionCount)}
+                                onDragOver={(e) => handleDragOver(e, item.id, item.mentionCount)}
+                                onDragEnter={(e) => handleDragEnter(e, item.id, item.mentionCount)}
                                 onDrop={() => handleDrop(item.id, item.mentionCount)}
                                 onDragEnd={handleDragEnd}
                             />
@@ -440,8 +525,9 @@ interface ItemTileProps {
     isDragging?: boolean;
     isDragOver?: boolean;
     canDrop?: boolean;
-    onDragStart?: () => void;
+    onDragStart?: (e: React.DragEvent) => void;
     onDragOver?: (e: React.DragEvent) => void;
+    onDragEnter?: (e: React.DragEvent) => void;
     onDrop?: () => void;
     onDragEnd?: () => void;
 }
@@ -450,13 +536,40 @@ const ItemTile: React.FC<ItemTileProps> = ({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
     onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop,
-    onDragStart, onDragOver, onDrop, onDragEnd,
+    onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
 }) => {
     const isSmall = size === 'sm';
     const draggable = !!onDragStart;
     const [stylerOpen, setStylerOpen] = useState(false);
     const stylerRef = useRef<HTMLDivElement>(null);
+    const tileRef = useRef<HTMLDivElement>(null);
     const [draftLabel, setDraftLabel] = useState(item.label);
+    const [tiltMatrix, setTiltMatrix] = useState<string>("matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)");
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (isExpanded || isDragging) return;
+        const rect = tileRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Tilt calculation (max 12deg)
+        const rotateX = ((y - centerY) / centerY) * -12;
+        const rotateY = ((x - centerX) / centerX) * 12;
+
+        // Simple matrix3d for tilt
+        const radX = (rotateX * Math.PI) / 180;
+        const radY = (rotateY * Math.PI) / 180;
+        
+        setTiltMatrix(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
+    };
+
+    const handleMouseLeave = () => {
+        setTiltMatrix("matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)");
+    };
 
     useEffect(() => { setDraftLabel(item.label); }, [item.label]);
 
@@ -478,20 +591,26 @@ const ItemTile: React.FC<ItemTileProps> = ({
 
     const TileContent = (
         <div
+            ref={tileRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
                 ${isExpanded ? 'border border-black/70 z-20 col-span-full shadow-lg' : 'border border-black/70 shadow-sm'}
+                ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${itemStyle.texture === 'neon' ? 'bg-black' : 'bg-white'} text-slate-900
+                rounded-[10px] ${['neon', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'bg-black' : 'bg-white'} text-slate-900
                 ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' ? 'animate-neon-flicker' : ''}
+                transition-transform duration-200 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: (itemStyle.texture === 'neon' || itemStyle.texture === 'xenon' || itemStyle.texture === 'novatrix') ? '#000' : colorBg,
+                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture)) ? '#000' : colorBg,
                 ...textureStyle,
                 padding,
+                transform: !isExpanded ? tiltMatrix : undefined,
                 ...(isExpanded ? {} : { aspectRatio }),
                 ...(itemStyle.texture === 'neon' ? {
                     '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
@@ -501,8 +620,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 } as any : {})
             }}
             draggable={draggable}
-            onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(); } : undefined}
+            onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(e); } : undefined}
             onDragOver={onDragOver ? (e) => { e.stopPropagation(); onDragOver(e); } : undefined}
+            onDragEnter={onDragEnter ? (e) => { e.stopPropagation(); onDragEnter(e); } : undefined}
             onDrop={onDrop ? (e) => { e.stopPropagation(); onDrop(); } : undefined}
             onDragEnd={onDragEnd}
             onClick={onToggle}
@@ -516,8 +636,24 @@ const ItemTile: React.FC<ItemTileProps> = ({
             )}
             
             {/* ── Shader Backgrounds ── */}
-            {itemStyle.texture === 'xenon' && <XenonTexture />}
-            {itemStyle.texture === 'novatrix' && <NovatrixTexture />}
+            {itemStyle.texture === 'xenon' && <XenonTexture isCompact />}
+            {itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact />}
+            {itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact />}
+            {itemStyle.texture === 'lamp' && <SpotlightLamp isCompact className="absolute inset-0 pointer-events-none" />}
+            
+            {itemStyle.texture === 'dithering-wave' && (
+                <DitheringShader 
+                    shape="wave" type="8x8" colorBack="#001122" colorFront="#ff0088" pxSize={3} speed={0.6}
+                    className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+                />
+            )}
+            {itemStyle.texture === 'dithering-swirl' && (
+                <DitheringShader 
+                    shape="swirl" type="4x4" colorBack="#220011" colorFront="#00ffff" pxSize={4} speed={0.9}
+                    className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
+                />
+            )}
+            {itemStyle.texture === 'holographic' && <HolographicTexture />}
 
             {/* ── Animated Background ── */}
             {itemStyle.texture === 'animated-dots' && (
@@ -539,8 +675,8 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         onClick={onComplete}
                         className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
                             item.isCompleted
-                                ? (['aurora', 'xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600')
-                                : (['aurora', 'xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                                ? (itemStyle.texture === 'novatrix' ? 'text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
+                                : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -558,7 +694,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight font-normal leading-[1.75] text-[16px]
-                                ${['xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]')}
+                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}
@@ -567,7 +703,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     ) : (
                         <p className={`
                             tracking-tight font-semibold leading-snug
-                            ${['xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900')}
+                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
                             ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
                         `}>
@@ -579,12 +715,12 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 {/* ── Mention Count Pill ── */}
                 {item.mentionCount > 1 && !isExpanded && (
                     <div className="flex items-center mt-1">
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.texture === 'neon' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
                             />
-                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'neon' ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>
+                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
                                 {item.mentionCount}×
                             </span>
                         </div>
@@ -599,9 +735,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     <button
                         onClick={onFlag}
                         className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            ['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
+                            itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
                         } ${
-                            item.isFlagged ? (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
+                            item.isFlagged ? (['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
@@ -611,11 +747,16 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     {/* Style Button */}
                     <div className="relative" ref={stylerRef}>
                         <button
-                            onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const isRightSide = rect.left > window.innerWidth / 2;
+                                setStylerOpen(v => !v); 
+                            }}
                             className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                                 stylerOpen 
-                                    ? (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
-                                    : (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                                    ? (['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
+                                    : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                             }`}
                             title="Style"
                         >
@@ -625,7 +766,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         {stylerOpen && (
                             <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40 text-black"
+                                className={`
+                                    absolute bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40 text-black
+                                    ${stylerRef.current && stylerRef.current.getBoundingClientRect().left > window.innerWidth / 2 ? 'right-0' : 'left-0'}
+                                `}
                                 style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', minWidth: 188 }}
                             >
                                 <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Color</p>

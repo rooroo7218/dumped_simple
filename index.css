@@ -67,3 +67,50 @@
         padding-top: calc(3.25rem + env(safe-area-inset-top));
     }
 }
+
+@layer utilities {
+  .bg-conic {
+    background-image: conic-gradient(from 270deg, var(--tw-gradient-stops));
+  }
+  .bg-gradient-conic {
+    background-image: conic-gradient(var(--conic-position, from 0deg at center), var(--tw-gradient-stops));
+  }
+}
+
+/* ── Neon Lighting Effects ── */
+:root {
+  --neon-text-color: #39ff14;
+  --neon-border-color: #00ffff;
+  --neon-intensity: 1;
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 
+      calc(-0.1rem * var(--neon-intensity, 1)) calc(-0.1rem * var(--neon-intensity, 1)) calc(0.5rem * var(--neon-intensity, 1)) #fff,
+      calc(0.1rem * var(--neon-intensity, 1)) calc(0.1rem * var(--neon-intensity, 1)) calc(0.5rem * var(--neon-intensity, 1)) #fff,
+      0 0 calc(1rem * var(--neon-intensity, 1)) var(--neon-text-color),
+      0 0 calc(2rem * var(--neon-intensity, 1)) var(--neon-text-color),
+      0 0 calc(4rem * var(--neon-intensity, 1)) var(--neon-text-color);
+    box-shadow: 
+      0 0 calc(0.2rem * var(--neon-intensity, 1)) #fff,
+      inset 0 0 calc(0.2rem * var(--neon-intensity, 1)) #fff,
+      0 0 calc(1rem * var(--neon-intensity, 1)) var(--neon-border-color),
+      inset 0 0 calc(1rem * var(--neon-intensity, 1)) var(--neon-border-color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+    box-shadow: none;
+  }
+}
+
+@keyframes neon-rgb {
+  0% { --neon-text-color: #ff0000; --neon-border-color: #00ff00; }
+  33% { --neon-text-color: #00ff00; --neon-border-color: #0000ff; }
+  66% { --neon-text-color: #0000ff; --neon-border-color: #ff0000; }
+  100% { --neon-text-color: #ff0000; --neon-border-color: #00ff00; }
+}
+
+.animate-neon-flicker {
+  animation: flicker 2s infinite alternate;
+}

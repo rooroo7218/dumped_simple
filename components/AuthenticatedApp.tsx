@@ -39,9 +39,16 @@ export const BACKGROUND_SCENES: BackgroundScene[] = [
     { id: 'slate',        name: 'Default',        url: null, preview: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' },
     { id: 'aurora',       name: 'Aurora Light',   url: null, preview: 'linear-gradient(100deg, #bfdbfe 0%, #e0e7ff 20%, #bae6fd 40%, #ddd6fe 60%, #c7d2fe 80%, #bfdbfe 100%)' },
     { id: 'aurora_dream', name: 'Aurora Dream',   url: null, preview: 'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)' },
+    { id: 'peachy',       name: 'Peachy Sunrise', url: null, preview: 'linear-gradient(180deg, rgba(255,247,237,1) 0%, rgba(255,237,213,0.8) 50%, rgba(249,115,22,0.3) 100%)' },
+    { id: 'shader',       name: 'Deep Shader',    url: null, preview: 'linear-gradient(135deg, #000000 0%, #06b6d4 50%, #f97316 100%)' },
     { id: 'sunlight',     name: 'Sunlight',       url: null, preview: 'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)' },
     { id: 'warp',         name: 'Lava',           url: null, preview: 'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)' },
     { id: 'gradient',     name: 'Galaxy Twilight', url: null, preview: 'radial-gradient(125% 125% at 50% 20%, #0A0A0A 35%, #2979FF 50%, #FF80AB 60%, #FF6D00 70%, #FFD600 80%, #00E676 90%, #3D5AFE 100%)' },
+    { id: 'xenon',        name: 'Xenon Pulse',    url: null, preview: 'linear-gradient(135deg, #000000 0%, #39ff14 50%, #00ffff 100%)' },
+    { id: 'novatrix',     name: 'Novatrix Flow',  url: null, preview: 'linear-gradient(135deg, #1a1a1a 0%, #ff00ff 50%, #0000ff 100%)' },
+    { id: 'zenitho',      name: 'Zenitho Aura',   url: null, preview: 'linear-gradient(135deg, #000000 0%, #ff7e5f 50%, #feb47b 100%)' },
+    { id: 'neon',         name: 'Neon Flicker',   url: null, preview: 'linear-gradient(135deg, #000000 0%, #39ff14 50%, #f43f5e 100%)' },
+    { id: 'lamp',         name: 'Spotlight',       url: null, preview: 'linear-gradient(180deg, #020617 0%, #ffffff 100%)' },
 ];
 
 interface AuthenticatedAppProps {

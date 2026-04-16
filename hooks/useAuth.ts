@@ -27,15 +27,16 @@ export const useAuth = () => {
     };
 
     const handleBypassLogin = () => {
-        const tester = {
+        const guest = {
             id: '00000000-0000-0000-0000-000000000000',
-            name: 'Tester McGee',
-            email: 'test@dumped.ai',
-            picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Millennial',
-            lastLogin: Date.now()
+            name: 'Guest Tester',
+            email: 'guest@dumped.ai',
+            picture: `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${Math.random()}`,
+            lastLogin: Date.now(),
+            isGuest: true
         };
-        setUser(tester);
-        localStorage.setItem('dumped_user', JSON.stringify(tester));
+        setUser(guest as UserProfile);
+        localStorage.setItem('dumped_user', JSON.stringify(guest));
     };
 
     useEffect(() => {

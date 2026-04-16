@@ -7,7 +7,7 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, handleBypassLogin }) => {
-    const isLocal = window.location.hostname === 'localhost';
+    // Removed isLocal restriction to allow public Tester Mode
 
     return (
         <AuroraBackground className="p-6 text-center" showRadialGradient={false}>
@@ -31,15 +31,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
                         Continue with Google
                     </button>
 
-                    {/* Local bypass for local dev only */}
-                    {isLocal && (
-                        <button
-                            onClick={handleBypassLogin}
-                            className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
-                        >
-                            Development: Bypass Login
-                        </button>
-                    )}
+                    <div className="w-full h-px bg-slate-100 my-2" />
+
+                    <button
+                        onClick={handleBypassLogin}
+                        className="w-full py-3 px-5 rounded-2xl border border-slate-200 bg-white text-slate-500 text-[12px] font-bold uppercase tracking-widest hover:bg-slate-50 hover:text-slate-700 transition-all active:scale-[0.98]"
+                    >
+                        Tester Access
+                    </button>
                 </div>
             </>
         </AuroraBackground>

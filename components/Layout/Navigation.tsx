@@ -130,6 +130,14 @@ export const Navigation: React.FC<NavigationProps> = ({
 
                 <div className={divider} />
 
+                {/* Guest Indicator */}
+                {(user as any).isGuest && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 ml-2 animate-pulse">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">Guest Session</span>
+                    </div>
+                )}
+
                 {/* Tabs */}
                 <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar ml-2">
                     {MAIN_TABS.map((tab) => {
@@ -286,7 +294,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 </div>
                             )}
                             <div className="flex flex-col flex-1 min-w-0">
-                                <span className="text-[12px] font-semibold text-[#1a1a1a] truncate">{user.name}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-[12px] font-semibold text-[#1a1a1a] truncate">{user.name}</span>
+                                    {(user as any).isGuest && <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold uppercase">Guest</span>}
+                                </div>
                                 <span className="text-[10px] text-slate-400 truncate">{user.email}</span>
                             </div>
                             <button

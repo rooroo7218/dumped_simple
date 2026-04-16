@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { MemoryItem } from '../types';
+import { ShineBorder } from './ui/shine-border';
 
 interface MemoryCardProps {
   memory: MemoryItem;
@@ -13,37 +14,50 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory }) => {
     low: 'bg-emerald-50 text-emerald-600 border-emerald-200'
   };
 
+  const priorityGradients = {
+    high: 'from-rose-500 via-rose-400 to-rose-300',
+    medium: 'from-orange-500 via-orange-400 to-orange-300',
+    low: 'from-emerald-500 via-emerald-400 to-emerald-300'
+  };
+
   return (
-    <div className="glass-panel bento-card p-6 mb-5 relative group bg-white/80">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex gap-2">
-          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 ${priorityStyles[memory.priority]}`}>
-            {memory.priority}
-          </span>
-          <span className="text-[10px] bg-slate-100 text-slate-500 font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 border-slate-200">
-            {memory.category}
+    <ShineBorder 
+      borderWidth={2} 
+      duration={4}
+      gradient={priorityGradients[memory.priority] || 'from-indigo-500 via-indigo-400 to-indigo-300'}
+      className="mb-5 shadow-xl hover:shadow-2xl transition-all duration-500"
+    >
+      <div className="p-6 relative z-10 group bg-white/90 backdrop-blur-xl rounded-2xl">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex gap-2">
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 ${priorityStyles[memory.priority]}`}>
+              {memory.priority}
+            </span>
+            <span className="text-[10px] bg-slate-100 text-slate-500 font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 border-slate-200">
+              {memory.category}
+            </span>
+          </div>
+          <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+            {new Date(memory.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
           </span>
         </div>
-        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-          {new Date(memory.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-        </span>
+        <p className="text-slate-800 text-lg font-medium leading-tight mb-6">
+          {memory.content}
+        </p>
+        <div className="flex flex-wrap gap-2 items-center">
+          {memory.tags.map(tag => (
+            <span key={tag} className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border-2 border-indigo-100">
+              #{tag}
+            </span>
+          ))}
+          {memory.mood && (
+            <span className="text-[11px] font-bold text-slate-500 px-3 py-1 rounded-lg border-2 border-slate-100 ml-auto uppercase tracking-tighter">
+              mood: {memory.mood}
+            </span>
+          )}
+        </div>
       </div>
-      <p className="text-slate-800 text-lg font-medium leading-tight mb-6">
-        {memory.content}
-      </p>
-      <div className="flex flex-wrap gap-2 items-center">
-        {memory.tags.map(tag => (
-          <span key={tag} className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border-2 border-indigo-100">
-            #{tag}
-          </span>
-        ))}
-        {memory.mood && (
-          <span className="text-[11px] font-bold text-slate-500 px-3 py-1 rounded-lg border-2 border-slate-100 ml-auto uppercase tracking-tighter">
-            mood: {memory.mood}
-          </span>
-        )}
-      </div>
-    </div>
+    </ShineBorder>
   );
 };
 

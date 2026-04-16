@@ -21,5 +21,12 @@ export default {
   },
   plugins: [
     tailwindAnimate,
+    function ({ addUtilities }) {
+      addUtilities({
+        '.bg-gradient-conic': {
+          'background-image': 'conic-gradient(var(--tw-gradient-stops))',
+        },
+      });
+    },
   ],
 };

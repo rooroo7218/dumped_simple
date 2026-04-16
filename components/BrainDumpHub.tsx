@@ -13,6 +13,19 @@ interface BrainDumpHubProps {
     isListening: boolean;
 }
 
+const SAMPLE_DUMPS = [
+    "Call the dentist about the crown",
+    "Need to unsubscribe from that streaming service",
+    "Fix the squeaky door in the hallway",
+    "Look up flights for the summer trip",
+    "Buy a birthday card for Sarah",
+    "Clean the coffee machine filters",
+    "Update my portfolio with the new project",
+    "Follow up on the insurance claim",
+    "Research new monitors for the desk",
+    "Remember to take the trash out tonight"
+];
+
 export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     input,
     setInput,
@@ -171,8 +184,23 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             color: '#1a1a1a',
                             caretColor: '#6366f1',
                             display: 'block',
+                            position: 'relative',
+                            zIndex: 2,
                         }}
                     />
+                    
+                    {/* Onboarding suggestions */}
+                    {!hasText && (
+                        <div className="absolute top-0 left-0 w-full pointer-events-none select-none px-[20px] transition-opacity duration-300" style={{ paddingTop: 'calc(5.5rem + env(safe-area-inset-top))' }}>
+                            <div className="flex flex-col">
+                                {SAMPLE_DUMPS.map((dump, idx) => (
+                                    <div key={idx} className="text-[17px] leading-[1.75] text-[#1a1a1a] opacity-15">
+                                        {dump}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom action bar — horizontal pill tools */}
