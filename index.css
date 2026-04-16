@@ -60,7 +60,7 @@
 
 /* Responsive top padding: clear safe area on mobile, clear fixed header on desktop */
 .main-content-pad-top {
-    padding-top: calc(env(safe-area-inset-top) + 2rem);
+    padding-top: calc(env(safe-area-inset-top) + 3rem);
 }
 @media (min-width: 768px) {
     .main-content-pad-top {
