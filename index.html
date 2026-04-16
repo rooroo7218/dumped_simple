@@ -37,6 +37,7 @@
             overflow-y: auto;
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
+            background-color: #f7eaff; /* fallback behind the gradient layer */
         }
 
         html::-webkit-scrollbar {
@@ -44,9 +45,8 @@
         }
 
         body {
-            background-color: #f7eaff;
+            background: transparent; /* let the fixed ZenBackground show through everywhere */
             color: #0f172a;
-            transition: background-color 0.5s ease;
         }
 
         h1, h2, h3 {
