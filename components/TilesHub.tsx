@@ -78,7 +78,15 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const pendingDeleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
     useEffect(() => {
-        return () => { pendingDeleteTimers.current.forEach(clearTimeout); };
+        return () => {
+            // On unmount (tab switch), fire all pending deletes immediately
+            // rather than cancelling them — otherwise items are never removed from Supabase
+            pendingDeleteTimers.current.forEach((timer, itemId) => {
+                clearTimeout(timer);
+                databaseService.deleteItem(itemId);
+            });
+            pendingDeleteTimers.current.clear();
+        };
     }, []);
 
     // Per-group custom order, persisted in localStorage
