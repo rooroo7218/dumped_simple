@@ -58,9 +58,9 @@
     }
 }
 
-/* Responsive top padding: no top nav on mobile, fixed header on desktop */
+/* Responsive top padding: bleed to top on mobile, clear fixed header on desktop */
 .main-content-pad-top {
-    padding-top: env(safe-area-inset-top);
+    padding-top: 0;
 }
 @media (min-width: 768px) {
     .main-content-pad-top {
