@@ -140,7 +140,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
             {/* Full-screen fixed container */}
             <div
                 onClick={() => textareaRef.current?.focus()}
-                style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden' }}
+                style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', zIndex: 10 }}
             >
                 {/* Grid icon — top right */}
                 <button
