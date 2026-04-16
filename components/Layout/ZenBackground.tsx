@@ -42,6 +42,22 @@ const auroraC = `repeating-linear-gradient(
     #a5f3fc 80%, #c7d2fe 100%
 )`;
 
+// Per-scene CSS background values painted onto <html> so the background
+// extends behind the iOS status bar (only the html element's background
+// reliably fills that area with viewport-fit=cover + black-translucent).
+const SCENE_HTML_BG: Record<string, string> = {
+    slate:         'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+    aurora:        'linear-gradient(180deg, #bfdbfe 0%, #ddd6fe 40%, #bae6fd 100%)',
+    warp:          'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)',
+    gradient:      'linear-gradient(180deg, #0A0A0A 0%, #2979FF 100%)',
+    aurora_dream:  `radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%),
+                    radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%),
+                    radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%),
+                    linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)`,
+    sunlight:      'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)',
+    girly_sparkles:'linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #fce7f3 100%)',
+};
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export const ZenBackground: React.FC<ZenBackgroundProps> = ({
@@ -53,14 +69,32 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     const isAuroraDream = sceneId === 'aurora_dream';
     const isSunlight = sceneId === 'sunlight';
 
+    // Paint the html element background so it bleeds behind the iOS status bar.
+    // Fixed divs cannot reach that area — only the html background can.
+    React.useEffect(() => {
+        const html = document.documentElement;
+        if (url) {
+            html.style.backgroundImage = `url("${url}")`;
+            html.style.backgroundSize = 'cover';
+            html.style.backgroundPosition = 'center';
+            html.style.backgroundRepeat = 'no-repeat';
+            html.style.backgroundAttachment = 'fixed';
+            html.style.backgroundColor = '';
+        } else {
+            const bg = SCENE_HTML_BG[sceneId ?? ''] ?? SCENE_HTML_BG.aurora_dream;
+            html.style.backgroundImage = bg;
+            html.style.backgroundSize = 'cover';
+            html.style.backgroundAttachment = 'fixed';
+            html.style.backgroundRepeat = 'no-repeat';
+            html.style.backgroundColor = '';
+        }
+        return () => {
+            html.style.cssText = '';
+        };
+    }, [sceneId, url]);
+
     return (
-        // Extend above safe-area-inset-top so the background reaches the
-        // physical screen top (behind the iOS status bar).
-        <div className="fixed left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{
-            top: 'calc(-1 * env(safe-area-inset-top))',
-            height: 'calc(100dvh + env(safe-area-inset-top))',
-            backgroundColor: '#f7eaff',
-        }}>
+        <div className="fixed top-0 left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100dvh' }}>
 
             {/* Image background (Zen scenes) */}
             <div

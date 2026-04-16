@@ -37,7 +37,11 @@
             overflow-y: auto;
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
-            background-color: transparent;
+            /* Pull html taller than the viewport so the background fills
+               behind the iOS status bar (notch hack from ITNEXT article) */
+            min-height: calc(100% + env(safe-area-inset-top));
+            background-color: #f7eaff; /* pre-JS load fallback */
+            background-attachment: fixed;
         }
 
         html::-webkit-scrollbar {
