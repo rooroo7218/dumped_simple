@@ -371,11 +371,11 @@ interface CompletedRowProps {
 }
 
 const CompletedRow: React.FC<CompletedRowProps> = ({ item, onComplete, onDelete }) => (
-    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-black/70 bg-white/40 opacity-50">
+    <div className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl border border-black/70 bg-white/40 opacity-50">
         <button onClick={onComplete} className="shrink-0 text-emerald-600 active:scale-95 transition-all">
-            <CheckSolid className="w-4 h-4" />
+            <CheckSolid className="w-3.5 h-3.5" />
         </button>
-        <span className="flex-1 text-[14px] font-medium text-slate-700 line-through truncate">
+        <span className="flex-1 text-[12px] font-semibold text-slate-800 line-through truncate">
             {item.label}
         </span>
         <button onClick={onDelete} className="shrink-0 text-[10px] font-medium uppercase tracking-widest text-red-400 active:scale-95 transition-all">
