@@ -429,10 +429,11 @@ export const databaseService = {
             if (upErr) console.error('Item migration failed:', upErr.message);
         }
 
-        // Return remote items merged with any still-local ones (covers migration failures)
-        const allIds = new Set(remoteItems.map(i => i.id));
-        const localOnly = localItems.filter(i => !allIds.has(i.id));
-        return [...remoteItems, ...localOnly];
+        // Supabase is the source of truth — overwrite localStorage with what came back.
+        // Do NOT merge stale localOnly items: that causes deleted items to reappear on
+        // other devices whose localStorage hasn't been cleaned up yet.
+        localStorage.setItem('dumped_items', JSON.stringify(remoteItems));
+        return remoteItems;
     },
 
     async loadItemExcerpts(itemId: string): Promise<DumpItem[]> {
@@ -590,28 +591,26 @@ export const databaseService = {
 
     async toggleFlag(itemId: string, isFlagged: boolean) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
-            const item = items.find(i => i.id === itemId);
-            if (item) { item.isFlagged = isFlagged; localStorage.setItem('dumped_items', JSON.stringify(items)); }
-            return;
-        }
+        // Always update localStorage so it stays consistent
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const item = items.find(i => i.id === itemId);
+        if (item) { item.isFlagged = isFlagged; localStorage.setItem('dumped_items', JSON.stringify(items)); }
+        if (!user) return;
         await supabase.from('items').update({ is_flagged: isFlagged }).eq('id', itemId);
     },
 
     async toggleComplete(itemId: string, isCompleted: boolean) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
-            const item = items.find(i => i.id === itemId);
-            if (item) {
-                item.isCompleted = isCompleted;
-                item.completedAt = isCompleted ? Date.now() : undefined;
-                if (isCompleted) item.mentionCount = 0;
-                localStorage.setItem('dumped_items', JSON.stringify(items));
-            }
-            return;
+        // Always update localStorage so it stays consistent
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const item = items.find(i => i.id === itemId);
+        if (item) {
+            item.isCompleted = isCompleted;
+            item.completedAt = isCompleted ? Date.now() : undefined;
+            if (isCompleted) item.mentionCount = 0;
+            localStorage.setItem('dumped_items', JSON.stringify(items));
         }
+        if (!user) return;
         const updates: any = { is_completed: isCompleted };
         if (isCompleted) {
             updates.completed_at = new Date().toISOString();
@@ -624,11 +623,10 @@ export const databaseService = {
 
     async deleteItem(itemId: string) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
-            localStorage.setItem('dumped_items', JSON.stringify(items.filter(i => i.id !== itemId)));
-            return;
-        }
+        // Always update localStorage so it stays consistent
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        localStorage.setItem('dumped_items', JSON.stringify(items.filter(i => i.id !== itemId)));
+        if (!user) return;
         await supabase.from('items').delete().eq('id', itemId);
     },
 

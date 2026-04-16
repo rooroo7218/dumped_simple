@@ -96,9 +96,14 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
     useEffect(() => {
         load();
-        const interval = setInterval(load, 3000);
-        const timeout = setTimeout(() => clearInterval(interval), 30000);
-        return () => { clearInterval(interval); clearTimeout(timeout); };
+        // Fast poll for first 30s (catches immediate changes), then slow poll indefinitely
+        // so changes from other devices are always picked up without a page refresh.
+        let interval = setInterval(load, 3000);
+        const slowDown = setTimeout(() => {
+            clearInterval(interval);
+            interval = setInterval(load, 15000);
+        }, 30000);
+        return () => { clearInterval(interval); clearTimeout(slowDown); };
     }, []);
 
     const toggleExpand = async (itemId: string) => {
