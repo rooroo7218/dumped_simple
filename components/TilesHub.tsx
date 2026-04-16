@@ -66,6 +66,8 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [itemStyles, setItemStyles] = useState<Record<string, ItemStyle>>(loadStyles);
 
+    const [showCompleted, setShowCompleted] = useState(false);
+
     // Drag state
     const [draggedId, setDraggedId] = useState<string | null>(null);
     const [draggedGroup, setDraggedGroup] = useState<number | null>(null);
@@ -312,18 +314,34 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
                 <section>
-                    <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60 opacity-50 grayscale">
-                        <div className="flex items-center gap-2 mb-1">
-                            <SparklesIcon className="w-4 h-4 text-slate-400" />
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Resolved ({completed.length + faded.length})</span>
+                    <button
+                        onClick={() => setShowCompleted(v => !v)}
+                        className="w-full mb-4 mx-1 pb-3 border-b border-slate-100/60 opacity-50 grayscale text-left flex items-center justify-between"
+                    >
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <SparklesIcon className="w-4 h-4 text-slate-400" />
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Resolved ({completed.length + faded.length})</span>
+                            </div>
+                            <h2 className="text-xl font-medium tracking-tight text-slate-900">Done and dusted.</h2>
                         </div>
-                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Done and dusted.</h2>
-                    </div>
-                    <div className="grid grid-cols-9 gap-2 opacity-50">
-                        {[...completed, ...faded].map(item => (
-                            <ItemTile key={item.id} {...tileProps(item, 'sm')} />
-                        ))}
-                    </div>
+                        <span className="text-[11px] font-medium text-slate-400 shrink-0 mr-1">
+                            {showCompleted ? 'Hide' : 'Show'}
+                        </span>
+                    </button>
+
+                    {showCompleted && (
+                        <div className="flex flex-col gap-1.5">
+                            {[...completed, ...faded].map(item => (
+                                <CompletedRow
+                                    key={item.id}
+                                    item={item}
+                                    onComplete={(e) => handleToggleComplete(e, item)}
+                                    onDelete={(e) => handleDelete(e, item)}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
             )}
             {/* Undo-delete toast */}
@@ -343,6 +361,28 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         </div>
     );
 };
+
+// ── CompletedRow ─────────────────────────────────────────────────────────────
+
+interface CompletedRowProps {
+    item: Item;
+    onComplete: (e: React.MouseEvent) => void;
+    onDelete: (e: React.MouseEvent) => void;
+}
+
+const CompletedRow: React.FC<CompletedRowProps> = ({ item, onComplete, onDelete }) => (
+    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-black/70 bg-white/40 opacity-50">
+        <button onClick={onComplete} className="shrink-0 text-emerald-600 active:scale-95 transition-all">
+            <CheckSolid className="w-4 h-4" />
+        </button>
+        <span className="flex-1 text-[14px] font-medium text-slate-700 line-through truncate">
+            {item.label}
+        </span>
+        <button onClick={onDelete} className="shrink-0 text-[10px] font-medium uppercase tracking-widest text-red-400 active:scale-95 transition-all">
+            Delete
+        </button>
+    </div>
+);
 
 // ── ItemTile ────────────────────────────────────────────────────────────────
 
