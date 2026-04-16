@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowPathIcon, Squares2X2Icon, MicrophoneIcon, PhotoIcon, StopIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, MicrophoneIcon, PhotoIcon, StopIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { extractImageText } from '../services/geminiService';
 
@@ -142,19 +142,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 onClick={() => textareaRef.current?.focus()}
                 style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', zIndex: 10 }}
             >
-                {/* Grid icon — top right */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onNavigateToGrid(); }}
-                    className="absolute right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-black/[0.05] hover:bg-black/[0.09] backdrop-blur-sm transition-all active:scale-95"
-                    style={{ top: 'max(16px, env(safe-area-inset-top))' }}
-                    aria-label="Open grid"
-                >
-                    <Squares2X2Icon className="w-4 h-4 text-slate-500" />
-                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#1a1a1a' }}>
-                        My Grid
-                    </span>
-                </button>
-
                 {/* Scrollable writing area */}
                 <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
                     <textarea
@@ -174,7 +161,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             transition: 'opacity 0.18s ease',
                             width: '100%',
                             minHeight: '100dvh',
-                            padding: 'calc(72px + env(safe-area-inset-top)) 28px calc(180px + env(safe-area-inset-bottom))',
+                            padding: 'calc(3rem + env(safe-area-inset-top)) 20px calc(180px + env(safe-area-inset-bottom))',
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
