@@ -121,7 +121,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* ── DESKTOP: Single-row fixed header ── */}
             <div className={`hidden md:flex fixed top-0 left-0 right-0 z-40 items-center px-5 gap-2 transition-all duration-700 ease-in-out ${
                 isZenMode ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            } bg-transparent`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
+            } bg-white/90 backdrop-blur-md border-b-2 border-slate-950/70`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
                 <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
