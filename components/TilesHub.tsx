@@ -13,10 +13,15 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/solid';
 
+import { AnimatedDots } from './ui/animated-dots';
+import { ShineBorder } from './ui/shine-border';
+import { XenonTexture, NovatrixTexture } from './ui/uvcanvas-textures';
+import { cn } from '@/lib/utils';
+
 // ── Style system ────────────────────────────────────────────────────────────
 
-type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate' | 'aurora';
-type TextureKey = 'none' | 'dots' | 'mesh' | 'linen';
+type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
+type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix';
 
 interface ItemStyle { color: ColorKey; texture: TextureKey }
 
@@ -28,14 +33,23 @@ const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[]
     { key: 'violet',  label: 'Violet',  bg: 'rgba(221,214,254,0.55)',  dot: '#c4b5fd' },
     { key: 'sky',     label: 'Sky',     bg: 'rgba(186,230,253,0.55)',  dot: '#7dd3fc' },
     { key: 'slate',   label: 'Slate',   bg: 'rgba(203,213,225,0.55)',  dot: '#94a3b8' },
-    { key: 'aurora',  label: 'Aurora',  bg: '#0e131f',                 dot: 'linear-gradient(135deg, #ac5cff, #38bdf8)' },
 ];
 
-const TEXTURE_OPTIONS: { key: TextureKey; label: string; pattern: React.CSSProperties }[] = [
+const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperties }[] = [
     { key: 'none',   label: '—',    pattern: {} },
     { key: 'dots',   label: '···',  pattern: { backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)', backgroundSize: '8px 8px' } },
     { key: 'mesh',   label: '⊞',   pattern: { backgroundImage: 'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)', backgroundSize: '10px 10px' } },
     { key: 'linen',  label: '////',  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)' } },
+    { key: 'animated-dots', label: '✧', pattern: {} },
+    { key: 'aurora', label: (
+        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7]" />
+    ), pattern: {} },
+    { key: 'shine-border', label: '□', pattern: {} },
+    { key: 'neon', label: (
+        <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 5px #39ff14' }}>N</span>
+    ), pattern: {} },
+    { key: 'xenon', label: 'Xe', pattern: {} },
+    { key: 'novatrix', label: 'Nx', pattern: {} },
 ];
 
 function getColorBg(key: ColorKey): string {
@@ -438,7 +452,6 @@ const ItemTile: React.FC<ItemTileProps> = ({
     isDragging, isDragOver, canDrop,
     onDragStart, onDragOver, onDrop, onDragEnd,
 }) => {
-    const isFlagged = size === 'flagged';
     const isSmall = size === 'sm';
     const draggable = !!onDragStart;
     const [stylerOpen, setStylerOpen] = useState(false);
@@ -461,11 +474,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
 
     const colorBg = getColorBg(itemStyle.color);
     const textureStyle = getTextureStyle(itemStyle.texture);
-
-    const borderRadius = '10px';
     const padding = '8px';
 
-    return (
+    const TileContent = (
         <div
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
@@ -473,14 +484,21 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] bg-white text-slate-900
-                ${className ?? ''}
+                rounded-[10px] ${itemStyle.texture === 'neon' ? 'bg-black' : 'bg-white'} text-slate-900
+                ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
+                ${itemStyle.texture === 'neon' ? 'animate-neon-flicker' : ''}
             `}
             style={{
-                background: colorBg,
+                backgroundColor: (itemStyle.texture === 'neon' || itemStyle.texture === 'xenon' || itemStyle.texture === 'novatrix') ? '#000' : colorBg,
                 ...textureStyle,
                 padding,
-                ...(isExpanded ? {} : { aspectRatio })
+                ...(isExpanded ? {} : { aspectRatio }),
+                ...(itemStyle.texture === 'neon' ? {
+                    '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
+                    '--neon-border-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#00ffff',
+                    '--neon-intensity': 1,
+                    borderColor: 'var(--neon-border-color)',
+                } as any : {})
             }}
             draggable={draggable}
             onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(); } : undefined}
@@ -489,16 +507,40 @@ const ItemTile: React.FC<ItemTileProps> = ({
             onDragEnd={onDragEnd}
             onClick={onToggle}
         >
+            {/* ── Aurora Glow Background ── */}
+            {itemStyle.texture === 'aurora' && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden blur-3xl opacity-60">
+                    <div className="absolute -inset-10 bg-gradient-to-tr from-[#bfdbfe] via-[#ddd6fe] to-[#bae6fd] opacity-80 animate-pulse" />
+                    <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-rose-200 to-transparent mix-blend-overlay opacity-40 animate-pulse delay-700" />
+                </div>
+            )}
+            
+            {/* ── Shader Backgrounds ── */}
+            {itemStyle.texture === 'xenon' && <XenonTexture />}
+            {itemStyle.texture === 'novatrix' && <NovatrixTexture />}
 
-            <div className="flex flex-col gap-2">
+            {/* ── Animated Background ── */}
+            {itemStyle.texture === 'animated-dots' && (
+                <div className="absolute inset-0 pointer-events-none opacity-40">
+                    <AnimatedDots 
+                        fullScreen={false} 
+                        dotsNum={25} 
+                        dotRadius={6} 
+                        opacity={0.6}
+                        speedRange={[0.5, 2]} 
+                    />
+                </div>
+            )}
+
+            <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
                 <div className="flex items-start gap-1.5">
                     <button
                         onClick={onComplete}
                         className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
                             item.isCompleted
-                                ? (itemStyle.color === 'aurora' ? 'text-emerald-400' : 'text-emerald-600')
-                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                                ? (['aurora', 'xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600')
+                                : (['aurora', 'xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -516,7 +558,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight font-normal leading-[1.75] text-[16px]
-                                ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
+                                ${['xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]')}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}
@@ -525,7 +567,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     ) : (
                         <p className={`
                             tracking-tight font-semibold leading-snug
-                            ${itemStyle.color === 'aurora' ? 'text-white' : 'text-slate-800'}
+                            ${['xenon', 'novatrix'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900')}
                             ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
                         `}>
@@ -534,15 +576,15 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     )}
                 </div>
 
-                {/* ── Mention Count Pill (Airy style) ── */}
+                {/* ── Mention Count Pill ── */}
                 {item.mentionCount > 1 && !isExpanded && (
                     <div className="flex items-center mt-1">
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.color === 'aurora' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${itemStyle.texture === 'neon' ? 'bg-black/40 border-white/10' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
                             />
-                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.color === 'aurora' ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>
+                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'neon' ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>
                                 {item.mentionCount}×
                             </span>
                         </div>
@@ -552,14 +594,14 @@ const ItemTile: React.FC<ItemTileProps> = ({
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (
-                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0">
+                <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0">
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
                         className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            item.isFlagged
-                                ? (itemStyle.color === 'aurora' ? 'text-amber-400' : 'text-amber-600')
-                                : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                            ['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]'
+                        } ${
+                            item.isFlagged ? (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
@@ -571,9 +613,9 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); setStylerOpen(v => !v); }}
                             className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                                stylerOpen
-                                    ? (itemStyle.color === 'aurora' ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]')
-                                    : (itemStyle.color === 'aurora' ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
+                                stylerOpen 
+                                    ? (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
+                                    : (['xenon', 'novatrix', 'neon'].includes(itemStyle.texture) ? 'text-white/40 hover:text-white' : 'text-[#1a1a1a]/30 hover:text-[#1a1a1a]')
                             }`}
                             title="Style"
                         >
@@ -583,11 +625,11 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         {stylerOpen && (
                             <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40"
+                                className="absolute left-0 bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40 text-black"
                                 style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', minWidth: 188 }}
                             >
-                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest">Color</p>
-                                <div className="flex gap-1.5 flex-wrap mb-3">
+                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Color</p>
+                                <div className="flex gap-1.5 flex-wrap mb-4">
                                     {COLOR_OPTIONS.map(c => (
                                         <button
                                             key={c.key}
@@ -602,47 +644,70 @@ const ItemTile: React.FC<ItemTileProps> = ({
                                         />
                                     ))}
                                 </div>
+
+                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Texture</p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {TEXTURE_OPTIONS.map(t => (
+                                        <button
+                                            key={t.key}
+                                            onClick={() => onStyleChange({ texture: t.key })}
+                                            className={`
+                                                flex-1 min-w-[36px] h-8 flex items-center justify-center rounded-lg text-[12px] font-bold transition-all active:scale-95
+                                                ${itemStyle.texture === t.key 
+                                                    ? 'bg-slate-900 text-white shadow-md' 
+                                                    : 'bg-black/5 text-slate-600 hover:bg-black/10'}
+                                            `}
+                                            title={typeof t.label === 'string' ? t.label : 'Texture'}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
-
                 </div>
             )}
 
             {/* ── Expanded detail ── */}
             {isExpanded && (
-                <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="flex items-center gap-10 mb-6 pb-5 border-b border-slate-100/60">
+                <div className="mt-3 animate-in fade-in duration-300">
+                    {/* Metadata row */}
+                    <div className="flex items-center gap-4 mb-3 pb-3 border-b border-black/10">
                         <div>
-                            <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-1">Frequency</span>
-                            <span className="text-base font-medium text-[#1a1a1a]">{item.mentionCount} sightings</span>
+                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Seen</span>
+                            <span className="text-[12px] font-semibold text-[#1a1a1a]">{item.mentionCount}×</span>
                         </div>
+                        <div className="w-px h-6 bg-black/10" />
                         <div>
-                            <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-1">Last Noted</span>
-                            <span className="text-base font-medium text-[#1a1a1a]">{new Date(item.lastMentionedAt).toLocaleDateString()}</span>
+                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Last noted</span>
+                            <span className="text-[12px] font-semibold text-[#1a1a1a]">{new Date(item.lastMentionedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         </div>
                     </div>
-                    <div className="space-y-3">
-                        <span className="block text-[9px] font-medium uppercase text-slate-400 tracking-widest mb-2">Original Thoughts</span>
-                        {excerpts.length > 0 ? excerpts.map(ex => (
-                            <div key={ex.id} className="rounded-2xl p-4 italic text-[#1a1a1a] text-[14px] leading-relaxed relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(15,23,42,0.1)' }}>
-                                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-slate-900/10" />
-                                "{ex.rawExcerpt}"
-                            </div>
-                        )) : (
-                            <p className="text-sm text-slate-400 italic px-2">No excerpts yet.</p>
-                        )}
-                    </div>
-                    <div className="mt-8 flex items-center justify-between">
+
+                    {/* Excerpts */}
+                    {excerpts.length > 0 && (
+                        <div className="space-y-1.5 mb-3">
+                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-1">From your dumps</span>
+                            {excerpts.map(ex => (
+                                <div key={ex.id} className="rounded-xl px-3 py-2 text-[11px] italic text-[#1a1a1a]/70 leading-relaxed border border-black/10 bg-white/40">
+                                    "{ex.rawExcerpt}"
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between pt-2 border-t border-black/10">
                         <button
                             onClick={onDelete}
-                            className="text-[10px] font-medium uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
+                            className="text-[10px] font-semibold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95"
                         >
-                            Delete Forever
+                            Delete
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); onToggle(); }}
-                            className="bg-black/[0.05] text-[#1a1a1a]/60 hover:bg-black/[0.09] font-medium text-[11px] uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all active:scale-95"
+                            className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
                         >
                             Close
                         </button>
@@ -651,4 +716,29 @@ const ItemTile: React.FC<ItemTileProps> = ({
             )}
         </div>
     );
+
+    if (itemStyle.texture === 'shine-border' && !isExpanded) {
+        const colorMap: Record<string, string> = {
+            'default': 'from-slate-200 via-slate-300 to-slate-400',
+            'rose': 'from-rose-500 via-rose-300 to-rose-400',
+            'amber': 'from-amber-500 via-amber-300 to-amber-400',
+            'emerald': 'from-emerald-500 via-emerald-300 to-emerald-400',
+            'violet': 'from-violet-500 via-violet-300 to-violet-400',
+            'sky': 'from-sky-500 via-sky-300 to-sky-400',
+            'slate': 'from-slate-500 via-slate-300 to-slate-400'
+        };
+
+        return (
+            <ShineBorder
+                borderWidth={2}
+                duration={4}
+                gradient={colorMap[itemStyle.color] || 'from-blue-500 via-indigo-500 to-purple-500'}
+                className={cn("rounded-[10px]", className)}
+            >
+                {TileContent}
+            </ShineBorder>
+        );
+    }
+
+    return TileContent;
 };
