@@ -44,22 +44,6 @@ const auroraC = `repeating-linear-gradient(
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-// Static gradient strings keyed by scene — used to paint body background so
-// it extends behind the iOS status bar (body background is the only reliable
-// way to fill the area above env(safe-area-inset-top) on iOS PWAs).
-const SCENE_BODY_BG: Record<string, string> = {
-    slate:             'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    aurora:            'linear-gradient(180deg, #bfdbfe 0%, #ddd6fe 50%, #bae6fd 100%)',
-    warp:              'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)',
-    gradient:          'radial-gradient(125% 125% at 50% 20%, #0A0A0A 35%, #2979FF 50%, #FF80AB 60%, #FF6D00 70%, #FFD600 80%, #00E676 90%, #3D5AFE 100%)',
-    aurora_dream:      'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)',
-    sunlight:          'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)',
-    girly_sparkles:    'linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #fce7f3 100%)',
-    miyazaki_meadow:   'linear-gradient(180deg, #a8d8a8 0%, #c8e6c8 100%)',
-    frog_spirits_pond: 'linear-gradient(180deg, #b8d8b8 0%, #d0e8d0 100%)',
-    snowy_sledding:    'linear-gradient(180deg, #e8f4f8 0%, #f0f8fc 100%)',
-};
-
 export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     url, sceneId, isZenMode, isFocusActive = false,
 }) => {
@@ -69,22 +53,11 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     const isAuroraDream = sceneId === 'aurora_dream';
     const isSunlight = sceneId === 'sunlight';
 
-    // Paint the body background to match the active scene so it bleeds
-    // behind the iOS status bar (fixed elements can't reliably reach there).
-    React.useEffect(() => {
-        const bg = url
-            ? `url("${url}") center/cover no-repeat`
-            : (SCENE_BODY_BG[sceneId ?? ''] ?? SCENE_BODY_BG.aurora_dream);
-        document.body.style.background = bg;
-        document.body.style.backgroundAttachment = 'fixed';
-        return () => {
-            document.body.style.background = '';
-            document.body.style.backgroundAttachment = '';
-        };
-    }, [sceneId, url]);
-
     return (
-        <div className="fixed top-0 left-0 w-[100vw] z-0 overflow-hidden pointer-events-none" style={{ height: '100dvh' }}>
+        // z-[1] sits above the browser's default white canvas so the actual
+        // background renders at the physical top of the screen (behind the
+        // iOS status bar) with no separate gradient approximation needed.
+        <div className="fixed top-0 left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100dvh', backgroundColor: '#f7eaff' }}>
 
             {/* Image background (Zen scenes) */}
             <div
