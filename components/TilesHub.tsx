@@ -452,7 +452,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             rows={2}
                             className={`
                                 w-full bg-transparent border-none resize-none
-                                tracking-tight font-normal leading-[1.75] text-[15px]
+                                tracking-tight font-normal leading-[1.75] text-[16px]
                                 ${itemStyle.color === 'aurora' ? 'text-white' : 'text-[#1a1a1a]'}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
