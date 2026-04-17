@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { Item, DumpItem } from '../types';
 import { databaseService } from '../services/databaseService';
 
@@ -20,6 +20,32 @@ import { SpotlightLamp } from './ui/spotlight-lamp';
 import { DitheringShader } from './ui/dithering-shader';
 import { HolographicTexture } from './ui/holographic-texture';
 import { cn } from '@/lib/utils';
+import {
+    DndContext,
+    closestCenter,
+    closestCorners,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+    defaultDropAnimationSideEffects,
+    type DragStartEvent,
+    type DragOverEvent,
+    type DragEndEvent,
+    TouchSensor,
+    MouseSensor,
+    MeasuringStrategy
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    rectSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // ── Style system ────────────────────────────────────────────────────────────
 
@@ -40,9 +66,9 @@ const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[]
 
 const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperties }[] = [
     { key: 'none',   label: '—',    pattern: {} },
-    { key: 'dots',   label: '···',  pattern: { backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)', backgroundSize: '8px 8px' } },
-    { key: 'mesh',   label: '⊞',   pattern: { backgroundImage: 'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)', backgroundSize: '10px 10px' } },
-    { key: 'linen',  label: '////',  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)' } },
+    { key: 'dots',   label: '···',  pattern: { backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 8px) calc(var(--tile-scale, 1) * 8px)' } },
+    { key: 'mesh',   label: '⊞',   pattern: { backgroundImage: 'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
+    { key: 'linen',  label: '////',  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'animated-dots', label: '✧', pattern: {} },
     { key: 'aurora', label: (
         <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7]" />
@@ -142,11 +168,16 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const [itemStyles, setItemStyles] = useState<Record<string, ItemStyle>>(loadStyles);
 
     const [showCompleted, setShowCompleted] = useState(false);
+    
+    // dnd-kit sensors
+    const sensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 10 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
 
-    // Drag state
-    const [draggedId, setDraggedId] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
     const [draggedGroup, setDraggedGroup] = useState<number | null>(null);
-    const [dragOverId, setDragOverId] = useState<string | null>(null);
 
     // Undo-delete state
     const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
@@ -261,52 +292,82 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         databaseService.saveItemStyle(itemId, merged);
     };
 
-    // ── Drag handlers ────────────────────────────────────────────────────────
-    const handleDragStart = (e: React.DragEvent, id: string, group: number) => {
-        setDraggedId(id);
-        setDraggedGroup(group);
-        if (e.dataTransfer) {
-            e.dataTransfer.setData('text/plain', id);
-            e.dataTransfer.effectAllowed = 'move';
+    // ── dnd-kit Handlers ──────────────────────────────────────────────────
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        setActiveId(active.id as string);
+        const item = items.find(i => i.id === active.id);
+        if (item) setDraggedGroup(item.mentionCount);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+
+        const activeItem = items.find(i => i.id === activeIdStr);
+        const overItem = items.find(i => i.id === overIdStr);
+
+        if (!activeItem || !overItem) return;
+
+        // Still detect group for visual grouping constraints if needed
+        const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
+        const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
+
+        if (!isSameFlaggedGroup && !isSameMentionGroup) {
+            setDraggedGroup(null);
+            return;
         }
+
+        setDraggedGroup(isSameFlaggedGroup ? -1 : activeItem.mentionCount);
     };
-    const handleDragOver = (e: React.DragEvent, id: string, group: number) => {
-        if (draggedGroup !== group) return;
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'move';
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        
+        if (over && active.id !== over.id) {
+            const activeIdStr = String(active.id);
+            const overIdStr = String(over.id);
+            
+            const activeItem = items.find(i => i.id === activeIdStr);
+            const overItem = items.find(i => i.id === overIdStr);
+
+            if (activeItem && overItem) {
+                const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
+                const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
+
+                if (isSameFlaggedGroup || isSameMentionGroup) {
+                    const groupKey = isSameFlaggedGroup ? 'flagged' : String(activeItem.mentionCount);
+                    const listToUse = isSameFlaggedGroup 
+                        ? flagged 
+                        : activeGroups.find(g => g.count === activeItem.mentionCount)?.items;
+
+                    if (listToUse) {
+                        const oldIndex = listToUse.findIndex(i => i.id === activeIdStr);
+                        const newIndex = listToUse.findIndex(i => i.id === overIdStr);
+
+                        if (oldIndex !== -1 && newIndex !== -1) {
+                            const currentOrder = itemOrder[groupKey] || listToUse.map(i => i.id);
+                            const newOrderIds = arrayMove(currentOrder, oldIndex, newIndex);
+                            
+                            const newOrder = { ...itemOrder, [groupKey]: newOrderIds };
+                            setItemOrder(newOrder);
+                            localStorage.setItem('dumped_item_order', JSON.stringify(newOrder));
+                        }
+                    }
+                }
+            }
         }
-        if (dragOverId !== id) setDragOverId(id);
-    };
-    const handleDragEnter = (e: React.DragEvent, id: string, group: number) => {
-        if (draggedGroup !== group) return;
-        e.preventDefault();
-        setDragOverId(id);
-    };
-    const handleDragLeave = (e: React.DragEvent) => {
-        // Only clear if we're leaving the current target, but usually 
-        // handleDragOver handles setting the next one correctly.
-    };
-    const handleDrop = (targetId: string, targetGroup: number) => {
-        if (!draggedId || draggedGroup !== targetGroup || draggedId === targetId) return;
-        const groupItems = activeGroups.find(g => g.count === targetGroup)?.items ?? [];
-        const fromIdx = groupItems.findIndex(i => i.id === draggedId);
-        const toIdx = groupItems.findIndex(i => i.id === targetId);
-        if (fromIdx === -1 || toIdx === -1) return;
-        const reordered = [...groupItems];
-        const [moved] = reordered.splice(fromIdx, 1);
-        reordered.splice(toIdx, 0, moved);
-        const newOrder = { ...itemOrder, [String(targetGroup)]: reordered.map(i => i.id) };
-        setItemOrder(newOrder);
-        localStorage.setItem('dumped_item_order', JSON.stringify(newOrder));
-        setDraggedId(null);
+
+        setActiveId(null);
         setDraggedGroup(null);
-        setDragOverId(null);
     };
-    const handleDragEnd = () => {
-        setDraggedId(null);
+
+    const handleDragCancel = () => {
+        setActiveId(null);
         setDraggedGroup(null);
-        setDragOverId(null);
     };
 
     // ── Filter & group ───────────────────────────────────────────────────────
@@ -314,7 +375,15 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
 
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
-    const flagged   = displayItems.filter(i => !i.isCompleted && i.isFlagged);
+    const flagged = useMemo(() => {
+        const raw = displayItems.filter(i => !i.isCompleted && i.isFlagged);
+        const storedIds = itemOrder['flagged'] ?? [];
+        const idMap = new Map(raw.map(i => [i.id, i]));
+        const ordered = storedIds.filter(id => idMap.has(id)).map(id => idMap.get(id)!);
+        const remaining = raw.filter(i => !storedIds.includes(i.id));
+        return [...ordered, ...remaining];
+    }, [displayItems, itemOrder]);
+
     const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt < fourteenDaysMs));
     const completed = displayItems.filter(i => i.isCompleted);
     const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt >= fourteenDaysMs));
@@ -381,7 +450,20 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700">
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            measuring={{
+                droppable: {
+                    strategy: MeasuringStrategy.Always,
+                },
+            }}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+        >
+            <div className="max-w-3xl mx-auto w-full pt-4 pb-24 animate-in fade-in duration-700 overflow-visible">
 
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
@@ -393,14 +475,16 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                         </div>
                         <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
                     </div>
-                    <div className="grid grid-cols-9 gap-1 auto-rows-min">
-                        {flagged.map(item => (
-                            <ItemTile
-                                key={item.id}
-                                {...tileProps(item, 'md')}
-                            />
-                        ))}
-                    </div>
+                    <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
+                        <div className="grid grid-cols-9 gap-1 auto-rows-min">
+                            {flagged.map(item => (
+                                <ItemTile
+                                    key={item.id}
+                                    {...tileProps(item, 'md')}
+                                />
+                            ))}
+                        </div>
+                    </SortableContext>
                 </section>
             )}
 
@@ -414,22 +498,16 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                     <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
                 </div>
                 <div className="grid grid-cols-9 gap-1 auto-rows-min">
-                    {activeGroups.flatMap(({ items: groupItems }) =>
-                        groupItems.map(item => (
-                            <ItemTile
-                                key={item.id}
-                                {...tileProps(item, 'md')}
-                                isDragging={draggedId === item.id}
-                                isDragOver={dragOverId === item.id}
-                                canDrop={draggedGroup === item.mentionCount}
-                                onDragStart={(e) => handleDragStart(e, item.id, item.mentionCount)}
-                                onDragOver={(e) => handleDragOver(e, item.id, item.mentionCount)}
-                                onDragEnter={(e) => handleDragEnter(e, item.id, item.mentionCount)}
-                                onDrop={() => handleDrop(item.id, item.mentionCount)}
-                                onDragEnd={handleDragEnd}
-                            />
-                        ))
-                    )}
+                    {activeGroups.flatMap(({ count, items: groupItems }) => (
+                        <SortableContext key={count} items={groupItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                            {groupItems.map(item => (
+                                <ItemTile
+                                    key={item.id}
+                                    {...tileProps(item, 'md')}
+                                />
+                            ))}
+                        </SortableContext>
+                    ))}
                 </div>
             </section>
 
@@ -480,7 +558,19 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                     </button>
                 </div>
             )}
-        </div>
+            </div>
+
+            <DragOverlay adjustScale={true}>
+                {activeId ? (
+                    <div style={{ transform: 'scale(1.05)', cursor: 'grabbing', pointerEvents: 'none' }}>
+                        <ItemTile
+                            {...tileProps(items.find(i => i.id === activeId)!, 'md', 'shadow-2xl')}
+                            isDragging={true}
+                        />
+                    </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     );
 };
 
@@ -541,13 +631,45 @@ const ItemTile: React.FC<ItemTileProps> = ({
     const isSmall = size === 'sm';
     const draggable = !!onDragStart;
     const [stylerOpen, setStylerOpen] = useState(false);
+    const [stylerPosition, setStylerPosition] = useState<'left' | 'right'>('right');
     const stylerRef = useRef<HTMLDivElement>(null);
+
+    useLayoutEffect(() => {
+        if (stylerOpen && stylerRef.current) {
+            const rect = stylerRef.current.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 20) {
+                setStylerPosition('left');
+            } else {
+                setStylerPosition('right');
+            }
+        }
+    }, [stylerOpen]);
+
     const tileRef = useRef<HTMLDivElement>(null);
     const [draftLabel, setDraftLabel] = useState(item.label);
-    const [tiltMatrix, setTiltMatrix] = useState<string>("matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)");
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging: isSortableDragging,
+    } = useSortable({ 
+        id: item.id,
+        data: { type: 'item', item }
+    });
+
+    const [tiltMatrix, setTiltMatrix] = useState("");
+    const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+    const sortableStyle = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isSortableDragging ? 0 : 1, // The DragOverlay will show the active tile
+    };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (isExpanded || isDragging) return;
+        if (isExpanded || isDragging || itemStyle.texture !== 'holographic') return;
         const rect = tileRef.current?.getBoundingClientRect();
         if (!rect) return;
 
@@ -556,19 +678,22 @@ const ItemTile: React.FC<ItemTileProps> = ({
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         
+        // Percent for shaders (0-100)
+        setMousePos({ 
+            x: (x / rect.width) * 100, 
+            y: (y / rect.height) * 100 
+        });
+
         // Tilt calculation (max 12deg)
         const rotateX = ((y - centerY) / centerY) * -12;
         const rotateY = ((x - centerX) / centerX) * 12;
-
-        // Simple matrix3d for tilt
-        const radX = (rotateX * Math.PI) / 180;
-        const radY = (rotateY * Math.PI) / 180;
         
         setTiltMatrix(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
     };
 
     const handleMouseLeave = () => {
-        setTiltMatrix("matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)");
+        setTiltMatrix("");
+        setMousePos({ x: 50, y: 50 });
     };
 
     useEffect(() => { setDraftLabel(item.label); }, [item.label]);
@@ -591,26 +716,38 @@ const ItemTile: React.FC<ItemTileProps> = ({
 
     const TileContent = (
         <div
-            ref={tileRef}
+            ref={setNodeRef}
+            style={{
+                ...sortableStyle,
+                zIndex: isSortableDragging ? 100 : (stylerOpen ? 150 : undefined),
+                overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden'
+            }}
+            {...attributes}
+            {...listeners}
+            className={cn("relative", className)}
+        >
+        <div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             className={`
-                relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between
+                relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between h-full w-full
                 ${isExpanded ? 'border border-black/70 z-20 col-span-full shadow-lg' : 'border border-black/70 shadow-sm'}
                 ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${['neon', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'bg-black' : 'bg-white'} text-slate-900
+                rounded-[10px] ${['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black' : (itemStyle.texture === 'holographic' ? 'bg-slate-50' : 'bg-white')} text-slate-900
                 ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' ? 'animate-neon-flicker' : ''}
-                transition-transform duration-200 ease-out will-change-transform
+                transition-transform duration-[400ms] ease-out will-change-transform
             `}
             style={{
-                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture)) ? '#000' : colorBg,
+                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (itemStyle.texture === 'holographic' ? '#f8fafc' : colorBg),
                 ...textureStyle,
                 padding,
-                transform: !isExpanded ? tiltMatrix : undefined,
+                '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
+                transform: (!isExpanded && itemStyle.texture === 'holographic' && tiltMatrix) ? tiltMatrix : undefined,
+                transformStyle: 'preserve-3d',
                 ...(isExpanded ? {} : { aspectRatio }),
                 ...(itemStyle.texture === 'neon' ? {
                     '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
@@ -619,14 +756,23 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     borderColor: 'var(--neon-border-color)',
                 } as any : {})
             }}
-            draggable={draggable}
-            onDragStart={onDragStart ? (e) => { e.stopPropagation(); onDragStart(e); } : undefined}
-            onDragOver={onDragOver ? (e) => { e.stopPropagation(); onDragOver(e); } : undefined}
-            onDragEnter={onDragEnter ? (e) => { e.stopPropagation(); onDragEnter(e); } : undefined}
-            onDrop={onDrop ? (e) => { e.stopPropagation(); onDrop(); } : undefined}
-            onDragEnd={onDragEnd}
-            onClick={onToggle}
+            onClick={(e) => {
+                // Prevent toggle if we were dragging
+                if (isSortableDragging) return;
+                if (item.isNew) {
+                    databaseService.markItemRead(item.id);
+                }
+                onToggle();
+            }}
         >
+            {/* ── iMessage-style unread indicator ── */}
+            {(item.isNew || (item.createdAt > Date.now() - 30 * 60 * 1000 && !item.isCompleted)) && !isExpanded && (
+                <div 
+                    className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)] z-[60]" 
+                    style={{ border: '1px solid white' }}
+                />
+            )}
+
             {/* ── Aurora Glow Background ── */}
             {itemStyle.texture === 'aurora' && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden blur-3xl opacity-60">
@@ -636,10 +782,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
             )}
             
             {/* ── Shader Backgrounds ── */}
-            {itemStyle.texture === 'xenon' && <XenonTexture isCompact />}
-            {itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact />}
-            {itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact />}
-            {itemStyle.texture === 'lamp' && <SpotlightLamp isCompact className="absolute inset-0 pointer-events-none" />}
+            {itemStyle.texture === 'xenon' && <XenonTexture isCompact={!isExpanded} />}
+            {itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
+            {itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
+            {itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
             
             {itemStyle.texture === 'dithering-wave' && (
                 <DitheringShader 
@@ -653,7 +799,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-            {itemStyle.texture === 'holographic' && <HolographicTexture />}
+            {itemStyle.texture === 'holographic' && <HolographicTexture mouseX={mousePos.x} mouseY={mousePos.y} />}
 
             {/* ── Animated Background ── */}
             {itemStyle.texture === 'animated-dots' && (
@@ -764,13 +910,20 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         </button>
 
                         {stylerOpen && (
-                            <div
+                            <div 
+                                ref={stylerRef}
                                 onClick={(e) => e.stopPropagation()}
                                 className={`
-                                    absolute bottom-full mb-2 z-50 p-3 rounded-2xl shadow-xl border-2 border-white/40 text-black
-                                    ${stylerRef.current && stylerRef.current.getBoundingClientRect().left > window.innerWidth / 2 ? 'right-0' : 'left-0'}
+                                    absolute z-50 p-3 rounded-2xl shadow-2xl border border-white/20 text-black
+                                    ${stylerPosition === 'right' ? 'left-0' : 'right-0'}
+                                    ${tileRef.current && tileRef.current.getBoundingClientRect().top < 300 ? 'top-full mt-2' : 'bottom-full mb-2'}
                                 `}
-                                style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', minWidth: 188 }}
+                                style={{ 
+                                    background: 'rgba(255,255,255,0.95)', 
+                                    backdropFilter: 'blur(16px)', 
+                                    minWidth: 190,
+                                    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
+                                }}
                             >
                                 <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Color</p>
                                 <div className="flex gap-1.5 flex-wrap mb-4">
@@ -858,6 +1011,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     </div>
                 </div>
             )}
+        </div>
         </div>
     );
 

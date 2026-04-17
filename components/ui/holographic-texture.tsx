@@ -1,69 +1,76 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 export const HolographicTexture = ({ 
+  mouseX = 50,
+  mouseY = 50,
   className 
 }: { 
-  className?: string 
+  mouseX?: number;
+  mouseY?: number;
+  className?: string;
 }) => {
-  // Generate the 10 rotation keyframes for the holographic effect
-  const overlayAnimations = useMemo(() => {
-    return [...Array(10).keys()].map((e) => (
-      `@keyframes holoLoop${e + 1} {
-        0% { transform: rotate(${e * 10}deg); }
-        50% { transform: rotate(${(e + 1) * 10}deg); }
-        100% { transform: rotate(${e * 10}deg); }
-      }`
-    )).join("\n");
-  }, []);
-
-  const hslColors = [
-    "hsl(358, 100%, 62%)",
-    "hsl(30, 100%, 50%)",
-    "hsl(60, 100%, 50%)",
-    "hsl(96, 100%, 50%)",
-    "hsl(233, 85%, 47%)",
-    "hsl(271, 85%, 47%)",
-    "hsl(300, 20%, 35%)",
-    "transparent",
-    "transparent",
-    "white"
-  ];
-
   return (
     <div className={cn("absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0", className)}>
-      <style>{overlayAnimations}</style>
+      {/* ── Base metallic foil finish ── */}
+      <div className="absolute inset-0 bg-slate-100 opacity-20" />
       
-      <svg 
-        viewBox="0 0 100 100" 
-        preserveAspectRatio="none" 
-        className="w-full h-full opacity-60 mix-blend-overlay"
-      >
-        <defs>
-          <filter id="holoBlur">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
+      {/* ── Shimmering Iridescence Layer ── */}
+      <div 
+        className="absolute inset-[-100%] transition-transform duration-[400ms] ease-out"
+        style={{
+          background: `
+            linear-gradient(
+              ${135 + (mouseX - 50) * 0.2}deg,
+              transparent 0%,
+              rgba(255, 0, 0, 0.1) 15%,
+              rgba(255, 255, 0, 0.1) 30%,
+              rgba(0, 255, 0, 0.1) 45%,
+              rgba(0, 255, 255, 0.1) 60%,
+              rgba(0, 0, 255, 0.1) 75%,
+              rgba(255, 0, 255, 0.1) 90%,
+              transparent 100%
+            )
+          `,
+          transform: `translate(${(mouseX - 50) * 0.5}%, ${(mouseY - 50) * 0.5}%)`,
+          mixBlendMode: 'color-dodge',
+          opacity: 0.8
+        }}
+      />
+
+      {/* ── Bright Specular Flare (Glint) ── */}
+      <div 
+        className="absolute inset-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(circle at ${mouseX}% ${mouseY}%, rgba(255,255,255,0.8) 0%, transparent 60%)`,
+          mixBlendMode: 'soft-light',
+          opacity: 0.6
+        }}
+      />
+
+      {/* ── Foil "Diagonal Shards" Effect ── */}
+      <div 
+        className="absolute inset-0 opacity-[0.15]"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            45deg,
+            #fff 0px,
+            #fff 2px,
+            transparent 2px,
+            transparent 10px
+          )`,
+          mixBlendMode: 'overlay'
+        }}
+      />
+
+      {/* ── Fine Noise / Foil Grain ── */}
+      <div className="absolute inset-0 opacity-[0.03] mix-blend-multiply pointer-events-none">
+        <svg filter='url(#noiseFilter)' className='w-full h-full'>
+          <filter id='noiseFilter'>
+            <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/>
           </filter>
-        </defs>
-        
-        <g filter="url(#holoBlur)">
-          {hslColors.map((color, i) => (
-            <g 
-              key={i}
-              style={{
-                transformOrigin: "center center",
-                animation: `holoLoop${i + 1} 5s infinite ease-in-out`,
-                animationDelay: `${i * -0.5}s`
-              }}
-            >
-              <polygon 
-                points="0,0 100,100 100,0 0,100" 
-                fill={color} 
-                opacity="0.4" 
-              />
-            </g>
-          ))}
-        </g>
-      </svg>
+        </svg>
+      </div>
     </div>
   );
 };

@@ -372,8 +372,6 @@ export const databaseService = {
         const { error } = await supabase.from('items').upsert(rows, { onConflict: 'id' });
         if (error) {
             console.error('pushLocalItemsToCloud failed:', error.message);
-        } else {
-            console.log(`✅ Pushed ${rows.length} local items to Supabase`);
         }
     },
 
@@ -483,7 +481,8 @@ export const databaseService = {
                         firstMentionedAt: now,
                         isFlagged: false,
                         isCompleted: false,
-                        createdAt: now
+                        createdAt: now,
+                        isNew: true
                     };
                     items.push(newItem);
                     itemId = newItem.id;
@@ -538,7 +537,8 @@ export const databaseService = {
                     localItems.push({
                         id: fallbackId, userId: user.id, label: res.label,
                         mentionCount: 1, lastMentionedAt: now, firstMentionedAt: now,
-                        isFlagged: false, isCompleted: false, createdAt: now
+                        isFlagged: false, isCompleted: false, createdAt: now,
+                        isNew: true
                     });
                     itemId = fallbackId;
                     localDirty = true;
@@ -548,7 +548,8 @@ export const databaseService = {
                     localItems.push({
                         id: newItem.id, userId: user.id, label: res.label,
                         mentionCount: 1, lastMentionedAt: now, firstMentionedAt: now,
-                        isFlagged: false, isCompleted: false, createdAt: now
+                        isFlagged: false, isCompleted: false, createdAt: now,
+                        isNew: true
                     });
                     localDirty = true;
                 }
@@ -598,6 +599,20 @@ export const databaseService = {
         if (item) { item.isFlagged = isFlagged; localStorage.setItem('dumped_items', JSON.stringify(items)); }
         if (!user) return;
         await supabase.from('items').update({ is_flagged: isFlagged }).eq('id', itemId);
+    },
+
+    async markItemRead(itemId: string) {
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const item = items.find(i => i.id === itemId);
+        if (item && item.isNew) {
+            item.isNew = false;
+            localStorage.setItem('dumped_items', JSON.stringify(items));
+        }
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('items').update({ is_new: false }).eq('id', itemId);
+        }
     },
 
     async toggleComplete(itemId: string, isCompleted: boolean) {

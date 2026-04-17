@@ -13,18 +13,6 @@ interface BrainDumpHubProps {
     isListening: boolean;
 }
 
-const SAMPLE_DUMPS = [
-    "Call the dentist about the crown",
-    "Need to unsubscribe from that streaming service",
-    "Fix the squeaky door in the hallway",
-    "Look up flights for the summer trip",
-    "Buy a birthday card for Sarah",
-    "Clean the coffee machine filters",
-    "Update my portfolio with the new project",
-    "Follow up on the insurance claim",
-    "Research new monitors for the desk",
-    "Remember to take the trash out tonight"
-];
 
 export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     input,
@@ -92,35 +80,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         textareaRef.current?.focus();
     };
 
-    // Mic — appends transcript to existing input
-    const handleMic = () => {
-        startSpeechToText((transcript) => {
-            setInput(prev => prev ? `${prev}\n${transcript}` : transcript);
-            setTimeout(growTextarea, 50);
-        });
-    };
-
-    // Image upload → OCR → append to input
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        e.target.value = ''; // reset so same file can be re-selected
-
-        setIsAnalyzing(true);
-        try {
-            const base64 = await fileToBase64(file);
-            const extracted = await extractImageText(base64, file.type);
-            if (extracted) {
-                setInput(prev => prev ? `${prev}\n\n${extracted}` : extracted);
-                setTimeout(growTextarea, 50);
-                textareaRef.current?.focus();
-            }
-        } catch (err) {
-            console.error('Image analysis failed:', err);
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
 
     const hasText = input.trim().length > 0;
 
@@ -141,14 +100,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
 
     return (
         <>
-            {/* Hidden file input */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,image/heic,image/heif,.pdf"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-            />
 
             {/* Full-screen fixed container */}
             <div
@@ -173,8 +124,8 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             opacity: fadeOpacity,
                             transition: 'opacity 0.18s ease',
                             width: '100%',
-                            minHeight: '100dvh',
-                            padding: 'calc(3rem + env(safe-area-inset-top)) 20px calc(180px + env(safe-area-inset-bottom))',
+                            minHeight: '20dvh',
+                            padding: 'calc(3rem + env(safe-area-inset-top)) 20px calc(140px + env(safe-area-inset-bottom))',
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
@@ -188,136 +139,87 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             zIndex: 2,
                         }}
                     />
-                    
-                    {/* Onboarding suggestions */}
-                    {!hasText && (
-                        <div className="absolute top-0 left-0 w-full pointer-events-none select-none px-[20px] transition-opacity duration-300" style={{ paddingTop: 'calc(5.5rem + env(safe-area-inset-top))' }}>
-                            <div className="flex flex-col">
-                                {SAMPLE_DUMPS.map((dump, idx) => (
-                                    <div key={idx} className="text-[17px] leading-[1.75] text-[#1a1a1a] opacity-15">
-                                        {dump}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
-
-                {/* Bottom action bar — horizontal pill tools */}
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="fixed z-40 transition-all duration-300 w-full left-0 right-0 px-4"
-                    style={{
-                        bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
-                    }}
-                >
-                    <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-1.5 py-1 flex items-center justify-center gap-0.5 min-h-[42px] w-fit mx-auto overflow-hidden transition-all duration-300">
-                        <AnimatePresence mode="wait">
-                            {!hasText ? (
-                                <motion.div
-                                    key="tools"
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="flex items-center"
-                                >
-                                    {/* Mic button */}
-                                    <button
-                                        onClick={handleMic}
-                                        disabled={isProcessing}
-                                        style={toolBtn(isListening)}
-                                        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-                                    >
-                                        {isListening
-                                            ? <StopIcon style={{ width: 19, height: 19, color: '#ef4444' }} />
-                                            : <MicrophoneIcon style={{ width: 19, height: 19, color: '#94a3b8' }} />
-                                        }
-                                    </button>
-
-                                    {/* Upload / scan button */}
-                                    <button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={isProcessing || isAnalyzing}
-                                        style={toolBtn(isAnalyzing)}
-                                        aria-label="Scan image or checklist"
-                                    >
-                                        {isAnalyzing
-                                            ? <ArrowPathIcon style={{ width: 19, height: 19, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                                            : <PhotoIcon style={{ width: 19, height: 19, color: '#94a3b8' }} />
-                                        }
-                                    </button>
-                                </motion.div>
-                            ) : (
-                                <motion.button
-                                    key="submit"
-                                    initial={{ opacity: 0, x: 10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    onClick={handleSubmit}
-                                    disabled={isProcessing}
-                                    className="flex-1 flex items-center justify-center px-6 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95"
-                                >
-                                    {isProcessing
-                                        ? <ArrowPathIcon style={{ width: 16, height: 16, color: '#94a3b8', animation: 'spin 1s linear infinite' }} />
-                                        : 'put it all down'
-                                    }
-                                </motion.button>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-
-                {/* Listening indicator */}
-                {isListening && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '8px 16px',
-                        borderRadius: 20,
-                        background: 'rgba(239,68,68,0.08)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(239,68,68,0.15)',
-                        zIndex: 50,
-                    }}>
-                        <span style={{
-                            width: 7, height: 7, borderRadius: '50%', background: '#ef4444',
-                            animation: 'pulse 1.2s ease-in-out infinite'
-                        }} />
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
-                            Listening…
-                        </span>
-                    </div>
-                )}
-
-                {/* Analyzing indicator */}
-                {isAnalyzing && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '8px 16px',
-                        borderRadius: 20,
-                        background: 'rgba(99,102,241,0.08)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(99,102,241,0.15)',
-                        zIndex: 50,
-                    }}>
-                        <ArrowPathIcon style={{ width: 13, height: 13, color: '#6366f1', animation: 'spin 1s linear infinite' }} />
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#6366f1' }}>
-                            Reading image…
-                        </span>
-                    </div>
-                )}
             </div>
+
+            <AnimatePresence>
+                {(hasText || isProcessing) && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="fixed z-40 transition-all duration-[200ms] w-full left-0 right-0 px-4 pointer-events-none"
+                        style={{
+                            bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
+                        }}
+                    >
+                        <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-1.5 py-1 flex items-center justify-center gap-0.5 min-h-[42px] w-fit mx-auto overflow-hidden pointer-events-auto">
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isProcessing}
+                                className="flex-1 flex items-center justify-center px-6 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95"
+                            >
+                                {isProcessing
+                                    ? <ArrowPathIcon className="w-4 h-4 text-slate-400 animate-spin" />
+                                    : 'put it all down'
+                                }
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Listening indicator */}
+            {isListening && (
+                <div style={{
+                    position: 'fixed',
+                    top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 16px',
+                    borderRadius: 20,
+                    background: 'rgba(239,68,68,0.08)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(239,68,68,0.15)',
+                    zIndex: 50,
+                }}>
+                    <span style={{
+                        width: 7, height: 7, borderRadius: '50%', background: '#ef4444',
+                        animation: 'pulse 1.2s ease-in-out infinite'
+                    }} />
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
+                        Listening…
+                    </span>
+                </div>
+            )}
+
+            {/* Analyzing indicator */}
+            {isAnalyzing && (
+                <div style={{
+                    position: 'fixed',
+                    top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 16px',
+                    borderRadius: 20,
+                    background: 'rgba(99,102,241,0.08)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(99,102,241,0.15)',
+                    zIndex: 50,
+                }}>
+                    <ArrowPathIcon style={{ width: 13, height: 13, color: '#6366f1', animation: 'spin 1s linear infinite' }} />
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#6366f1' }}>
+                        Reading image…
+                    </span>
+                </div>
+            )}
 
             <style>{`
                 textarea::placeholder { color: rgba(0,0,0,0.4); }

@@ -21,6 +21,7 @@ import { PatternHub } from './PatternHub';
 // Modals & Notifications
 import { ToastList } from './Notifications/Toast';
 import { ConfirmDialog } from './Notifications/ConfirmDialog';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
 import { useZenPlayer } from '../hooks/useZenPlayer';
@@ -138,23 +139,29 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 {activeTab === 'patterns' && (
                     <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16 pb-48">
                         <div className="space-y-8">
-                            <TilesHub setActiveTab={setActiveTab} />
+                            <ErrorBoundary inline>
+                                <TilesHub setActiveTab={setActiveTab} />
+                            </ErrorBoundary>
                         </div>
                     </main>
                 )}
 
                 {activeTab === 'streak' && (
                     <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
-                        <PatternHub />
+                        <ErrorBoundary inline>
+                            <PatternHub />
+                        </ErrorBoundary>
                     </main>
                 )}
 
                 {/* Dump screen renders outside the scrollable layout — it owns the full viewport */}
                 {activeTab === 'dump' && (
-                    <BrainDumpHub
-                        {...dump}
-                        onNavigateToGrid={() => setActiveTab('patterns')}
-                    />
+                    <ErrorBoundary inline>
+                        <BrainDumpHub
+                            {...dump}
+                            onNavigateToGrid={() => setActiveTab('patterns')}
+                        />
+                    </ErrorBoundary>
                 )}
             </div>
 

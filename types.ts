@@ -219,6 +219,7 @@ export interface Item {
   fadedAt?: number;
   createdAt: number;
   style?: { color: string; texture: string };
+  isNew?: boolean;
   excerpts?: DumpItem[]; // Loaded on expansion
 }
 

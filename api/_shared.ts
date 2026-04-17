@@ -32,7 +32,12 @@ const ratelimit = redis
 
 export async function checkRateLimit(userId: string, res: VercelResponse): Promise<boolean> {
     if (!ratelimit) {
-        console.warn('⚠️ [Config] UPSTASH_REDIS_REST_URL/TOKEN missing. Rate limiting is disabled.');
+        // In production, refuse requests if rate limiting isn't configured — fail closed.
+        // In development, allow through so local testing still works.
+        if (process.env.NODE_ENV === 'production') {
+            res.status(503).json({ error: 'Service temporarily unavailable. Please try again shortly.' });
+            return false;
+        }
         return true;
     }
     const { success } = await ratelimit.limit(userId);
@@ -66,14 +71,6 @@ Address the user naturally as "you" and maintain a friendly, personal connection
 export async function verifyAuth(req: VercelRequest): Promise<string> {
     verifyConfig();
     const token = req.headers.authorization?.replace('Bearer ', '');
-
-    // Bypass: accept userId from request body when no token is present for unauthenticated local mode
-    if (!token) {
-        const userId = req.body?.userId;
-        if (userId) return userId;
-        throw new Error('Unauthorized: no token provided');
-    }
-
     if (!token) throw new Error('Unauthorized: no token provided');
     const { data: { user }, error } = await supabaseAdmin!.auth.getUser(token);
     if (error || !user) throw new Error('Unauthorized: invalid token');
@@ -118,7 +115,6 @@ export async function generateWithFallback(config: any, payload: any): Promise<a
         
         if (isQuota || isUnavailable) {
             currentModelName = FALLBACK_MODEL;
-            console.log(`🔄 [AI] Falling back to ${currentModelName}...`);
             const fallback = ai!.getGenerativeModel({ ...config, model: currentModelName });
             return await retryWithBackoff(() => fallback.generateContent(payload), 1, 2000);
         }
