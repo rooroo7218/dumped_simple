@@ -29,6 +29,8 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     const [fadeOpacity, setFadeOpacity] = useState(1);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isManualOpen, setIsManualOpen] = useState(false);
+    const [caretPos, setCaretPos] = useState({ top: 0, left: 0 });
+    const mirrorRef = useRef<HTMLDivElement>(null);
 
     // Track keyboard height via visualViewport
     useEffect(() => {
@@ -62,7 +64,45 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         if (!ta) return;
         ta.style.height = 'auto';
         ta.style.height = `${ta.scrollHeight}px`;
+        updateCaret();
     }, []);
+
+    // ── Caret Position logic ────────────────────────────────────────────────
+    const updateCaret = useCallback(() => {
+        const ta = textareaRef.current;
+        const mirror = mirrorRef.current;
+        if (!ta || !mirror) return;
+
+        const selectionEnd = ta.selectionEnd;
+        const textBefore = ta.value.substring(0, selectionEnd);
+        
+        // Use a hidden div to calculate coordinates
+        mirror.textContent = textBefore;
+        const span = document.createElement('span');
+        span.textContent = ta.value.substring(selectionEnd, selectionEnd + 1) || '.';
+        mirror.appendChild(span);
+
+        setCaretPos({
+            top: span.offsetTop,
+            left: span.offsetLeft
+        });
+    }, []);
+
+    useEffect(() => {
+        const ta = textareaRef.current;
+        if (!ta) return;
+
+        const handleEvents = () => updateCaret();
+        ta.addEventListener('click', handleEvents);
+        ta.addEventListener('keyup', handleEvents);
+        ta.addEventListener('focus', handleEvents);
+        
+        return () => {
+            ta.removeEventListener('click', handleEvents);
+            ta.removeEventListener('keyup', handleEvents);
+            ta.removeEventListener('focus', handleEvents);
+        };
+    }, [updateCaret]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInput(e.target.value);
@@ -112,7 +152,8 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         ref={textareaRef}
                         value={input}
                         onChange={handleChange}
-                        placeholder="Just keep going. Nothing is too small."
+                        onScroll={updateCaret}
+                        placeholder="phew... let it all out."
                         rows={1}
                         autoComplete="off"
                         autoCorrect="off"
@@ -125,7 +166,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             transition: 'opacity 0.18s ease',
                             width: '100%',
                             minHeight: '20dvh',
-                            padding: 'calc(3rem + env(safe-area-inset-top)) 20px calc(140px + env(safe-area-inset-bottom))',
+                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 60px)`,
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
@@ -139,6 +180,64 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             zIndex: 2,
                         }}
                     />
+
+                    {/* ── Mirror Div for Caret Tracking ── */}
+                    <div
+                        ref={mirrorRef}
+                        aria-hidden="true"
+                        style={{
+                            position: 'absolute',
+                            visibility: 'hidden',
+                            whiteSpace: 'pre-wrap',
+                            wordWrap: 'break-word',
+                            width: textareaRef.current?.clientWidth || '100%',
+                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 60px)`,
+                            fontSize: '17px',
+                            lineHeight: '1.75',
+                            fontFamily: 'inherit',
+                            top: 0,
+                            left: 0,
+                            pointerEvents: 'none',
+                            zIndex: -1,
+                        }}
+                    />
+
+                    {/* ── Floating Caret Logo ── */}
+                    <AnimatePresence>
+                        {textareaRef.current && input.length > 0 && (
+                            <motion.div
+                                initial={false}
+                                animate={{
+                                    x: caretPos.left + 10,
+                                    y: caretPos.top - 24,
+                                }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 400,
+                                    damping: 30,
+                                    mass: 0.8
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    zIndex: 5,
+                                    pointerEvents: 'none',
+                                }}
+                            >
+                                <img 
+                                    src="/phew-logo.svg" 
+                                    alt="" 
+                                    className="w-16 h-16 opacity-100"
+                                    style={{
+                                        transform: 'scale(1.2)',
+                                        transformOrigin: 'center',
+                                        filter: 'brightness(0)',
+                                    }}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -149,7 +248,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="fixed z-40 transition-all duration-[200ms] w-full left-0 right-0 px-4 pointer-events-none"
+                        className="fixed z-40 transition-all duration-200 w-full left-0 right-0 px-4 pointer-events-none"
                         style={{
                             bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
                         }}

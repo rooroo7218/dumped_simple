@@ -6,11 +6,13 @@ import {
     FlagIcon as FlagOutline,
     CheckCircleIcon as CheckOutline,
     SwatchIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
     FlagIcon as FlagSolid,
     CheckCircleIcon as CheckSolid,
     SparklesIcon,
+    ArrowPathIcon,
 } from '@heroicons/react/24/solid';
 
 import { AnimatedDots } from './ui/animated-dots';
@@ -250,16 +252,18 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         }
     };
 
-    const handleToggleFlag = async (e: React.MouseEvent, item: Item) => {
+    const handleToggleFlag = (e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
-        await databaseService.toggleFlag(item.id, !item.isFlagged);
-        load();
+        const nextValue = !item.isFlagged;
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, isFlagged: nextValue } : i));
+        databaseService.toggleFlag(item.id, nextValue);
     };
 
-    const handleToggleComplete = async (e: React.MouseEvent, item: Item) => {
+    const handleToggleComplete = (e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
-        await databaseService.toggleComplete(item.id, !item.isCompleted);
-        load();
+        const nextValue = !item.isCompleted;
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, isCompleted: nextValue } : i));
+        databaseService.toggleComplete(item.id, nextValue);
     };
 
     const handleDelete = useCallback((e: React.MouseEvent, item: Item) => {
@@ -267,25 +271,37 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         if (pendingDeleteTimers.current.has(item.id)) {
             clearTimeout(pendingDeleteTimers.current.get(item.id)!);
         }
+        
+        // 1. Optimistic: Remove from primary list immediately
+        setItems(prev => prev.filter(i => i.id !== item.id));
+        setExpandedItemId(null);
+
+        // 2. Setup the background delete timer
         const timer = setTimeout(async () => {
             await databaseService.deleteItem(item.id);
             pendingDeleteTimers.current.delete(item.id);
             setPendingDeletes(prev => { const next = new Map(prev); next.delete(item.id); return next; });
-            // Reload from Supabase after delete so the authoritative state is used
+            // Authoritative reload
             load();
         }, 5000);
+        
         pendingDeleteTimers.current.set(item.id, timer);
         setPendingDeletes(prev => new Map(prev).set(item.id, { item }));
-        setExpandedItemId(null);
     }, []);
 
     const handleUndoDelete = useCallback((itemId: string) => {
+        const deletedData = pendingDeletes.get(itemId);
+        if (!deletedData) return;
+
         if (pendingDeleteTimers.current.has(itemId)) {
             clearTimeout(pendingDeleteTimers.current.get(itemId)!);
             pendingDeleteTimers.current.delete(itemId);
         }
+        
+        // Restore to local state immediately
+        setItems(prev => [...prev, deletedData.item]);
         setPendingDeletes(prev => { const next = new Map(prev); next.delete(itemId); return next; });
-    }, []);
+    }, [pendingDeletes]);
 
     const handleLabelChange = useCallback((itemId: string, newLabel: string) => {
         setItems(prev => prev.map(i => i.id === itemId ? { ...i, label: newLabel } : i));
@@ -590,14 +606,14 @@ interface CompletedRowProps {
 
 const CompletedRow: React.FC<CompletedRowProps> = ({ item, onComplete, onDelete }) => (
     <div className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl border border-black/70 bg-white/40 opacity-50">
-        <button onClick={onComplete} className="shrink-0 text-emerald-600 active:scale-95 transition-all">
-            <CheckSolid className="w-3.5 h-3.5" />
+        <button onClick={onComplete} className="shrink-0 text-slate-400 active:scale-95 transition-all">
+            <CheckSolid className="w-4 h-4" />
         </button>
         <span className="flex-1 text-[12px] font-semibold text-slate-800 line-through truncate">
             {item.label}
         </span>
-        <button onClick={onDelete} className="shrink-0 text-[10px] font-medium uppercase tracking-widest text-red-400 active:scale-95 transition-all">
-            Delete
+        <button onClick={onDelete} className="shrink-0 p-1 text-slate-400 hover:text-slate-600 active:scale-90 transition-all">
+            <TrashIcon className="w-3.5 h-3.5" />
         </button>
     </div>
 );
