@@ -124,8 +124,8 @@ export const Navigation: React.FC<NavigationProps> = ({
             } bg-white/90 backdrop-blur-md border-b-2 border-slate-950/70`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
-                <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
-                    Dumped.
+                <span className="text-[17px] font-bold tracking-tighter select-none shrink-0 text-slate-900 mr-2">
+                    phew.
                 </span>
 
                 <div className={divider} />
