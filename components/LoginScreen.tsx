@@ -11,9 +11,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-white p-6">
-            <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6 text-center">
+            <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-0 text-center">
                 {/* ── Brand Logo ── */}
-                <div className="mb-2">
+                <div className="mb-0">
                     <img 
                         src="/brand-logo.png" 
                         alt="Logo" 
