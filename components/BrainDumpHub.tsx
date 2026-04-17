@@ -170,16 +170,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* ── Brand Logo (Bottom Right) ── */}
-            <div className="fixed bottom-6 right-6 z-[60] pointer-events-none select-none">
-                <div className="flex flex-col items-center">
-                    <img 
-                        src="/brand-logo.png" 
-                        alt="Logo" 
-                        className="w-16 h-16 object-contain opacity-20 hover:opacity-100 transition-opacity duration-500 animate-pulse-gentle"
-                    />
-                </div>
-            </div>
 
             {/* Listening indicator */}
             {isListening && (
