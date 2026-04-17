@@ -52,8 +52,8 @@ export const Header: React.FC<HeaderProps> = ({
         <header className={`sticky top-0 z-50 transition-all duration-1000 ease-in-out ${isZenMode ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'} px-4 md:px-10 py-3 ${themeClasses.header} backdrop-blur-3xl flex items-center justify-between`}>
 
             {/* ── Wordmark ── */}
-            <h1 className="text-[17px] font-bold tracking-tight text-slate-800">
-                Dumped.
+            <h1 className="text-[19px] font-black tracking-tighter text-slate-800">
+                phew.
             </h1>
 
             {/* ── Right controls ── */}
@@ -130,8 +130,8 @@ export const Header: React.FC<HeaderProps> = ({
                                 className="w-7 h-7 rounded-full object-cover border-2 border-slate-200"
                             />
                         ) : (
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold bg-slate-100 text-slate-600">
-                                {user.name?.charAt(0).toUpperCase() ?? 'U'}
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-200 bg-white">
+                                <img src="/brand-logo.png" className="w-full h-full object-contain p-0.5" alt="Bot" />
                             </div>
                         )}
                         <span className="text-[12px] font-medium hidden sm:block text-slate-600">
