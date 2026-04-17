@@ -21,13 +21,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
                     />
                 </div>
 
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-black tracking-tighter text-slate-950">
+                <div className="flex flex-col items-center gap-2">
+                    <h1 className="text-[17px] font-bold tracking-tight text-slate-800">
                         phew.
                     </h1>
-                    <p className="text-[13px] font-medium text-slate-400 tracking-wide uppercase">
-                        Deep breath. Clear mind.
-                    </p>
                 </div>
 
                 <div className="w-full space-y-3 mt-8">
