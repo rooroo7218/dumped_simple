@@ -1,7 +1,7 @@
 {
-  "name": "phew.",
-  "short_name": "phew.",
-  "description": "Deep breath. Clear mind. Own your day.",
+  "name": "Dumped",
+  "short_name": "Dumped",
+  "description": "AI-powered personal operating system for your brain.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

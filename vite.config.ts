@@ -30,9 +30,9 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
         manifest: {
-          name: 'phew.',
-          short_name: 'phew.',
-          description: 'Deep breath. Clear mind. Own your day.',
+          name: 'Dumped',
+          short_name: 'Dumped',
+          description: 'AI-powered personal operating system for your brain.',
           display: 'standalone',
           background_color: '#ffffff',
           theme_color: '#ffffff',
