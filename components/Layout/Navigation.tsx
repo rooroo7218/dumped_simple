@@ -403,7 +403,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
                         ) : (
-                            <img src="/brand-logo.png" className="w-[24px] h-[24px] object-contain opacity-70" alt="Menu" />
+                            <UserIcon className="w-[22px] h-[22px] text-slate-500" />
                         )}
                     </button>
                 </nav>
