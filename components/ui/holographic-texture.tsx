@@ -17,7 +17,7 @@ export const HolographicTexture = ({
       
       {/* ── Shimmering Iridescence Layer ── */}
       <div 
-        className="absolute inset-[-100%] transition-transform duration-[400ms] ease-out"
+        className="absolute inset-[-100%] transition-transform duration-500 ease-out"
         style={{
           background: `
             linear-gradient(

@@ -19,6 +19,7 @@ import { XenonTexture, NovatrixTexture, ZenithoTexture } from './ui/uvcanvas-tex
 import { SpotlightLamp } from './ui/spotlight-lamp';
 import { DitheringShader } from './ui/dithering-shader';
 import { HolographicTexture } from './ui/holographic-texture';
+import { PremiumHolographic } from './ui/premium-holographic';
 import { cn } from '@/lib/utils';
 import {
     DndContext,
@@ -50,7 +51,7 @@ import { CSS } from '@dnd-kit/utilities';
 // ── Style system ────────────────────────────────────────────────────────────
 
 type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
-type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic';
+type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic' | 'premium-holographic';
 
 interface ItemStyle { color: ColorKey; texture: TextureKey }
 
@@ -84,6 +85,11 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
     { key: 'dithering-wave', label: 'Wv', pattern: {} },
     { key: 'dithering-swirl', label: 'Sw', pattern: {} },
     { key: 'holographic', label: 'Hl', pattern: {} },
+    { key: 'premium-holographic', label: (
+        <div className="w-full h-full flex items-center justify-center bg-slate-100 rounded overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
+        </div>
+    ), pattern: {} },
 ];
 
 function getColorBg(key: ColorKey): string {
@@ -739,10 +745,10 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 rounded-[10px] ${['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black' : (itemStyle.texture === 'holographic' ? 'bg-slate-50' : 'bg-white')} text-slate-900
                 ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' ? 'animate-neon-flicker' : ''}
-                transition-transform duration-[400ms] ease-out will-change-transform
+                transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (itemStyle.texture === 'holographic' ? '#f8fafc' : colorBg),
+                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
@@ -800,6 +806,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 />
             )}
             {itemStyle.texture === 'holographic' && <HolographicTexture mouseX={mousePos.x} mouseY={mousePos.y} />}
+            {itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
 
             {/* ── Animated Background ── */}
             {itemStyle.texture === 'animated-dots' && (
@@ -821,8 +828,8 @@ const ItemTile: React.FC<ItemTileProps> = ({
                         onClick={onComplete}
                         className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
                             item.isCompleted
-                                ? (itemStyle.texture === 'novatrix' ? 'text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
-                                : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
+                                ? (itemStyle.texture === 'novatrix' ? 'text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
+                                : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -840,7 +847,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight font-normal leading-[1.75] text-[16px]
-                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
+                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}
@@ -849,7 +856,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     ) : (
                         <p className={`
                             tracking-tight font-semibold leading-snug
-                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
+                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
                             ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
                         `}>
@@ -861,7 +868,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                 {/* ── Mention Count Pill ── */}
                 {item.mentionCount > 1 && !isExpanded && (
                     <div className="flex items-center mt-1">
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl', 'holographic'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
