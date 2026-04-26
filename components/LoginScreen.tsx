@@ -15,9 +15,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
                 {/* ── Brand Logo ── */}
                 <div className="mb-0">
                     <img 
-                        src="/brand-logo.png" 
+                        src="/phew-logo.svg" 
                         alt="Logo" 
                         className="w-32 h-32 object-contain"
+                        style={{ imageRendering: '-webkit-optimize-contrast' as any }}
                     />
                 </div>
 
@@ -48,6 +49,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
                     >
                         Tester Mode
                     </button>
+                </div>
+
+                {/* ── Footer ── */}
+                <div className="mt-24 flex items-center justify-center gap-8 w-full border-t border-slate-100 pt-8">
+                    <a href="/privacy.html" target="_blank" className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors">Privacy Policy</a>
+                    <a href="/terms.html" target="_blank" className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors">Terms of Service</a>
                 </div>
             </div>
         </div>

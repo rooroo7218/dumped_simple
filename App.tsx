@@ -3,7 +3,6 @@ import { useAuth } from './hooks/useAuth';
 import { supabase } from './services/supabaseClient';
 import { LoginScreen } from './components/LoginScreen';
 import { AuthenticatedApp } from './components/AuthenticatedApp';
-import { LandingPage } from './components/LandingPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const App: React.FC = () => {

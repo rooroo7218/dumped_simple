@@ -5,6 +5,9 @@
 @layer base {
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   /* Restore visible focus rings for keyboard users */
   :focus-visible {
@@ -79,9 +82,53 @@
 
 /* ── Neon Lighting Effects ── */
 :root {
+  --background: rgb(253, 251, 247);
+  --foreground: rgb(74, 59, 51);
+  --card: rgb(248, 244, 238);
+  --card-foreground: rgb(74, 59, 51);
+  --popover: rgb(248, 244, 238);
+  --popover-foreground: rgb(74, 59, 51);
+  --primary: rgb(180, 83, 9);
+  --primary-foreground: rgb(255, 255, 255);
+  --secondary: rgb(228, 192, 144);
+  --secondary-foreground: rgb(87, 83, 78);
+  --muted: rgb(241, 233, 218);
+  --muted-foreground: rgb(120, 113, 108);
+  --accent: rgb(242, 218, 186);
+  --accent-foreground: rgb(87, 83, 78);
+  --destructive: rgb(153, 27, 27);
+  --destructive-foreground: rgb(255, 255, 255);
+  --border: rgb(228, 217, 188);
+  --input: rgb(228, 217, 188);
+  --ring: rgb(180, 83, 9);
+  --radius: 0.3rem;
+
+  /* Neon overrides/additions */
   --neon-text-color: #39ff14;
   --neon-border-color: #00ffff;
   --neon-intensity: 1;
+}
+
+.dark {
+  --background: rgb(28, 25, 23);
+  --foreground: rgb(245, 245, 244);
+  --card: rgb(41, 37, 36);
+  --card-foreground: rgb(245, 245, 244);
+  --popover: rgb(41, 37, 36);
+  --popover-foreground: rgb(245, 245, 244);
+  --primary: rgb(249, 115, 22);
+  --primary-foreground: rgb(255, 255, 255);
+  --secondary: rgb(87, 83, 78);
+  --secondary-foreground: rgb(231, 229, 228);
+  --muted: rgb(32, 29, 26);
+  --muted-foreground: rgb(168, 162, 158);
+  --accent: rgb(30, 66, 82);
+  --accent-foreground: rgb(231, 229, 228);
+  --destructive: rgb(220, 38, 38);
+  --destructive-foreground: rgb(255, 255, 255);
+  --border: rgb(68, 64, 60);
+  --input: rgb(68, 64, 60);
+  --ring: rgb(249, 115, 22);
 }
 
 @keyframes flicker {

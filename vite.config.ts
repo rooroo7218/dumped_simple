@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      hmr: {
+        clientPort: 3000
+      },
       proxy: {
         '/api': {
           target: 'https://dumped-simple.vercel.app',

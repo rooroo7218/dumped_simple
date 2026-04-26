@@ -1,7 +1,20 @@
 import React, { useState, useCallback } from 'react';
 import { MemoryItem, ActionItem, UserPersona } from '../types';
-import { processBrainDump, processBrainDumpV3 } from '../services/geminiService';
+import { processBrainDumpV3 } from '../services/geminiService';
 import { databaseService } from '../services/databaseService';
+
+const THINKING_COPY = [
+  'flibbergasting the thoughts...',
+  'untangling the spaghetti...',
+  'rummaging around in there...',
+  'squinting at this really hard...',
+  'wrangling your brain dump...',
+  'chewing on it...',
+  'having a good think...',
+  'sorting the pile...',
+  'piecing it together...',
+  'making sense of the chaos...',
+];
 
 export const useBrainDump = (
     memories: MemoryItem[],
@@ -15,6 +28,7 @@ export const useBrainDump = (
 ) => {
     const [input, setInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [thinkingCopy, setThinkingCopy] = useState('');
 
     const handleBrainDumpSubmit = useCallback(async () => {
         if (isProcessing || !input.trim()) return;
@@ -26,6 +40,7 @@ export const useBrainDump = (
         // 1. CLEAR + NAVIGATE IMMEDIATELY — don't make user wait for AI
         setInput('');
         setAiStatus('processing');
+        setThinkingCopy(THINKING_COPY[Math.floor(Math.random() * THINKING_COPY.length)]);
         setLastAiError(null);
         onCommitSuccess(); // navigate to grid now
 
@@ -66,6 +81,7 @@ export const useBrainDump = (
             setLastAiError(e.message || "Failed to process brain dump.");
         } finally {
             setIsProcessing(false);
+            setThinkingCopy('');
         }
     }, [input, isProcessing, onCommitSuccess, setAiStatus, setLastAiError]);
 
@@ -95,7 +111,8 @@ export const useBrainDump = (
         isProcessing,
         handleBrainDumpSubmit,
         startSpeechToText,
-        isListening
+        isListening,
+        thinkingCopy
     };
 };
 

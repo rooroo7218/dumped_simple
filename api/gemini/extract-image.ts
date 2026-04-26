@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!imageData || !mimeType) return res.status(400).json({ error: 'Missing image data or mimeType' });
         if (!ai) throw new Error('Missing GEMINI_API_KEY');
 
-        const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = ai.getGenerativeModel({ model: 'gemini-3-flash-preview' }, { apiVersion: 'v1beta' });
 
         const result = await model.generateContent([
             { inlineData: { data: imageData, mimeType } },

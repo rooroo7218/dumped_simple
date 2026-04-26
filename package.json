@@ -39,6 +39,7 @@
     "react-dom": "^19.2.3",
     "react-error-boundary": "^6.1.1",
     "resend": "^6.9.4",
+    "stripe": "^22.0.2",
     "tailwind-merge": "^3.5.0",
     "uvcanvas": "^0.3.0"
   },

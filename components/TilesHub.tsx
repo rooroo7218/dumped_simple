@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { Item, DumpItem } from '../types';
 import { databaseService } from '../services/databaseService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import {
     FlagIcon as FlagOutline,
@@ -19,6 +20,8 @@ import { AnimatedDots } from './ui/animated-dots';
 import { ShineBorder } from './ui/shine-border';
 import { XenonTexture, NovatrixTexture, ZenithoTexture } from './ui/uvcanvas-textures';
 import { SpotlightLamp } from './ui/spotlight-lamp';
+import { EtheralShadow } from './ui/etheral-shadow';
+import MatrixRain from './ui/matrix-code';
 import { DitheringShader } from './ui/dithering-shader';
 import { HolographicTexture } from './ui/holographic-texture';
 import { PremiumHolographic } from './ui/premium-holographic';
@@ -53,9 +56,9 @@ import { CSS } from '@dnd-kit/utilities';
 // ── Style system ────────────────────────────────────────────────────────────
 
 type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
-type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic' | 'premium-holographic';
+type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic' | 'premium-holographic' | 'matrix' | 'shadow';
 
-interface ItemStyle { color: ColorKey; texture: TextureKey }
+interface ItemStyle { color: ColorKey; texture: TextureKey; orientation?: 'h' | 'v' }
 
 const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[] = [
     { key: 'default', label: 'Clear',   bg: 'rgba(255,255,255,0.42)',  dot: '#e2e8f0' },
@@ -92,6 +95,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
             <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
         </div>
     ), pattern: {} },
+    { key: 'matrix', label: '01', pattern: {} },
+    { key: 'shadow', label: 'Sh', pattern: {} },
 ];
 
 function getColorBg(key: ColorKey): string {
@@ -164,11 +169,13 @@ const ONBOARDING_SAMPLES: Item[] = [
 
 // ── TilesHub ───────────────────────────────────────────────────────────
 
-interface TilesHubProps {
-    setActiveTab: (tab: string) => void;
+interface TilesHubProps { 
+    setActiveTab: (tab: any) => void;
+    aiStatus?: 'idle' | 'processing' | 'error' | 'success';
+    thinkingCopy?: string;
 }
 
-export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
+export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thinkingCopy }) => {
     const [items, setItems] = useState<Item[]>([]);
     const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
     const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
@@ -190,11 +197,23 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     // Undo-delete state
     const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
     const pendingDeleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+    const styleCooldowns = useRef<Map<string, number>>(new Map());
 
     useEffect(() => {
+        load();
+        const interval = setInterval(load, 3000); // Poll every 3s
+        
+        // Slow down polling when tab is inactive to save battery/bandwidth
+        const slowDown = () => {
+            clearInterval(interval);
+            setInterval(load, 15000);
+        };
+        window.addEventListener('blur', slowDown);
+
         return () => {
+            clearInterval(interval);
+            window.removeEventListener('blur', slowDown);
             // On unmount (tab switch), fire all pending deletes immediately
-            // rather than cancelling them — otherwise items are never removed from Supabase
             pendingDeleteTimers.current.forEach((timer, itemId) => {
                 clearTimeout(timer);
                 databaseService.deleteItem(itemId);
@@ -219,13 +238,24 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         // If NO items exist at all, inject onboarding samples
         if (filtered.length === 0 && !localStorage.getItem('onboarding_completed')) {
             filtered = ONBOARDING_SAMPLES;
+        } else if (filtered.length > 0 && filtered[0].userId !== 'onboarding') {
+            // Real data exists — ensure the flag is set so samples never re-appear after a cache clear
+            localStorage.setItem('onboarding_completed', 'true');
         }
 
         setItems(filtered);
         // Seed itemStyles from Supabase — remote style wins over localStorage
         setItemStyles(prev => {
             const next = { ...prev };
-            filtered.forEach(i => { if (i.style) next[i.id] = i.style as ItemStyle; });
+            filtered.forEach(i => { 
+                if (i.style) {
+                    // Only overwrite if we aren't in a cooldown period for this item
+                    const cooldown = styleCooldowns.current.get(i.id);
+                    if (!cooldown || Date.now() > cooldown) {
+                        next[i.id] = i.style as ItemStyle; 
+                    }
+                }
+            });
             return next;
         });
         setIsLoading(false);
@@ -243,28 +273,28 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         return () => { clearInterval(interval); clearTimeout(slowDown); };
     }, []);
 
-    const toggleExpand = async (itemId: string) => {
+    const toggleExpand = useCallback(async (itemId: string) => {
         if (expandedItemId === itemId) { setExpandedItemId(null); return; }
         setExpandedItemId(itemId);
         if (!excerpts[itemId]) {
             const data = await databaseService.loadItemExcerpts(itemId);
             setExcerpts(prev => ({ ...prev, [itemId]: data }));
         }
-    };
+    }, [expandedItemId, excerpts]);
 
-    const handleToggleFlag = (e: React.MouseEvent, item: Item) => {
+    const handleToggleFlag = useCallback((e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
         const nextValue = !item.isFlagged;
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, isFlagged: nextValue } : i));
         databaseService.toggleFlag(item.id, nextValue);
-    };
+    }, []);
 
-    const handleToggleComplete = (e: React.MouseEvent, item: Item) => {
+    const handleToggleComplete = useCallback((e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
         const nextValue = !item.isCompleted;
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, isCompleted: nextValue } : i));
         databaseService.toggleComplete(item.id, nextValue);
-    };
+    }, []);
 
     const handleDelete = useCallback((e: React.MouseEvent, item: Item) => {
         e.stopPropagation();
@@ -300,19 +330,29 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         
         // Restore to local state immediately
         setItems(prev => [...prev, deletedData.item]);
-        setPendingDeletes(prev => { const next = new Map(prev); next.delete(itemId); return next; });
     }, [pendingDeletes]);
 
     const handleLabelChange = useCallback((itemId: string, newLabel: string) => {
         setItems(prev => prev.map(i => i.id === itemId ? { ...i, label: newLabel } : i));
     }, []);
 
-    const handleStyleChange = (itemId: string, patch: Partial<ItemStyle>) => {
-        const merged = { color: 'default', texture: 'none', ...itemStyles[itemId], ...patch } as ItemStyle;
-        setItemStyles(prev => ({ ...prev, [itemId]: merged }));
-        saveStyles({ ...itemStyles, [itemId]: merged });
-        databaseService.saveItemStyle(itemId, merged);
-    };
+    const handleStyleChange = useCallback((itemId: string, patch: Partial<ItemStyle>) => {
+        setItemStyles(prev => {
+            const current = prev[itemId] || { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
+            const merged = { ...current, ...patch } as ItemStyle;
+            const next = { ...prev, [itemId]: merged };
+            
+            // Persist to localStorage immediately
+            saveStyles(next);
+            // Persist to Supabase in background
+            databaseService.saveItemStyle(itemId, merged);
+            
+            // Set sync cooldown to prevent polling from reverting this change
+            styleCooldowns.current.set(itemId, Date.now() + 8000); // 8 second cooldown
+            
+            return next;
+        });
+    }, []);
 
     // ── dnd-kit Handlers ──────────────────────────────────────────────────
     const handleDragStart = (event: DragStartEvent) => {
@@ -399,16 +439,22 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
     const flagged = useMemo(() => {
         const raw = displayItems.filter(i => !i.isCompleted && i.isFlagged);
+        // Default sort: highest mention count first, then most recent
+        const sortedRaw = [...raw].sort((a, b) => {
+            if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            return b.lastMentionedAt - a.lastMentionedAt;
+        });
+        
         const storedIds = itemOrder['flagged'] ?? [];
-        const idMap = new Map(raw.map(i => [i.id, i]));
+        const idMap = new Map(sortedRaw.map(i => [i.id, i]));
         const ordered = storedIds.filter(id => idMap.has(id)).map(id => idMap.get(id)!);
-        const remaining = raw.filter(i => !storedIds.includes(i.id));
+        const remaining = sortedRaw.filter(i => !storedIds.includes(i.id));
         return [...ordered, ...remaining];
     }, [displayItems, itemOrder]);
 
-    const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt < fourteenDaysMs));
+    const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (!i.lastMentionedAt || now - i.lastMentionedAt < fourteenDaysMs));
     const completed = displayItems.filter(i => i.isCompleted);
-    const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (now - i.lastMentionedAt >= fourteenDaysMs));
+    const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (i.lastMentionedAt && now - i.lastMentionedAt >= fourteenDaysMs));
 
     const activeGroups = useMemo(() => {
         const map = new Map<number, Item[]>();
@@ -419,13 +465,64 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
         return [...map.entries()]
             .sort((a, b) => b[0] - a[0])
             .map(([count, groupItems]) => {
+                const sortedGroupItems = [...groupItems].sort((a, b) => b.lastMentionedAt - a.lastMentionedAt);
                 const storedIds = itemOrder[String(count)] ?? [];
-                const idMap = new Map(groupItems.map(i => [i.id, i]));
+                const idMap = new Map(sortedGroupItems.map(i => [i.id, i]));
                 const ordered = storedIds.filter(id => idMap.has(id)).map(id => idMap.get(id)!);
-                const remaining = groupItems.filter(i => !storedIds.includes(i.id));
+                const remaining = sortedGroupItems.filter(i => !storedIds.includes(i.id));
                 return { count, items: [...ordered, ...remaining] };
             });
     }, [active, itemOrder]);
+
+    const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
+        const count = item.mentionCount;
+        const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
+        const orientation = style.orientation ?? 'h';
+
+        let colSpan: string;
+        let rowSpan: string = '';
+        let aspectRatio: string;
+
+        if (count <= 1) {
+            colSpan = 'col-span-3';
+            aspectRatio = '1 / 1';
+        } else if (count === 2) {
+            if (orientation === 'v') {
+                colSpan = 'col-span-3';
+                rowSpan = 'row-span-2';
+                aspectRatio = '1 / 2';
+            } else {
+                colSpan = 'col-span-6';
+                aspectRatio = '2 / 1';
+            }
+        } else {
+            // count >= 3
+            if (orientation === 'v') {
+                colSpan = 'col-span-3';
+                rowSpan = 'row-span-3';
+                aspectRatio = '1 / 3';
+            } else {
+                colSpan = 'col-span-9';
+                aspectRatio = '3 / 1';
+            }
+        }
+
+        return {
+            item,
+            isExpanded: expandedItemId === item.id,
+            excerpts: excerpts[item.id] || [],
+            onToggle: () => toggleExpand(item.id),
+            onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
+            onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
+            onDelete: (e: React.MouseEvent) => handleDelete(e, item),
+            onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
+            onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
+            style,
+            size,
+            aspectRatio,
+            className: `${colSpan} ${rowSpan} ${extraClass ?? ''}`,
+        };
+    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange]);
 
     if (isLoading && items.length === 0) return null;
 
@@ -445,31 +542,6 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
 
     const maxMentionCount = Math.max(...[...active, ...flagged].map(i => i.mentionCount), 1);
 
-    const tileProps = (item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
-        const count = item.mentionCount;
-        let colSpan: string;
-        if (count === 1)      colSpan = 'col-span-3';
-        else if (count === 2) colSpan = 'col-span-6';
-        else                  colSpan = 'col-span-9';
-
-        const aspectRatio = count === 1 ? '1 / 1' : count === 2 ? '2 / 1' : '3 / 1';
-
-        return {
-            item,
-            isExpanded: expandedItemId === item.id,
-            excerpts: excerpts[item.id] || [],
-            onToggle: () => toggleExpand(item.id),
-            onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
-            onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
-            onDelete: (e: React.MouseEvent) => handleDelete(e, item),
-            onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
-            onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
-            style: itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey },
-            size,
-            aspectRatio,
-            className: `${colSpan} ${extraClass ?? ''}`,
-        };
-    };
 
     return (
         <DndContext
@@ -486,6 +558,41 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
             onDragCancel={handleDragCancel}
         >
             <div className="max-w-3xl mx-auto w-full pt-4 pb-24 animate-in fade-in duration-700 overflow-visible">
+                {aiStatus === 'processing' && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mb-10 mx-1 p-[2px] rounded-[24px] overflow-hidden relative"
+                    >
+                        {/* Shimmering border glow */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-50" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent animate-pulse" />
+                        
+                        <div className="relative bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[22px] px-6 py-5 flex items-center gap-5 shadow-xl shadow-indigo-500/5">
+                            <div className="relative flex items-center justify-center">
+                                <ArrowPathIcon className="w-5 h-5 text-indigo-500 animate-[spin_2s_linear_infinite]" />
+                                <div className="absolute inset-0 w-5 h-5 bg-indigo-500/20 blur-xl animate-pulse" />
+                            </div>
+                            
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[14px] font-bold text-slate-900 tracking-tight leading-none">
+                                    {thinkingCopy || 'Sorting your thoughts...'}
+                                </span>
+                                <span className="text-[11px] font-medium text-slate-400 tracking-wide uppercase">AI is carefully arranging your tiles</span>
+                            </div>
+
+                            <div className="ml-auto flex items-center gap-1">
+                                {[0, 1, 2].map(i => (
+                                    <div 
+                                        key={i} 
+                                        className="w-1.5 h-1.5 rounded-full bg-indigo-500/30"
+                                        style={{ animation: `pulse 1.5s ease-in-out ${i * 0.2}s infinite` }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
             {/* ── Flagged ─────────────────────────────────────────────── */}
             {flagged.length > 0 && (
@@ -498,7 +605,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                         <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
                     </div>
                     <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
-                        <div className="grid grid-cols-9 gap-1 auto-rows-min">
+                        <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
                             {flagged.map(item => (
                                 <ItemTile
                                     key={item.id}
@@ -519,7 +626,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab }) => {
                     </div>
                     <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
                 </div>
-                <div className="grid grid-cols-9 gap-1 auto-rows-min">
+                <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
                     {activeGroups.flatMap(({ count, items: groupItems }) => (
                         <SortableContext key={count} items={groupItems.map(i => i.id)} strategy={rectSortingStrategy}>
                             {groupItems.map(item => (
@@ -644,12 +751,12 @@ interface ItemTileProps {
     onDragEnd?: () => void;
 }
 
-const ItemTile: React.FC<ItemTileProps> = ({
+const ItemTile = React.memo(({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
     onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop,
     onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
-}) => {
+}: ItemTileProps) => {
     const isSmall = size === 'sm';
     const draggable = !!onDragStart;
     const [stylerOpen, setStylerOpen] = useState(false);
@@ -808,6 +915,8 @@ const ItemTile: React.FC<ItemTileProps> = ({
             {itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
             {itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
             {itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
+            {itemStyle.texture === 'matrix' && <MatrixRain color="#00ff00" speed={0.5} fontSize={12} />}
+            {itemStyle.texture === 'shadow' && <EtheralShadow color="rgba(15, 23, 42, 0.4)" animation={{ scale: 50, speed: 20 }} />}
             
             {itemStyle.texture === 'dithering-wave' && (
                 <DitheringShader 
@@ -863,7 +972,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight font-normal leading-[1.75] text-[16px]
-                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
+                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}
@@ -872,7 +981,7 @@ const ItemTile: React.FC<ItemTileProps> = ({
                     ) : (
                         <p className={`
                             tracking-tight font-semibold leading-snug
-                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
+                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
                             ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
                         `}>
@@ -983,6 +1092,31 @@ const ItemTile: React.FC<ItemTileProps> = ({
                                         </button>
                                     ))}
                                 </div>
+
+                                {item.mentionCount > 1 && (
+                                    <>
+                                        <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mt-4 mb-2 opacity-50 uppercase tracking-widest text-left">Orientation</p>
+                                        <div className="flex gap-1.5">
+                                            {[
+                                                { key: 'h', label: 'Horizontal' },
+                                                { key: 'v', label: 'Vertical' }
+                                            ].map(o => (
+                                                <button
+                                                    key={o.key}
+                                                    onClick={() => onStyleChange({ orientation: o.key as 'h' | 'v' })}
+                                                    className={`
+                                                        flex-1 h-8 flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95
+                                                        ${(itemStyle.orientation ?? 'h') === o.key 
+                                                            ? 'bg-slate-900 text-white shadow-md' 
+                                                            : 'bg-black/5 text-slate-600 hover:bg-black/10'}
+                                                    `}
+                                                >
+                                                    {o.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1060,6 +1194,5 @@ const ItemTile: React.FC<ItemTileProps> = ({
             </ShineBorder>
         );
     }
-
     return TileContent;
-};
+});

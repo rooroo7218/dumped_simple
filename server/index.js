@@ -102,8 +102,8 @@ async function generateWithOllama(prompt, systemInstruction, responseSchema) {
 // Strategy 2: Model Fallback & Strategy 3: DSQ Models
 // Wrapper to try primary model then fallback to secondary, then finally local Ollama
 async function generateAIContentWithFallback(aiInstance, config, payload) {
-    const PRIMARY_MODEL = "gemini-2.0-flash"; // Strongest & Fastest
-    const FALLBACK_MODEL = "gemini-1.5-flash"; // Stable and highly available fallback
+    const PRIMARY_MODEL = "gemini-2.5-flash"; // Strongest & Fastest
+    const FALLBACK_MODEL = "gemini-2.5-pro"; // Stable and highly available fallback
 
     const preferLocal = process.env.PREFER_LOCAL_AI === 'true';
     const localOnly = process.env.USE_LOCAL_AI_ONLY === 'true';

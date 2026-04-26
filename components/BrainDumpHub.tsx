@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowPathIcon, MicrophoneIcon, PhotoIcon, StopIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import { extractImageText } from '../services/geminiService';
 
 interface BrainDumpHubProps {
     input: string;
@@ -11,6 +10,7 @@ interface BrainDumpHubProps {
     onNavigateToGrid: () => void;
     startSpeechToText: (onResult: (text: string) => void) => void;
     isListening: boolean;
+    isGuest?: boolean;
 }
 
 
@@ -22,16 +22,11 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     onNavigateToGrid,
     startSpeechToText,
     isListening,
+    isGuest = false,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
     const [fadeOpacity, setFadeOpacity] = useState(1);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [isManualOpen, setIsManualOpen] = useState(false);
-    const [caretPos, setCaretPos] = useState({ top: 0, left: 0 });
-    const mirrorRef = useRef<HTMLDivElement>(null);
-
     // Track keyboard height via visualViewport
     useEffect(() => {
         const vv = window.visualViewport;
@@ -64,45 +59,8 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         if (!ta) return;
         ta.style.height = 'auto';
         ta.style.height = `${ta.scrollHeight}px`;
-        updateCaret();
     }, []);
 
-    // ── Caret Position logic ────────────────────────────────────────────────
-    const updateCaret = useCallback(() => {
-        const ta = textareaRef.current;
-        const mirror = mirrorRef.current;
-        if (!ta || !mirror) return;
-
-        const selectionEnd = ta.selectionEnd;
-        const textBefore = ta.value.substring(0, selectionEnd);
-        
-        // Use a hidden div to calculate coordinates
-        mirror.textContent = textBefore;
-        const span = document.createElement('span');
-        span.textContent = ta.value.substring(selectionEnd, selectionEnd + 1) || '.';
-        mirror.appendChild(span);
-
-        setCaretPos({
-            top: span.offsetTop,
-            left: span.offsetLeft
-        });
-    }, []);
-
-    useEffect(() => {
-        const ta = textareaRef.current;
-        if (!ta) return;
-
-        const handleEvents = () => updateCaret();
-        ta.addEventListener('click', handleEvents);
-        ta.addEventListener('keyup', handleEvents);
-        ta.addEventListener('focus', handleEvents);
-        
-        return () => {
-            ta.removeEventListener('click', handleEvents);
-            ta.removeEventListener('keyup', handleEvents);
-            ta.removeEventListener('focus', handleEvents);
-        };
-    }, [updateCaret]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInput(e.target.value);
@@ -123,21 +81,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
 
     const hasText = input.trim().length > 0;
 
-    // Shared tool button style
-    const toolBtn = (active = false): React.CSSProperties => ({
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        background: active ? 'rgba(239,68,68,0.10)' : 'transparent',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        transition: 'background 0.2s',
-        border: 'none',
-    });
-
     return (
         <>
 
@@ -152,7 +95,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         ref={textareaRef}
                         value={input}
                         onChange={handleChange}
-                        onScroll={updateCaret}
                         placeholder="phew... let it all out."
                         rows={1}
                         autoComplete="off"
@@ -160,13 +102,14 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         autoCapitalize="sentences"
                         spellCheck={false}
                         enterKeyHint="done"
+                        maxLength={2000}
                         disabled={isProcessing}
                         style={{
                             opacity: fadeOpacity,
                             transition: 'opacity 0.18s ease',
                             width: '100%',
                             minHeight: '20dvh',
-                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 60px)`,
+                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 100px)`,
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
@@ -181,63 +124,19 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         }}
                     />
 
-                    {/* ── Mirror Div for Caret Tracking ── */}
-                    <div
-                        ref={mirrorRef}
-                        aria-hidden="true"
-                        style={{
-                            position: 'absolute',
-                            visibility: 'hidden',
-                            whiteSpace: 'pre-wrap',
-                            wordWrap: 'break-word',
-                            width: textareaRef.current?.clientWidth || '100%',
-                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 60px)`,
-                            fontSize: '17px',
-                            lineHeight: '1.75',
-                            fontFamily: 'inherit',
-                            top: 0,
-                            left: 0,
-                            pointerEvents: 'none',
-                            zIndex: -1,
-                        }}
-                    />
-
-                    {/* ── Floating Caret Logo ── */}
-                    <AnimatePresence>
-                        {textareaRef.current && input.length > 0 && (
-                            <motion.div
-                                initial={false}
-                                animate={{
-                                    x: caretPos.left + 10,
-                                    y: caretPos.top - 24,
-                                }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 400,
-                                    damping: 30,
-                                    mass: 0.8
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    zIndex: 5,
-                                    pointerEvents: 'none',
-                                }}
-                            >
-                                <img 
-                                    src="/phew-logo.svg" 
-                                    alt="" 
-                                    className="w-16 h-16 opacity-100"
-                                    style={{
-                                        transform: 'scale(1.2)',
-                                        transformOrigin: 'center',
-                                        filter: 'brightness(0)',
-                                    }}
-                                />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {input.length > 0 && (
+                        <div 
+                            className="fixed right-6 text-[11px] font-bold tracking-widest uppercase transition-all duration-300"
+                            style={{ 
+                                bottom: `calc(${submitBottom}px + 14px)`,
+                                color: input.length > 1800 ? '#ef4444' : (input.length > 1500 ? '#f59e0b' : '#94a3b8'),
+                                opacity: isProcessing ? 0 : 1,
+                                zIndex: 30
+                            }}
+                        >
+                            {input.length} / 2000
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -253,12 +152,25 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
                         }}
                     >
-                        <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full px-1.5 py-1 flex items-center justify-center gap-0.5 min-h-[42px] w-fit mx-auto overflow-hidden pointer-events-auto">
+                        <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full flex items-center justify-center min-h-[44px] w-fit mx-auto overflow-hidden pointer-events-auto relative">
                             <button
                                 onClick={handleSubmit}
                                 disabled={isProcessing}
-                                className="flex-1 flex items-center justify-center px-6 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95"
+                                className="flex-1 flex items-center justify-start pl-6 pr-16 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95 relative"
                             >
+                                {!isProcessing && (
+                                    <img 
+                                        src="/phew-logo.svg" 
+                                        alt="" 
+                                        className="absolute right-[-4px] w-12 h-12 flex-shrink-0"
+                                        style={{ 
+                                            imageRendering: '-webkit-optimize-contrast' as any,
+                                            top: '50%',
+                                            transform: 'translateY(-50%) translate3d(0, 0, 0)',
+                                            filter: 'brightness(1.02) contrast(1.1) drop-shadow(0 0 0.2px rgba(0,0,0,0.5))'
+                                        }}
+                                    />
+                                )}
                                 {isProcessing
                                     ? <ArrowPathIcon className="w-4 h-4 text-slate-400 animate-spin" />
                                     : 'put it all down'
@@ -269,6 +181,30 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 )}
             </AnimatePresence>
 
+
+            {/* Guest data-loss warning */}
+            {isGuest && (
+                <div style={{
+                    position: 'fixed',
+                    top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '7px 14px',
+                    borderRadius: 20,
+                    background: 'rgba(245,158,11,0.10)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(245,158,11,0.25)',
+                    zIndex: 50,
+                    whiteSpace: 'nowrap',
+                }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309' }}>
+                        Guest mode — data is stored locally only
+                    </span>
+                </div>
+            )}
 
             {/* Listening indicator */}
             {isListening && (
@@ -297,30 +233,6 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 </div>
             )}
 
-            {/* Analyzing indicator */}
-            {isAnalyzing && (
-                <div style={{
-                    position: 'fixed',
-                    top: 'max(70px, calc(env(safe-area-inset-top) + 54px))',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 16px',
-                    borderRadius: 20,
-                    background: 'rgba(99,102,241,0.08)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(99,102,241,0.15)',
-                    zIndex: 50,
-                }}>
-                    <ArrowPathIcon style={{ width: 13, height: 13, color: '#6366f1', animation: 'spin 1s linear infinite' }} />
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#6366f1' }}>
-                        Reading image…
-                    </span>
-                </div>
-            )}
-
             <style>{`
                 textarea::placeholder { color: rgba(0,0,0,0.4); }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -333,17 +245,3 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     );
 };
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            // Strip the "data:image/png;base64," prefix
-            resolve(result.split(',')[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}

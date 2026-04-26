@@ -47,7 +47,8 @@ export const useAuth = () => {
                     name: session.user.user_metadata.full_name,
                     email: session.user.email!,
                     picture: session.user.user_metadata.avatar_url,
-                    lastLogin: Date.now()
+                    lastLogin: Date.now(),
+                    onboarding_completed: session.user.user_metadata.onboarding_completed
                 };
                 setUser(profile);
                 localStorage.setItem('dumped_user', JSON.stringify(profile));

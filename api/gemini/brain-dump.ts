@@ -95,7 +95,12 @@ ${promptText}
 
     } catch (error: any) {
         if (error.message?.startsWith('Unauthorized')) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            const tokenReceived = req.headers.authorization?.substring(0, 15) || 'none';
+            return res.status(401).json({ 
+                error: 'Unauthorized', 
+                message: error.message,
+                debug: `Token prefix received: ${tokenReceived}`
+            });
         }
         const isQuota = error.message?.includes('429') || error.message?.toLowerCase().includes('exhausted') || error.status === 429;
         return res.status(isQuota ? 429 : 500).json({

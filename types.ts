@@ -218,7 +218,7 @@ export interface Item {
   completedAt?: number;
   fadedAt?: number;
   createdAt: number;
-  style?: { color: string; texture: string };
+  style?: { color: string; texture: string; orientation?: 'h' | 'v' };
   isNew?: boolean;
   excerpts?: DumpItem[]; // Loaded on expansion
 }

@@ -4,8 +4,8 @@ import {
     UserIcon, PhotoIcon,
     ArrowsPointingOutIcon, ArrowsPointingInIcon,
     ArrowRightStartOnRectangleIcon,
-    MusicalNoteIcon,
     Squares2X2Icon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
@@ -23,6 +23,7 @@ const CircleIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 import { UserProfile, UserPersona } from '../../types';
 import { ZenPlayerState, TRACKS } from '../../hooks/useZenPlayer';
+import { SubscriptionState } from '../../hooks/useSubscription';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ interface NavigationProps {
     backgroundScenes: BackgroundScene[];
     player: ZenPlayerState;
     syncStatus?: 'idle' | 'saving' | 'saved' | 'local-only';
+    subscription: SubscriptionState;
 }
 
 // ─── Nav tabs (no dev/hidden tabs) ───────────────────────────────────────────
@@ -64,13 +66,38 @@ export const Navigation: React.FC<NavigationProps> = ({
     isCollapsed, setIsCollapsed, user, handleSignOut, persona,
     updateBrutalistBackground, backgroundScenes, player,
     syncStatus = 'idle',
+    subscription
 }) => {
     const [isSceneryOpen,       setIsSceneryOpen]       = useState(false);
     const [isUserMenuOpen,      setIsUserMenuOpen]      = useState(false);
     const [isMobileMenuOpen,    setIsMobileMenuOpen]    = useState(false);
     const [isFullscreen,        setIsFullscreen]        = useState(false);
+    const [isDeletingAccount,   setIsDeletingAccount]   = useState(false);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const mobileButtonRef  = useRef<HTMLButtonElement>(null);
+
+    const handleDeleteAccount = async (): Promise<void> => {
+        const confirmed = window.confirm(
+            'This will permanently delete your account and all your data. This cannot be undone.\n\nAre you sure?'
+        );
+        if (!confirmed) return;
+        setIsDeletingAccount(true);
+        try {
+            const { data: { session } } = await (await import('../../services/supabaseClient')).supabase.auth.getSession();
+            await fetch('/api/subscription/delete-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                },
+            });
+            localStorage.clear();
+            handleSignOut();
+        } catch {
+            setIsDeletingAccount(false);
+            window.alert('Something went wrong. Please try again.');
+        }
+    };
 
     useEffect(() => {
         if (!isMobileMenuOpen) return;
@@ -124,9 +151,20 @@ export const Navigation: React.FC<NavigationProps> = ({
             } bg-white/90 backdrop-blur-md border-b-2 border-slate-950/70`} style={{ height: 'calc(3rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}>
 
                 {/* Brand */}
-                <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 mr-1">
-                    Dumped.
-                </span>
+                {/* Brand & Trial Status */}
+                <div className="flex flex-col items-start gap-0 ml-1 mr-2 px-1">
+                    <span className="text-[15px] font-bold tracking-tight select-none shrink-0 text-slate-800 leading-none">
+                        Dumped.
+                    </span>
+                    {subscription.status === 'trialing' && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <div className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                {subscription.daysLeftInTrial}d left
+                            </span>
+                        </div>
+                    )}
+                </div>
 
                 <div className={divider} />
 
@@ -266,6 +304,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
                                     Sign out
                                 </button>
+                                <button
+                                    onClick={() => { setIsUserMenuOpen(false); handleDeleteAccount(); }}
+                                    disabled={isDeletingAccount}
+                                    className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-slate-400 hover:bg-slate-50 hover:text-rose-400 transition-colors border-t border-slate-50 disabled:opacity-40"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                    Delete account
+                                </button>
                             </div>
                         )}
                     </div>
@@ -297,16 +343,31 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <div className="flex items-center gap-1.5">
                                     <span className="text-[12px] font-semibold text-[#1a1a1a] truncate">{user.name}</span>
                                     {(user as any).isGuest && <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold uppercase">Guest</span>}
+                                    {subscription.status === 'trialing' && (
+                                        <span className="text-[8px] bg-peach-100 text-peach-700 px-1.5 py-0.5 rounded-full font-bold uppercase whitespace-nowrap">
+                                            {subscription.daysLeftInTrial}d Trial
+                                        </span>
+                                    )}
                                 </div>
                                 <span className="text-[10px] text-slate-400 truncate">{user.email}</span>
                             </div>
-                            <button
-                                onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
-                                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-90"
-                                title="Sign out"
-                            >
-                                <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                    onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-90"
+                                    title="Sign out"
+                                >
+                                    <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => { setIsMobileMenuOpen(false); handleDeleteAccount(); }}
+                                    disabled={isDeletingAccount}
+                                    className="p-1.5 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-50 transition-all active:scale-90 disabled:opacity-40"
+                                    title="Delete account"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Background */}

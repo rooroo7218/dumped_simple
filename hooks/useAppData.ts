@@ -49,6 +49,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         // Supabase session has time to fully restore before we try to write.
         const syncTimer = setTimeout(() => {
             databaseService.pushLocalItemsToCloud();
+            databaseService.pushLocalMemoriesToCloud();
         }, 2000);
         return () => clearTimeout(syncTimer);
     }, [userId]);

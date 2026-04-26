@@ -3,10 +3,22 @@ import { supabase } from './supabaseClient';
 import { databaseService } from './databaseService';
 
 const API_BASE_URL = '/api/gemini';
+const BYPASS_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 async function getAuthToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  if (session?.access_token) return session.access_token;
+
+  // Fallback for Tester Mode
+  const localUser = localStorage.getItem('dumped_user');
+  if (localUser) {
+    try {
+      const parsed = JSON.parse(localUser);
+      if (parsed.id === BYPASS_USER_ID) return BYPASS_USER_ID;
+    } catch {}
+  }
+
+  return null;
 }
 
 async function postToApi(endpoint: string, body: any, retries = 3, delay = 1000) {

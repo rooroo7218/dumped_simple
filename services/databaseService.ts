@@ -135,26 +135,35 @@ export const databaseService = {
                 }
             } else {
                 // Priority 2: Fallback to Profile Table (Migration path)
-                const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
-                if (data) {
-                    dbPersona = {
-                        writingStyle: data.writing_style,
-                        thoughtProcess: data.thought_process,
-                        values: data.values_list,
-                        speakingNuances: data.speaking_nuances,
-                        age: data.age,
-                        jobTitle: data.career,
-                        incomeLevel: data.income_level,
-                        maritalStatus: data.marital_status,
-                        lifestyle: data.lifestyle,
-                        longTermGoals: data.long_term_goals || [],
-                        coreValues: data.core_values || []
-                    };
-                    // Immediately migrate to Metadata for next time
-                    await this.savePersona(dbPersona);
-                } else if (local) {
-                    this.savePersona(local);
-                    return local;
+                try {
+                    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+                    if (data && !error) {
+                        dbPersona = {
+                            writingStyle: data.writing_style,
+                            thoughtProcess: data.thought_process,
+                            values: data.values_list,
+                            speakingNuances: data.speaking_nuances,
+                            age: data.age,
+                            jobTitle: data.career,
+                            incomeLevel: data.income_level,
+                            maritalStatus: data.marital_status,
+                            lifestyle: data.lifestyle,
+                            longTermGoals: data.long_term_goals || [],
+                            coreValues: data.core_values || []
+                        };
+                        // Immediately migrate to Metadata for next time
+                        await this.savePersona(dbPersona);
+                    } else if (local) {
+                        // If profiles table fails or is empty, try to sync local to metadata
+                        this.savePersona(local);
+                        return local;
+                    }
+                } catch (err) {
+                    console.warn("Priority 2 persona load (migration) skipped (likely missing profiles table):", err);
+                    if (local) {
+                        this.savePersona(local);
+                        return local;
+                    }
                 }
             }
         }
@@ -375,6 +384,18 @@ export const databaseService = {
         }
     },
 
+    async pushLocalMemoriesToCloud(): Promise<void> {
+        const localMemories: MemoryItem[] = JSON.parse(localStorage.getItem('dumped_memories') || '[]');
+        if (localMemories.length === 0) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        for (const memory of localMemories) {
+            await this.saveMemory(memory);
+        }
+    },
+
     async loadItems(): Promise<Item[]> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -397,14 +418,14 @@ export const databaseService = {
             userId: d.user_id,
             label: d.label,
             mentionCount: d.mention_count,
-            lastMentionedAt: new Date(d.last_mentioned_at).getTime(),
-            firstMentionedAt: new Date(d.first_mentioned_at).getTime(),
+            lastMentionedAt: d.last_mentioned_at ? new Date(d.last_mentioned_at).getTime() : Date.now(),
+            firstMentionedAt: d.first_mentioned_at ? new Date(d.first_mentioned_at).getTime() : Date.now(),
             isFlagged: d.is_flagged,
             flagOrder: d.flag_order,
             isCompleted: d.is_completed,
             completedAt: d.completed_at ? new Date(d.completed_at).getTime() : undefined,
             fadedAt: d.faded_at ? new Date(d.faded_at).getTime() : undefined,
-            createdAt: new Date(d.created_at).getTime(),
+            createdAt: d.created_at ? new Date(d.created_at).getTime() : Date.now(),
             style: d.style ?? undefined,
         }));
 
@@ -622,22 +643,21 @@ export const databaseService = {
         const item = items.find(i => i.id === itemId);
         if (item) {
             item.isCompleted = isCompleted;
-            item.completedAt = isCompleted ? Date.now() : undefined;
-            if (isCompleted) item.mentionCount = 0;
+            if (isCompleted) item.completedAt = Date.now();
+            else item.completedAt = undefined;
             localStorage.setItem('dumped_items', JSON.stringify(items));
         }
         if (!user) return;
         const updates: any = { is_completed: isCompleted };
         if (isCompleted) {
             updates.completed_at = new Date().toISOString();
-            updates.mention_count = 0;
         } else {
             updates.completed_at = null;
         }
         await supabase.from('items').update(updates).eq('id', itemId);
     },
 
-    async saveItemStyle(itemId: string, style: { color: string; texture: string }) {
+    async saveItemStyle(itemId: string, style: { color: string; texture: string; orientation?: 'h' | 'v' }) {
         const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
         const item = items.find(i => i.id === itemId);
         if (item) { item.style = style; localStorage.setItem('dumped_items', JSON.stringify(items)); }

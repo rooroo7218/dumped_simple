@@ -6,6 +6,7 @@ import { useAppData } from '../hooks/useAppData';
 import { useAppLogic } from '../hooks/useAppLogic';
 import { useBrainDump } from '../hooks/useBrainDump';
 import { useProfileUpdater } from '../hooks/useProfileUpdater';
+import { useSubscription } from '../hooks/useSubscription';
 import { databaseService } from '../services/databaseService';
 
 // Layout Components
@@ -22,6 +23,8 @@ import { PatternHub } from './PatternHub';
 import { ToastList } from './Notifications/Toast';
 import { ConfirmDialog } from './Notifications/ConfirmDialog';
 import { ErrorBoundary } from './ErrorBoundary';
+import { PaywallModal } from './PaywallModal';
+import { Onboarding, shouldShowOnboarding } from './Onboarding';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
 import { useZenPlayer } from '../hooks/useZenPlayer';
@@ -37,19 +40,21 @@ export type BackgroundScene = {
 };
 
 export const BACKGROUND_SCENES: BackgroundScene[] = [
-    { id: 'slate',        name: 'Default',        url: null, preview: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' },
-    { id: 'aurora',       name: 'Aurora Light',   url: null, preview: 'linear-gradient(100deg, #bfdbfe 0%, #e0e7ff 20%, #bae6fd 40%, #ddd6fe 60%, #c7d2fe 80%, #bfdbfe 100%)' },
-    { id: 'aurora_dream', name: 'Aurora Dream',   url: null, preview: 'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)' },
-    { id: 'peachy',       name: 'Peachy Sunrise', url: null, preview: 'linear-gradient(180deg, rgba(255,247,237,1) 0%, rgba(255,237,213,0.8) 50%, rgba(249,115,22,0.3) 100%)' },
-    { id: 'shader',       name: 'Deep Shader',    url: null, preview: 'linear-gradient(135deg, #000000 0%, #06b6d4 50%, #f97316 100%)' },
-    { id: 'sunlight',     name: 'Sunlight',       url: null, preview: 'radial-gradient(125% 125% at 50% 101%, rgba(245,100,50,1) 10.5%, rgba(245,180,110,1) 25%, rgba(238,184,212,1) 40%, rgba(212,189,224,1) 65%, rgba(168,211,243,1) 100%)' },
-    { id: 'warp',         name: 'Lava',           url: null, preview: 'radial-gradient(ellipse at 40% 50%, hsl(203,100%,62%) 0%, hsl(255,100%,72%) 35%, hsl(158,99%,59%) 65%, hsl(264,100%,61%) 100%)' },
-    { id: 'gradient',     name: 'Galaxy Twilight', url: null, preview: 'radial-gradient(125% 125% at 50% 20%, #0A0A0A 35%, #2979FF 50%, #FF80AB 60%, #FF6D00 70%, #FFD600 80%, #00E676 90%, #3D5AFE 100%)' },
-    { id: 'xenon',        name: 'Xenon Pulse',    url: null, preview: 'linear-gradient(135deg, #000000 0%, #39ff14 50%, #00ffff 100%)' },
-    { id: 'novatrix',     name: 'Novatrix Flow',  url: null, preview: 'linear-gradient(135deg, #1a1a1a 0%, #ff00ff 50%, #0000ff 100%)' },
-    { id: 'zenitho',      name: 'Zenitho Aura',   url: null, preview: 'linear-gradient(135deg, #000000 0%, #ff7e5f 50%, #feb47b 100%)' },
-    { id: 'neon',         name: 'Neon Flicker',   url: null, preview: 'linear-gradient(135deg, #000000 0%, #39ff14 50%, #f43f5e 100%)' },
-    { id: 'lamp',         name: 'Spotlight',       url: null, preview: 'linear-gradient(180deg, #020617 0%, #ffffff 100%)' },
+    { id: 'aurora', name: 'Aurora', url: null, preview: 'bg-gradient-to-br from-blue-400 to-indigo-600' },
+    { id: 'gradient', name: 'Cosmic', url: null, preview: 'bg-gradient-to-br from-purple-900 via-slate-900 to-black' },
+    { id: 'sunlight', name: 'Sunlight', url: null, preview: 'bg-gradient-to-br from-amber-200 to-orange-400' },
+    { id: 'matrix', name: 'Digital Rain', url: null, preview: 'bg-black text-[#00ff00]' },
+    { id: 'shadow', name: 'Ethereal Shadow', url: null, preview: 'bg-slate-800' },
+    { id: 'rays', name: 'God Rays', url: null, preview: 'bg-blue-900' },
+    { id: 'warp', name: 'Warp Drive', url: null, preview: 'bg-black opacity-90' },
+    { id: 'aurora_dream', name: 'Aurora Dream', url: null, preview: 'radial-gradient(ellipse 85% 65% at 8% 8%, rgba(175,109,255,0.42), transparent 60%), radial-gradient(ellipse 75% 60% at 75% 35%, rgba(255,235,170,0.55), transparent 62%), radial-gradient(ellipse 70% 60% at 15% 80%, rgba(255,100,180,0.40), transparent 62%), linear-gradient(180deg, #f7eaff 0%, #fde2ea 100%)' },
+    { id: 'peachy', name: 'Peachy Sunrise', url: null, preview: 'linear-gradient(180deg, rgba(255,247,237,1) 0%, rgba(255,237,213,0.8) 50%, rgba(249,115,22,0.3) 100%)' },
+    { id: 'shader', name: 'Deep Shader', url: null, preview: 'linear-gradient(135deg, #000000 0%, #06b6d4 50%, #f97316 100%)' },
+    { id: 'xenon', name: 'Xenon Pulse', url: null, preview: 'linear-gradient(135deg, #000000 0%, #39ff14 50%, #00ffff 100%)' },
+    { id: 'novatrix', name: 'Novatrix Flow', url: null, preview: 'linear-gradient(135deg, #1a1a1a 0%, #ff00ff 50%, #0000ff 100%)' },
+    { id: 'zenitho', name: 'Zenitho Aura', url: null, preview: 'linear-gradient(135deg, #000000 0%, #ff7e5f 50%, #feb47b 100%)' },
+    { id: 'neon', name: 'Neon City', url: null, preview: 'bg-fuchsia-950' },
+    { id: 'lamp', name: 'Studio Lamp', url: null, preview: 'bg-slate-900' },
 ];
 
 interface AuthenticatedAppProps {
@@ -62,11 +67,47 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
     const [ripples, ] = useState<RippleEffect[]>([]);
     const [isZenMode, ] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+    const [showOnboarding, setShowOnboarding] = useState(() => {
+        const local = shouldShowOnboarding();
+        // If user already has the flag in metadata, don't show it even if local is empty
+        const meta = (user as any).onboarding_completed;
+        if (meta === true) return false;
+        return local;
+    });
     const lastAiErrorRef = React.useRef<string | null>(null);
 
     const { toasts, showToast, dismissToast } = useToast();
     const { confirmState, confirm, handleConfirm, handleCancel } = useConfirm();
     const player = useZenPlayer();
+    const subscription = useSubscription(user.id);
+    const [isOptimisticallyPaid, setIsOptimisticallyPaid] = useState(false);
+
+    // Detect Stripe checkout redirect and show toast
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const checkout = params.get('checkout');
+        if (checkout === 'success') {
+            showToast('You\'re all set!', 'success', 'Welcome to Dumped.');
+            setIsOptimisticallyPaid(true);
+            subscription.refresh(); // Attempt to get the latest status
+            window.history.replaceState({}, '', window.location.pathname);
+        } else if (checkout === 'canceled') {
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [subscription.refresh, showToast]);
+    
+    // Migration: If we just logged in and have local guest data, push it to Supabase
+    useEffect(() => {
+        const isRealUser = user.id && user.id !== '00000000-0000-0000-0000-000000000000';
+        const hasLocalStorage = localStorage.getItem('dumped_memories') || localStorage.getItem('dumped_items');
+        
+        if (isRealUser && hasLocalStorage) {
+            console.log("🔄 [Migration] Migrating guest data to user account...");
+            databaseService.pushLocalMemoriesToCloud();
+            databaseService.pushLocalItemsToCloud();
+            // Once pushed, we'll let the next load() from TilesHub sync everything back
+        }
+    }, [user.id]);
     const data = useAppData(user.id, confirm);
 
     const maybeLaterIds = React.useMemo(() => {
@@ -88,7 +129,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
     useEffect(() => {
         if (aiStatus === 'error' && lastAiError && lastAiError !== lastAiErrorRef.current) {
             lastAiErrorRef.current = lastAiError;
-            showToast('AI thinking...', 'info', lastAiError.substring(0, 50));
+            showToast('Your dump was saved', 'info', 'AI is temporarily unavailable — tiles will appear once it recovers.');
         }
         if (aiStatus !== 'error') lastAiErrorRef.current = null;
     }, [aiStatus, lastAiError, showToast]);
@@ -126,6 +167,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 onAddTask={data.handleAddManualTask}
                 allCategories={allCategories}
                 syncStatus={data.syncStatus}
+                subscription={subscription}
             />
 
             <div className={`${themeClasses.text} ${themeClasses.bg} overflow-x-hidden transition-all duration-500 relative z-10`} style={{ minHeight: '100dvh' }}>
@@ -140,7 +182,11 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                     <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16 pb-48">
                         <div className="space-y-8">
                             <ErrorBoundary inline>
-                                <TilesHub setActiveTab={setActiveTab} />
+                                <TilesHub 
+                                    setActiveTab={setActiveTab} 
+                                    aiStatus={aiStatus} 
+                                    thinkingCopy={dump.thinkingCopy}
+                                />
                             </ErrorBoundary>
                         </div>
                     </main>
@@ -160,6 +206,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                         <BrainDumpHub
                             {...dump}
                             onNavigateToGrid={() => setActiveTab('patterns')}
+                            isGuest={(user as any).isGuest === true}
                         />
                     </ErrorBoundary>
                 )}
@@ -169,6 +216,15 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
             <ToastList toasts={toasts} dismissToast={dismissToast} />
             {confirmState && (
                 <ConfirmDialog {...confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
+            )}
+            {showOnboarding && (!subscription.isBlocked || isOptimisticallyPaid) && (
+                <Onboarding 
+                    userId={user.id}
+                    onDone={() => setShowOnboarding(false)} 
+                />
+            )}
+            {subscription.isBlocked && !isOptimisticallyPaid && (
+                <PaywallModal reason={subscription.status} />
             )}
         </>
     );

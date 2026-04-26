@@ -8,6 +8,10 @@ import { MeshGradientBackground } from '../ui/mesh-gradient-background';
 import { XenonTexture, NovatrixTexture, ZenithoTexture } from '../ui/uvcanvas-textures';
 import { SpotlightLamp } from '../ui/spotlight-lamp';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import MatrixRain from '../ui/matrix-code';
+import { EtheralShadow } from '../ui/etheral-shadow';
+import { GodRaysBackground } from '../ui/god-rays-background';
+import { LampContainer } from '../ui/lamp';
 
 interface ZenBackgroundProps {
     url: string | null;
@@ -65,6 +69,9 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     const isZenitho = sceneId === 'zenitho';
     const isNeon = sceneId === 'neon';
     const isLamp = sceneId === 'lamp' || sceneId === 'light';
+    const isMatrix = sceneId === 'matrix';
+    const isShadow = sceneId === 'shadow';
+    const isRays = sceneId === 'rays';
 
     const prefersReducedMotion = useReducedMotion();
 
@@ -133,8 +140,17 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
             {/* Neon Background */}
             {isNeon && <div className="absolute inset-0 bg-black animate-neon-flicker" />}
 
-            {/* Spotlight / Light UI Background */}
-            {isLamp && <SpotlightLamp className="absolute inset-0 w-full h-full" />}
+            {/* Matrix Rain */}
+            {isMatrix && <MatrixRain isFixed color="#00ff00" speed={0.8} />}
+
+            {/* Ethereal Shadow */}
+            {isShadow && <EtheralShadow color="rgba(15, 23, 42, 0.8)" animation={{ scale: 80, speed: 40 }} noise={{ opacity: 0.5, scale: 1.2 }} />}
+
+            {/* God Rays */}
+            {isRays && <GodRaysBackground />}
+
+            {/* Spotlight / Light UI Background / Updated Lamp */}
+            {isLamp && <LampContainer className="absolute inset-0 w-full h-full" />}
 
             {/* Tint overlay */}
             <div className={`absolute inset-0 ${isAurora ? 'bg-transparent' : 'bg-slate-50/5'} transition-colors duration-1000`} />

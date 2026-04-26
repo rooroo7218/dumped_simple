@@ -4,7 +4,7 @@ import type { Toast as ToastType } from '../../hooks/useToast';
 
 interface ToastListProps {
     toasts: ToastType[];
-    onDismiss: (id: string) => void;
+    dismissToast: (id: string) => void;
 }
 
 const ICONS = {
@@ -13,7 +13,7 @@ const ICONS = {
     info:    <InformationCircleIcon className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />,
 };
 
-export const ToastList: React.FC<ToastListProps> = ({ toasts, onDismiss }) => {
+export const ToastList: React.FC<ToastListProps> = ({ toasts, dismissToast }) => {
     if (toasts.length === 0) return null;
 
     return (
@@ -31,7 +31,7 @@ export const ToastList: React.FC<ToastListProps> = ({ toasts, onDismiss }) => {
                         )}
                     </div>
                     <button
-                        onClick={() => onDismiss(toast.id)}
+                        onClick={() => dismissToast(toast.id)}
                         className="shrink-0 p-0.5 rounded-lg text-slate-400 hover:text-slate-500 transition-colors"
                     >
                         <XMarkIcon className="w-4 h-4" />
