@@ -18,6 +18,7 @@ import { ZenPlayer } from './ZenPlayer';
 import { BrainDumpHub } from './BrainDumpHub';
 import { TilesHub } from './TilesHub';
 import { PatternHub } from './PatternHub';
+import { PersonaEditor } from './Persona/PersonaEditor';
 
 // Modals & Notifications
 import { ToastList } from './Notifications/Toast';
@@ -203,6 +204,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                 player={player}
                 onAddTask={data.handleAddManualTask}
                 allCategories={allCategories}
+                onUpdatePersona={data.handleUpdatePersona}
                 syncStatus={data.syncStatus}
                 subscription={subscription}
             />
@@ -233,6 +235,27 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                     <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
                         <ErrorBoundary inline>
                             <PatternHub />
+                        </ErrorBoundary>
+                    </main>
+                )}
+
+                {activeTab === 'persona' && (
+                    <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
+                        <ErrorBoundary inline>
+                            <PersonaEditor 
+                                persona={persona} 
+                                onSave={data.handleUpdatePersona}
+                                onReprioritize={async (p) => {
+                                    setAiStatus('processing');
+                                    try { 
+                                        // Logic for reprioritization would go here or in useAppLogic
+                                        // For now, mirroring existing behavior if any
+                                    } finally {
+                                        setAiStatus('idle');
+                                    }
+                                }}
+                                isProcessing={aiStatus === 'processing'}
+                            />
                         </ErrorBoundary>
                     </main>
                 )}

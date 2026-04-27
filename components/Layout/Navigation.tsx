@@ -49,6 +49,7 @@ interface NavigationProps {
     player: ZenPlayerState;
     syncStatus?: 'idle' | 'saving' | 'saved' | 'local-only';
     subscription: SubscriptionState;
+    onUpdatePersona: (updates: Partial<UserPersona>) => void;
 }
 
 // ─── Nav tabs (no dev/hidden tabs) ───────────────────────────────────────────
@@ -66,7 +67,8 @@ export const Navigation: React.FC<NavigationProps> = ({
     isCollapsed, setIsCollapsed, user, handleSignOut, persona,
     updateBrutalistBackground, backgroundScenes, player,
     syncStatus = 'idle',
-    subscription
+    subscription,
+    onUpdatePersona
 }) => {
     const [isSceneryOpen,       setIsSceneryOpen]       = useState(false);
     const [isUserMenuOpen,      setIsUserMenuOpen]      = useState(false);
@@ -297,6 +299,39 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     <p className="text-[11px] font-semibold text-slate-700 truncate">{user.name}</p>
                                     <p className="text-[10px] text-slate-600 truncate">{user.email}</p>
                                 </div>
+                                <div className="px-4 py-2 bg-slate-50/50 border-b border-slate-100">
+                                    <div className="flex items-center justify-between mb-2 mt-1">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Daily Ritual</span>
+                                        <button 
+                                            onClick={() => {
+                                                const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
+                                                onUpdatePersona({ reminderSettings: { ...settings, enabled: !settings.enabled } });
+                                            }}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                        >
+                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.reminderSettings?.enabled ? 'left-4.5' : 'left-0.5'}`} />
+                                        </button>
+                                    </div>
+                                    
+                                    {persona.reminderSettings?.enabled && (
+                                        <div className="flex items-center gap-1.5 pb-2">
+                                            <button 
+                                                onClick={() => {
+                                                    const settings = persona.reminderSettings!;
+                                                    onUpdatePersona({ reminderSettings: { ...settings, timeOfDay: 'morning', time: '09:00' } });
+                                                }} 
+                                                className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all ${persona.reminderSettings?.timeOfDay === 'morning' ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-200 shadow-sm' : 'bg-white text-slate-400 border border-slate-100'}`}
+                                            >☀️ AM</button>
+                                            <button 
+                                                onClick={() => {
+                                                    const settings = persona.reminderSettings!;
+                                                    onUpdatePersona({ reminderSettings: { ...settings, timeOfDay: 'evening', time: '21:00' } });
+                                                }} 
+                                                className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-all ${persona.reminderSettings?.timeOfDay === 'evening' ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 shadow-sm' : 'bg-white text-slate-400 border border-slate-100'}`}
+                                            >🌙 PM</button>
+                                        </div>
+                                    )}
+                                </div>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
@@ -368,6 +403,34 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     <TrashIcon className="w-4 h-4" />
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Rituals (Mobile) */}
+                        <div className="px-4 py-3 border-b border-black/10 bg-slate-50/30">
+                           <div className="flex items-center justify-between mb-2">
+                               <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Daily Ritual</span>
+                               <button 
+                                    onClick={() => {
+                                        const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
+                                        onUpdatePersona({ reminderSettings: { ...settings, enabled: !settings.enabled } });
+                                    }}
+                                    className={`w-10 h-5 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                >
+                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.reminderSettings?.enabled ? 'left-6' : 'left-1'}`} />
+                                </button>
+                           </div>
+                           {persona.reminderSettings?.enabled && (
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => onUpdatePersona({ reminderSettings: { ...persona.reminderSettings!, timeOfDay: 'morning', time: '09:00' } })}
+                                    className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition-all border-2 ${persona.reminderSettings?.timeOfDay === 'morning' ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-slate-100 text-slate-400'}`}
+                                >☀️ Morning</button>
+                                <button 
+                                    onClick={() => onUpdatePersona({ reminderSettings: { ...persona.reminderSettings!, timeOfDay: 'evening', time: '21:00' } })}
+                                    className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition-all border-2 ${persona.reminderSettings?.timeOfDay === 'evening' ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-white border-slate-100 text-slate-400'}`}
+                                >🌙 Evening</button>
+                            </div>
+                           )}
                         </div>
 
                         {/* Background */}
