@@ -136,6 +136,13 @@ export interface UserPersona {
     dumpsAtLastUpdate: number;
     journalsAtLastUpdate: number;
   };
+  reminderSettings?: {
+    enabled: boolean;
+    frequency: 'daily';
+    timeOfDay: 'morning' | 'evening';
+    time: string; // HH:mm
+    lastReminderSent?: number;
+  };
 }
 
 export interface AppState {

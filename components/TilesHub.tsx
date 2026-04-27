@@ -439,39 +439,47 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
     const flagged = useMemo(() => {
         const raw = displayItems.filter(i => !i.isCompleted && i.isFlagged);
-        // Default sort: highest mention count first, then most recent
-        const sortedRaw = [...raw].sort((a, b) => {
+        const storedIds = itemOrder['flagged'] ?? [];
+        
+        return [...raw].sort((a, b) => {
+            // Level 1: Frequency (mentionCount)
             if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            
+            // Level 2: Manual Order (if both in storedIds)
+            const idxA = storedIds.indexOf(a.id);
+            const idxB = storedIds.indexOf(b.id);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            
+            // Level 3: Recency
             return b.lastMentionedAt - a.lastMentionedAt;
         });
-        
-        const storedIds = itemOrder['flagged'] ?? [];
-        const idMap = new Map(sortedRaw.map(i => [i.id, i]));
-        const ordered = storedIds.filter(id => idMap.has(id)).map(id => idMap.get(id)!);
-        const remaining = sortedRaw.filter(i => !storedIds.includes(i.id));
-        return [...ordered, ...remaining];
     }, [displayItems, itemOrder]);
 
     const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (!i.lastMentionedAt || now - i.lastMentionedAt < fourteenDaysMs));
     const completed = displayItems.filter(i => i.isCompleted);
     const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (i.lastMentionedAt && now - i.lastMentionedAt >= fourteenDaysMs));
 
-    const activeGroups = useMemo(() => {
-        const map = new Map<number, Item[]>();
-        for (const item of active) {
-            if (!map.has(item.mentionCount)) map.set(item.mentionCount, []);
-            map.get(item.mentionCount)!.push(item);
-        }
-        return [...map.entries()]
-            .sort((a, b) => b[0] - a[0])
-            .map(([count, groupItems]) => {
-                const sortedGroupItems = [...groupItems].sort((a, b) => b.lastMentionedAt - a.lastMentionedAt);
-                const storedIds = itemOrder[String(count)] ?? [];
-                const idMap = new Map(sortedGroupItems.map(i => [i.id, i]));
-                const ordered = storedIds.filter(id => idMap.has(id)).map(id => idMap.get(id)!);
-                const remaining = sortedGroupItems.filter(i => !storedIds.includes(i.id));
-                return { count, items: [...ordered, ...remaining] };
-            });
+    const sortedActive = useMemo(() => {
+        const storedOrders = itemOrder || {};
+        
+        return [...active].sort((a, b) => {
+            // Level 1: Frequency (mentionCount)
+            if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            
+            // Level 2: Manual Order (if both in storedIds for that frequency)
+            const groupKey = String(a.mentionCount);
+            const groupOrder = storedOrders[groupKey] || [];
+            const idxA = groupOrder.indexOf(a.id);
+            const idxB = groupOrder.indexOf(b.id);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            
+            // Level 3: Recency
+            return b.lastMentionedAt - a.lastMentionedAt;
+        });
     }, [active, itemOrder]);
 
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
@@ -626,18 +634,16 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     </div>
                     <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
                 </div>
-                <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                    {activeGroups.flatMap(({ count, items: groupItems }) => (
-                        <SortableContext key={count} items={groupItems.map(i => i.id)} strategy={rectSortingStrategy}>
-                            {groupItems.map(item => (
+                    <SortableContext items={sortedActive.map(i => i.id)} strategy={rectSortingStrategy}>
+                        <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
+                            {sortedActive.map(item => (
                                 <ItemTile
                                     key={item.id}
                                     {...tileProps(item, 'md')}
                                 />
                             ))}
-                        </SortableContext>
-                    ))}
-                </div>
+                        </div>
+                    </SortableContext>
             </section>
 
             {/* ── Completed / Faded ───────────────────────────────────── */}

@@ -134,6 +134,43 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
         if (aiStatus !== 'error') lastAiErrorRef.current = null;
     }, [aiStatus, lastAiError, showToast]);
 
+    // ── Daily Ritual Reminders ──
+    useEffect(() => {
+        const settings = persona.reminderSettings;
+        if (!settings?.enabled) return;
+
+        const checkReminder = () => {
+            const [hour, minute] = settings.time.split(':').map(Number);
+            const now = new Date();
+            const lastSent = settings.lastReminderSent || 0;
+            
+            // Check if we already dumped today
+            const startOfDay = new Date();
+            startOfDay.setHours(0,0,0,0);
+            const hasDumpedToday = memories.some(m => m.timestamp >= startOfDay.getTime());
+            if (hasDumpedToday) return;
+
+            // Trigger if it's the right time and we haven't triggered in the last 12 hours
+            if (now.getHours() === hour && now.getMinutes() >= minute) {
+                const twelveHours = 12 * 60 * 60 * 1000;
+                if (now.getTime() - lastSent > twelveHours) {
+                    showToast(
+                        `Time for your ${settings.timeOfDay} ritual!`, 
+                        'info', 
+                        `Don't forget to do your ${settings.timeOfDay} brain dump.`
+                    );
+                    data.handleUpdatePersona({ 
+                        reminderSettings: { ...settings, lastReminderSent: now.getTime() } 
+                    });
+                }
+            }
+        };
+
+        const interval = setInterval(checkReminder, 60000); // Check once a minute
+        checkReminder();
+        return () => clearInterval(interval);
+    }, [persona.reminderSettings, memories, showToast, data.handleUpdatePersona]);
+
     if (data.isDbLoading) return null;
 
     const bgUrl = persona.brutalistBackground;

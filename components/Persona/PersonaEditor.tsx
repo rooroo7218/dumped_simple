@@ -183,6 +183,100 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                 )}
             </div>
 
+            {/* ── Daily Rituals ── */}
+            <div className={`${card} p-6 space-y-5 overflow-hidden relative`}>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full -mr-16 -mt-16" />
+                
+                <div className="flex items-center justify-between relative z-10">
+                    <div>
+                        <p className={sectionTitle}>Daily Rituals</p>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">Stay consistent with your brain dumps</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reminders</span>
+                        <button 
+                            onClick={() => {
+                                const newVal = !p.reminderSettings?.enabled;
+                                save({ 
+                                    ...p, 
+                                    reminderSettings: { 
+                                        enabled: newVal,
+                                        frequency: 'daily',
+                                        timeOfDay: p.reminderSettings?.timeOfDay || 'morning',
+                                        time: p.reminderSettings?.time || (p.reminderSettings?.timeOfDay === 'evening' ? '21:00' : '09:00')
+                                    } 
+                                });
+                            }}
+                            className={`w-10 h-5 rounded-full transition-all relative ${p.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                        >
+                            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${p.reminderSettings?.enabled ? 'left-6' : 'left-1'}`} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className={`space-y-4 transition-all duration-500 ${p.reminderSettings?.enabled ? 'opacity-100 max-h-[300px]' : 'opacity-30 grayscale max-h-[0px] overflow-hidden pointer-events-none'}`}>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => {
+                                save({ 
+                                    ...p, 
+                                    reminderSettings: { 
+                                        ...p.reminderSettings!, 
+                                        timeOfDay: 'morning',
+                                        time: '09:00'
+                                    } 
+                                });
+                            }}
+                            className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${p.reminderSettings?.timeOfDay === 'morning' ? 'border-amber-400 bg-amber-50/50' : 'border-slate-100 bg-slate-50/50 grayscale hover:grayscale-0'}`}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl">☀️</div>
+                            <div className="text-center">
+                                <p className="text-[11px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-amber-200 inline-block">Morning</p>
+                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Start fresh</p>
+                            </div>
+                        </button>
+
+                        <button 
+                            onClick={() => {
+                                save({ 
+                                    ...p, 
+                                    reminderSettings: { 
+                                        ...p.reminderSettings!, 
+                                        timeOfDay: 'evening',
+                                        time: '21:00'
+                                    } 
+                                });
+                            }}
+                            className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${p.reminderSettings?.timeOfDay === 'evening' ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-100 bg-slate-50/50 grayscale hover:grayscale-0'}`}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-xl">🌙</div>
+                            <div className="text-center">
+                                <p className="text-[11px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-indigo-200 inline-block">Evening</p>
+                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Wind down</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between px-2 pt-2">
+                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Reminder Time</label>
+                        <input 
+                            type="time"
+                            value={p.reminderSettings?.time || '09:00'}
+                            onChange={e => {
+                                save({ 
+                                    ...p, 
+                                    reminderSettings: { 
+                                        ...p.reminderSettings!, 
+                                        time: e.target.value 
+                                    } 
+                                });
+                            }}
+                            className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-800 outline-none focus:ring-2 ring-indigo-500/20"
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* ── How you work ── */}
             <div className={`${card} p-6 space-y-5`}>
                 <p className={sectionTitle}>How you work</p>
