@@ -192,7 +192,19 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     );
 
     const [activeId, setActiveId] = useState<string | null>(null);
-    const [draggedGroup, setDraggedGroup] = useState<number | null>(null);
+    const [draggedGroup, setDraggedGroup] = useState<string | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const prevStatus = useRef(aiStatus);
+
+    // Success flash logic
+    useEffect(() => {
+        if (prevStatus.current === 'processing' && aiStatus === 'idle') {
+            setShowSuccess(true);
+            const timer = setTimeout(() => setShowSuccess(false), 3500);
+            return () => clearTimeout(timer);
+        }
+        prevStatus.current = aiStatus;
+    }, [aiStatus]);
 
     // Undo-delete state
     const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
@@ -570,6 +582,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
                         className="mb-10 mx-1 p-[2px] rounded-[24px] overflow-hidden relative"
                     >
                         {/* Shimmering border glow */}
@@ -586,7 +599,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                 <span className="text-[14px] font-bold text-slate-900 tracking-tight leading-none">
                                     {thinkingCopy || 'Sorting your thoughts...'}
                                 </span>
-                                <span className="text-[11px] font-medium text-slate-400 tracking-wide uppercase">AI is carefully arranging your tiles</span>
+                                <span className="text-[11px] font-medium text-slate-400 tracking-wide uppercase">AI is carefully arranging your items</span>
                             </div>
 
                             <div className="ml-auto flex items-center gap-1">
@@ -599,6 +612,30 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                 ))}
                             </div>
                         </div>
+                    </motion.div>
+                )}
+
+                {/* ── Success Flash ── */}
+                {showSuccess && aiStatus === 'idle' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="mb-10 mx-1 bg-emerald-50 border border-emerald-200 rounded-[24px] p-5 flex items-center gap-4"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
+                            <CheckIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-bold text-emerald-900 tracking-tight">phew. all sorted.</span>
+                            <span className="text-[11px] font-medium text-emerald-600/70 uppercase tracking-wider">Your mind represents your space now.</span>
+                        </div>
+                        <button 
+                            onClick={() => setShowSuccess(false)}
+                            className="ml-auto p-2 text-emerald-400 hover:text-emerald-600 transition-colors"
+                        >
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
                     </motion.div>
                 )}
 

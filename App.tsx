@@ -23,6 +23,7 @@ const App: React.FC = () => {
         {!user ? (
           <LoginScreen
             signInWithGoogle={signInWithGoogle}
+            signInWithApple={signInWithApple}
             handleBypassLogin={handleBypassLogin}
           />
         ) : (

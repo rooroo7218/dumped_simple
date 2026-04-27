@@ -3,10 +3,11 @@ import { AuroraBackground } from './ui/aurora-background';
 
 interface LoginScreenProps {
     signInWithGoogle: () => void;
+    signInWithApple: () => void;
     handleBypassLogin: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, handleBypassLogin }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, signInWithApple, handleBypassLogin }) => {
     // Removed isLocal restriction to allow public Tester Mode
 
     return (
@@ -43,11 +44,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, hand
                         continue with google.
                     </button>
 
+                    {/* Apple Sign In */}
+                    <button
+                        onClick={signInWithApple}
+                        className="w-full max-w-[280px] py-3.5 px-8 flex items-center justify-center gap-3 rounded-2xl border-2 border-slate-950 bg-slate-950 text-white text-[14px] font-bold shadow-sm hover:bg-slate-900 transition-all active:scale-[0.98] mx-auto"
+                    >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.05 20.28c-.96.95-2.21 1.72-3.72 1.72-1.46 0-2.31-.83-3.61-.83-1.32 0-2.31.81-3.61.81-1.4 0-2.88-1.02-3.89-2.38-2.12-2.85-2.12-7.29 0-10.13 1.06-1.42 2.6-2.31 4-2.31 1.32 0 2.21.72 3.51.72s2.21-.72 3.52-.72c1.23 0 2.5.64 3.4 1.55-2.73 1.52-2.28 5.75.5 7.15-.55 1.57-1.37 3.19-2.21 4.29l.11.13zm-3.56-15.65c0-1.81 1.48-3.41 3.25-3.63.19 2.13-1.39 3.99-3.25 3.63z" />
+                        </svg>
+                        continue with apple.
+                    </button>
+
                     <button
                         onClick={handleBypassLogin}
                         className="w-full py-3 px-6 rounded-2xl text-slate-400 text-[11px] font-bold uppercase tracking-[0.2em] hover:text-slate-600 transition-all font-sans"
                     >
-                        Tester Mode
+                        continue as guest.
                     </button>
                 </div>
 

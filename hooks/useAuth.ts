@@ -10,14 +10,25 @@ export const useAuth = () => {
 
     const signInWithGoogle = async () => {
         const redirectTo = window.location.origin.replace(/\/$/, '');
-
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: {
-                redirectTo
-            }
+            options: { redirectTo }
         });
-        if (error) console.error("❌ [Auth] Login failed:", error.message);
+        if (error) console.error("❌ [Auth] Google Login failed:", error.message);
+    };
+
+    const signInWithApple = async () => {
+        const redirectTo = window.location.origin.replace(/\/$/, '');
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'apple',
+            options: { redirectTo }
+        });
+        if (error) console.error("❌ [Auth] Apple Login failed:", error.message);
+    };
+
+    const signInAnonymously = async () => {
+        const { error } = await supabase.auth.signInAnonymously();
+        if (error) console.error("❌ [Auth] Anonymous login failed:", error.message);
     };
 
     const handleSignOut = async () => {
@@ -27,16 +38,7 @@ export const useAuth = () => {
     };
 
     const handleBypassLogin = () => {
-        const guest = {
-            id: '00000000-0000-0000-0000-000000000000',
-            name: 'Guest Tester',
-            email: 'guest@dumped.ai',
-            picture: `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${Math.random()}`,
-            lastLogin: Date.now(),
-            isGuest: true
-        };
-        setUser(guest as UserProfile);
-        localStorage.setItem('dumped_user', JSON.stringify(guest));
+        signInAnonymously();
     };
 
     useEffect(() => {
@@ -44,11 +46,12 @@ export const useAuth = () => {
             if (session?.user) {
                 const profile: UserProfile = {
                     id: session.user.id,
-                    name: session.user.user_metadata.full_name,
-                    email: session.user.email!,
-                    picture: session.user.user_metadata.avatar_url,
+                    name: session.user.user_metadata.full_name || 'Guest',
+                    email: session.user.email || 'guest@dumped.ai',
+                    picture: session.user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${session.user.id}`,
                     lastLogin: Date.now(),
-                    onboarding_completed: session.user.user_metadata.onboarding_completed
+                    onboarding_completed: session.user.user_metadata.onboarding_completed,
+                    isGuest: !!session.user.is_anonymous
                 };
                 setUser(profile);
                 localStorage.setItem('dumped_user', JSON.stringify(profile));
@@ -66,6 +69,8 @@ export const useAuth = () => {
         user,
         setUser,
         signInWithGoogle,
+        signInWithApple,
+        signInAnonymously,
         handleSignOut,
         handleBypassLogin
     };
