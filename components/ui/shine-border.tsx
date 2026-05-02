@@ -21,7 +21,7 @@ type ShineBorderProps = {
   className?: string;
   borderWidth?: number;
   duration?: number;
-  gradient?: string;
+  color?: string;
 };
 
 export const ShineBorder = ({
@@ -29,27 +29,37 @@ export const ShineBorder = ({
   className,
   borderWidth = 2,
   duration = 3,
-  gradient = "from-blue-500 via-red-500 to-teal-400",
+  color = "#00f2ff",
 }: ShineBorderProps) => {
   return (
     <div
       className={cn("relative rounded-2xl", className)}
-      style={{ padding: borderWidth }}
     >
-      {/* Animated Gradient Layer */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden">
-        <div
-          className={cn(
-            "absolute -inset-full blur-sm animate-spin bg-conic",
-            gradient
-          )}
-          style={{ animationDuration: `${duration}s` }}
-        />
+      {/* Content Layer */}
+      <div className="relative h-full w-full rounded-[inherit]">
+        {children}
       </div>
 
-      {/* Content Layer */}
-      <div className="relative rounded-2xl bg-card">
-        {children}
+      {/* Animated Gradient Layer with Mask (Overlay) */}
+      <div 
+        className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none"
+        style={{ 
+          padding: borderWidth,
+          maskImage: 'linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)',
+          maskClip: 'content-box, border-box',
+          WebkitMaskImage: 'linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)',
+          WebkitMaskClip: 'content-box, border-box',
+          maskComposite: 'exclude',
+          WebkitMaskComposite: 'xor',
+        }}
+      >
+        <div
+          className="absolute -inset-[100%] animate-spin blur-[2px]"
+          style={{ 
+            animationDuration: `${duration}s`,
+            backgroundImage: `conic-gradient(from 270deg, transparent, ${color}, white, ${color}, transparent)`
+          }}
+        />
       </div>
     </div>
   );

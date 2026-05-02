@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
-import { Item, DumpItem } from '../types';
+import { Item, DumpItem, UserPersona } from '../types';
 import { databaseService } from '../services/databaseService';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -173,9 +173,10 @@ interface TilesHubProps {
     setActiveTab: (tab: any) => void;
     aiStatus?: 'idle' | 'processing' | 'error' | 'success';
     thinkingCopy?: string;
+    persona?: UserPersona;
 }
 
-export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thinkingCopy }) => {
+export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thinkingCopy, persona }) => {
     const [items, setItems] = useState<Item[]>([]);
     const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
     const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
@@ -494,6 +495,25 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         });
     }, [active, itemOrder]);
 
+    const boardItems = useMemo(() => {
+        if (!persona?.tileBoardViewEnabled) return [];
+        
+        // Board view combines flagged and active into one grid
+        const combined = [...flagged, ...active];
+        
+        return combined.sort((a, b) => {
+            // 1. Flagged on top
+            if (a.isFlagged && !b.isFlagged) return -1;
+            if (!a.isFlagged && b.isFlagged) return 1;
+            
+            // 2. Then frequency (mentionCount)
+            if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            
+            // 3. Then recency
+            return b.lastMentionedAt - a.lastMentionedAt;
+        });
+    }, [flagged, active, persona?.tileBoardViewEnabled]);
+
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
         const count = item.mentionCount;
         const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
@@ -639,19 +659,19 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     </motion.div>
                 )}
 
-            {/* ── Flagged ─────────────────────────────────────────────── */}
-            {flagged.length > 0 && (
+            {persona?.tileBoardViewEnabled ? (
+                /* ── Board View: Combined Grid ── */
                 <section className="mb-12">
                     <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
                         <div className="flex items-center gap-2 mb-1">
-                            <SparklesIcon className="w-4 h-4 text-rose-400" />
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Flagged ({flagged.length})</span>
+                            <SparklesIcon className="w-4 h-4 text-indigo-400" />
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Board ({boardItems.length})</span>
                         </div>
-                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
+                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Your mind, unified.</h2>
                     </div>
-                    <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
+                    <SortableContext items={boardItems.map(i => i.id)} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                            {flagged.map(item => (
+                            {boardItems.map(item => (
                                 <ItemTile
                                     key={item.id}
                                     {...tileProps(item, 'md')}
@@ -660,28 +680,53 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                         </div>
                     </SortableContext>
                 </section>
-            )}
+            ) : (
+                <>
+                    {/* ── Flagged ─────────────────────────────────────────────── */}
+                    {flagged.length > 0 && (
+                        <section className="mb-12">
+                            <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <SparklesIcon className="w-4 h-4 text-rose-400" />
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Flagged ({flagged.length})</span>
+                                </div>
+                                <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
+                            </div>
+                            <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
+                                <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
+                                    {flagged.map(item => (
+                                        <ItemTile
+                                            key={item.id}
+                                            {...tileProps(item, 'md')}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </section>
+                    )}
 
-            {/* ── Active — grouped by mentionCount, draggable within group ── */}
-            <section className="mb-12">
-                <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
-                    <div className="flex items-center gap-2 mb-1">
-                        <SparklesIcon className="w-4 h-4 text-amber-400" />
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tasks ({active.length})</span>
-                    </div>
-                    <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
-                </div>
-                    <SortableContext items={sortedActive.map(i => i.id)} strategy={rectSortingStrategy}>
-                        <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                            {sortedActive.map(item => (
-                                <ItemTile
-                                    key={item.id}
-                                    {...tileProps(item, 'md')}
-                                />
-                            ))}
+                    {/* ── Active — grouped by mentionCount, draggable within group ── */}
+                    <section className="mb-12">
+                        <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                            <div className="flex items-center gap-2 mb-1">
+                                <SparklesIcon className="w-4 h-4 text-amber-400" />
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tasks ({active.length})</span>
+                            </div>
+                            <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
                         </div>
-                    </SortableContext>
-            </section>
+                            <SortableContext items={sortedActive.map(i => i.id)} strategy={rectSortingStrategy}>
+                                <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
+                                    {sortedActive.map(item => (
+                                        <ItemTile
+                                            key={item.id}
+                                            {...tileProps(item, 'md')}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                    </section>
+                </>
+            )}
 
             {/* ── Completed / Faded ───────────────────────────────────── */}
             {(completed.length > 0 || faded.length > 0) && (
@@ -896,7 +941,7 @@ const ItemTile = React.memo(({
             }}
             {...attributes}
             {...listeners}
-            className={cn("relative", className)}
+            className={cn("relative h-full w-full", (itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className)}
         >
         <div
             onMouseMove={handleMouseMove}
@@ -1216,21 +1261,22 @@ const ItemTile = React.memo(({
     );
 
     if (itemStyle.texture === 'shine-border' && !isExpanded) {
-        const colorMap: Record<string, string> = {
-            'default': 'from-slate-200 via-slate-300 to-slate-400',
-            'rose': 'from-rose-500 via-rose-300 to-rose-400',
-            'amber': 'from-amber-500 via-amber-300 to-amber-400',
-            'emerald': 'from-emerald-500 via-emerald-300 to-emerald-400',
-            'violet': 'from-violet-500 via-violet-300 to-violet-400',
-            'sky': 'from-sky-500 via-sky-300 to-sky-400',
-            'slate': 'from-slate-500 via-slate-300 to-slate-400'
+        const neonMap: Record<string, string> = {
+            'default': '#00FFFF',
+            'rose': '#FF00FF',
+            'amber': '#FFFF00',
+            'emerald': '#00FF00',
+            'violet': '#BC13FE',
+            'sky': '#00BFFF',
+            'slate': '#E0E0E0'
         };
-
+        const neonColor = neonMap[itemStyle.color] || '#00f2ff';
+        
         return (
             <ShineBorder
-                borderWidth={2}
-                duration={4}
-                gradient={colorMap[itemStyle.color] || 'from-blue-500 via-indigo-500 to-purple-500'}
+                borderWidth={4}
+                duration={8}
+                color={neonColor}
                 className={cn("rounded-[10px]", className)}
             >
                 {TileContent}

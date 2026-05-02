@@ -143,6 +143,7 @@ export interface UserPersona {
     time: string; // HH:mm
     lastReminderSent?: number;
   };
+  tileBoardViewEnabled?: boolean;
 }
 
 export interface AppState {

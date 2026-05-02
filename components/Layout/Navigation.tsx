@@ -331,6 +331,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             >🌙 PM</button>
                                         </div>
                                     )}
+
+                                    <div className="flex items-center justify-between mb-1 mt-3 pt-3 border-t border-slate-100">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tile Board</span>
+                                        <button 
+                                            onClick={() => {
+                                                onUpdatePersona({ tileBoardViewEnabled: !persona.tileBoardViewEnabled });
+                                            }}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.tileBoardViewEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                        >
+                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.tileBoardViewEnabled ? 'left-4.5' : 'left-0.5'}`} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
@@ -431,7 +443,19 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 >🌙 Evening</button>
                             </div>
                            )}
-                        </div>
+                           
+                               <div className="flex items-center justify-between mb-1 mt-3 pt-3 border-t border-black/5">
+                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tile Board</span>
+                                   <button 
+                                        onClick={() => {
+                                            onUpdatePersona({ tileBoardViewEnabled: !persona.tileBoardViewEnabled });
+                                        }}
+                                        className={`w-10 h-5 rounded-full relative transition-colors ${persona.tileBoardViewEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.tileBoardViewEnabled ? 'left-6' : 'left-1'}`} />
+                                    </button>
+                               </div>
+                            </div>
 
                         {/* Background */}
                         <div className="px-4 py-3 border-b border-black/10">
