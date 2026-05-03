@@ -968,7 +968,7 @@ const ItemTile = React.memo(({
             onMouseLeave={handleMouseLeave}
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between h-full w-full
-                ${isExpanded ? 'border border-black/70 z-20 col-span-full shadow-lg' : 'border border-black/70 shadow-sm'}
+                ${isExpanded ? (isStale ? 'border border-black/70 z-20 col-span-3 row-span-3 shadow-lg' : 'border border-black/70 z-20 col-span-full shadow-lg') : 'border border-black/70 shadow-sm'}
                 ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
