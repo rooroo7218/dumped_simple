@@ -478,6 +478,14 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         const storedOrders = itemOrder || {};
         
         return [...active].sort((a, b) => {
+            // Level 0: Stale status (if dimming is enabled, stale items go to the bottom)
+            if (persona?.staleTaskDimmingEnabled) {
+                const isStaleA = a.lastMentionedAt && (now - a.lastMentionedAt >= sevenDaysMs);
+                const isStaleB = b.lastMentionedAt && (now - b.lastMentionedAt >= sevenDaysMs);
+                if (isStaleA && !isStaleB) return 1;
+                if (!isStaleA && isStaleB) return -1;
+            }
+
             // Level 1: Frequency (mentionCount)
             if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
             
