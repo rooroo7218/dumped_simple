@@ -470,17 +470,9 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         });
     }, [displayItems, itemOrder]);
 
-    const active = displayItems.filter(i => {
-        if (i.isCompleted || i.isFlagged) return false;
-        if (persona?.staleTaskDimmingEnabled) return true;
-        return !i.lastMentionedAt || (now - i.lastMentionedAt < sevenDaysMs);
-    });
+    const active = displayItems.filter(i => !i.isCompleted && !i.isFlagged);
     const completed = displayItems.filter(i => i.isCompleted);
-    const faded = displayItems.filter(i => {
-        if (i.isCompleted || i.isFlagged) return false;
-        if (persona?.staleTaskDimmingEnabled) return false;
-        return i.lastMentionedAt && (now - i.lastMentionedAt >= sevenDaysMs);
-    });
+    const faded: Item[] = []; // Stale tasks now stay in active and fade visually via isStale logic
 
     const sortedActive = useMemo(() => {
         const storedOrders = itemOrder || {};
