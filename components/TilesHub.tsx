@@ -1056,6 +1056,7 @@ const ItemTile = React.memo(({
 
             <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
+            {(!isStale || isExpanded) && (
                 <div className="flex items-start gap-1.5">
                     <button
                         onClick={onComplete}
@@ -1097,9 +1098,10 @@ const ItemTile = React.memo(({
                         </p>
                     )}
                 </div>
+            )}
 
                 {/* ── Mention Count Pill ── */}
-                {item.mentionCount > 1 && !isExpanded && (
+                {item.mentionCount > 1 && !isExpanded && !isStale && (
                     <div className="flex items-center mt-1">
                         <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
                             <div
@@ -1115,7 +1117,7 @@ const ItemTile = React.memo(({
             </div>
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
-            {!isExpanded && (
+            {!isExpanded && !isStale && (
                 <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0">
                     {/* Flag Button */}
                     <button
