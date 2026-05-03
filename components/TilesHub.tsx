@@ -513,14 +513,21 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             // 1. Flagged on top
             if (a.isFlagged && !b.isFlagged) return -1;
             if (!a.isFlagged && b.isFlagged) return 1;
+
+            // 2. Stale tasks at the bottom
+            const aStale = !!(!a.isFlagged && persona?.staleTaskDimmingEnabled && a.lastMentionedAt && (now - a.lastMentionedAt >= sevenDaysMs));
+            const bStale = !!(!b.isFlagged && persona?.staleTaskDimmingEnabled && b.lastMentionedAt && (now - b.lastMentionedAt >= sevenDaysMs));
             
-            // 2. Then frequency (mentionCount)
+            if (aStale && !bStale) return 1;
+            if (!aStale && bStale) return -1;
+            
+            // 3. Then frequency (mentionCount)
             if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
             
-            // 3. Then recency
+            // 4. Then recency
             return b.lastMentionedAt - a.lastMentionedAt;
         });
-    }, [flagged, active, persona?.tileBoardViewEnabled]);
+    }, [flagged, active, persona?.staleTaskDimmingEnabled, now, sevenDaysMs, persona?.tileBoardViewEnabled]);
 
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
         const isStale = !!(!item.isFlagged && persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
