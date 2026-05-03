@@ -145,6 +145,7 @@ export interface UserPersona {
   };
   tileBoardViewEnabled?: boolean;
   staleTaskDimmingEnabled?: boolean;
+  miniaturizeStaleTasksEnabled?: boolean;
 }
 
 export interface AppState {

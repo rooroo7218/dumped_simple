@@ -355,6 +355,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.staleTaskDimmingEnabled ? 'left-[18px]' : 'left-0.5'}`} />
                                         </button>
                                     </div>
+
+                                    <div className="flex items-center justify-between mb-1 mt-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mini Stale</span>
+                                        <button 
+                                            onClick={() => {
+                                                onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });
+                                            }}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.miniaturizeStaleTasksEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                        >
+                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.miniaturizeStaleTasksEnabled ? 'left-[18px]' : 'left-0.5'}`} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
@@ -477,6 +489,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                                         className={`w-10 h-5 rounded-full relative transition-colors ${persona.staleTaskDimmingEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                                     >
                                         <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.staleTaskDimmingEnabled ? 'left-6' : 'left-1'}`} />
+                                    </button>
+                               </div>
+
+                               <div className="flex items-center justify-between mb-1 mt-2">
+                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Miniaturize Stale</span>
+                                   <button 
+                                        onClick={() => {
+                                            onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });
+                                        }}
+                                        className={`w-10 h-5 rounded-full relative transition-colors ${persona.miniaturizeStaleTasksEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.miniaturizeStaleTasksEnabled ? 'left-6' : 'left-1'}`} />
                                     </button>
                                </div>
                             </div>
