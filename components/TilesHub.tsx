@@ -967,7 +967,7 @@ const ItemTile = React.memo(({
                 transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: isStale ? '#f1f5f9' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
+                backgroundColor: isStale ? '#e2e8f0' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
@@ -999,7 +999,7 @@ const ItemTile = React.memo(({
             )}
 
             {/* ── Aurora Glow Background ── */}
-            {itemStyle.texture === 'aurora' && (
+            {!isStale && itemStyle.texture === 'aurora' && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden blur-3xl opacity-60">
                     <div className="absolute -inset-10 bg-gradient-to-tr from-[#bfdbfe] via-[#ddd6fe] to-[#bae6fd] opacity-80 animate-pulse" />
                     <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-rose-200 to-transparent mix-blend-overlay opacity-40 animate-pulse delay-700" />
@@ -1007,30 +1007,30 @@ const ItemTile = React.memo(({
             )}
             
             {/* ── Shader Backgrounds ── */}
-            {itemStyle.texture === 'xenon' && <XenonTexture isCompact={!isExpanded} />}
-            {itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
-            {itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
-            {itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
-            {itemStyle.texture === 'matrix' && <MatrixRain color="#00ff00" speed={0.5} fontSize={12} />}
-            {itemStyle.texture === 'shadow' && <EtheralShadow color="rgba(15, 23, 42, 0.4)" animation={{ scale: 50, speed: 20 }} />}
+            {!isStale && itemStyle.texture === 'xenon' && <XenonTexture isCompact={!isExpanded} />}
+            {!isStale && itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
+            {!isStale && itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
+            {!isStale && itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
+            {!isStale && itemStyle.texture === 'matrix' && <MatrixRain color="#00ff00" speed={0.5} fontSize={12} />}
+            {!isStale && itemStyle.texture === 'shadow' && <EtheralShadow color="rgba(15, 23, 42, 0.4)" animation={{ scale: 50, speed: 20 }} />}
             
-            {itemStyle.texture === 'dithering-wave' && (
+            {!isStale && itemStyle.texture === 'dithering-wave' && (
                 <DitheringShader 
                     shape="wave" type="8x8" colorBack="#001122" colorFront="#ff0088" pxSize={3} speed={0.6}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-            {itemStyle.texture === 'dithering-swirl' && (
+            {!isStale && itemStyle.texture === 'dithering-swirl' && (
                 <DitheringShader 
                     shape="swirl" type="4x4" colorBack="#220011" colorFront="#00ffff" pxSize={4} speed={0.9}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-            {itemStyle.texture === 'holographic' && <HolographicTexture mouseX={mousePos.x} mouseY={mousePos.y} />}
-            {itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
+            {!isStale && itemStyle.texture === 'holographic' && <HolographicTexture mouseX={mousePos.x} mouseY={mousePos.y} />}
+            {!isStale && itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
 
             {/* ── Animated Background ── */}
-            {itemStyle.texture === 'animated-dots' && (
+            {!isStale && itemStyle.texture === 'animated-dots' && (
                 <div className="absolute inset-0 pointer-events-none opacity-40">
                     <AnimatedDots 
                         fullScreen={false} 
@@ -1268,7 +1268,7 @@ const ItemTile = React.memo(({
         </div>
     );
 
-    if (itemStyle.texture === 'shine-border' && !isExpanded) {
+    if (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) {
         const neonMap: Record<string, string> = {
             'default': '#00FFFF',
             'rose': '#FF00FF',
