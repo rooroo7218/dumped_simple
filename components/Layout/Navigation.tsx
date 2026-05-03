@@ -343,6 +343,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.tileBoardViewEnabled ? 'left-4.5' : 'left-0.5'}`} />
                                         </button>
                                     </div>
+
+                                    <div className="flex items-center justify-between mb-1 mt-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dim Stale</span>
+                                        <button 
+                                            onClick={() => {
+                                                onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
+                                            }}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.staleTaskDimmingEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                        >
+                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.staleTaskDimmingEnabled ? 'left-4.5' : 'left-0.5'}`} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
@@ -453,6 +465,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                                         className={`w-10 h-5 rounded-full relative transition-colors ${persona.tileBoardViewEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                                     >
                                         <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.tileBoardViewEnabled ? 'left-6' : 'left-1'}`} />
+                                    </button>
+                               </div>
+
+                               <div className="flex items-center justify-between mb-1 mt-2">
+                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dim Stale Tasks</span>
+                                   <button 
+                                        onClick={() => {
+                                            onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
+                                        }}
+                                        className={`w-10 h-5 rounded-full relative transition-colors ${persona.staleTaskDimmingEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.staleTaskDimmingEnabled ? 'left-6' : 'left-1'}`} />
                                     </button>
                                </div>
                             </div>

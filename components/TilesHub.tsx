@@ -470,9 +470,17 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         });
     }, [displayItems, itemOrder]);
 
-    const active    = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (!i.lastMentionedAt || now - i.lastMentionedAt < fourteenDaysMs));
+    const active = displayItems.filter(i => {
+        if (i.isCompleted || i.isFlagged) return false;
+        if (persona?.staleTaskDimmingEnabled) return true;
+        return !i.lastMentionedAt || (now - i.lastMentionedAt < fourteenDaysMs);
+    });
     const completed = displayItems.filter(i => i.isCompleted);
-    const faded     = displayItems.filter(i => !i.isCompleted && !i.isFlagged && (i.lastMentionedAt && now - i.lastMentionedAt >= fourteenDaysMs));
+    const faded = displayItems.filter(i => {
+        if (i.isCompleted || i.isFlagged) return false;
+        if (persona?.staleTaskDimmingEnabled) return false;
+        return i.lastMentionedAt && (now - i.lastMentionedAt >= fourteenDaysMs);
+    });
 
     const sortedActive = useMemo(() => {
         const storedOrders = itemOrder || {};
@@ -515,6 +523,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     }, [flagged, active, persona?.tileBoardViewEnabled]);
 
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
+        const isStale = !!(persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= fourteenDaysMs));
         const count = item.mentionCount;
         const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
         const orientation = style.orientation ?? 'h';
@@ -559,10 +568,11 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
             style,
             size,
+            isStale,
             aspectRatio,
             className: `${colSpan} ${rowSpan} ${extraClass ?? ''}`,
         };
-    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange]);
+    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange, persona?.staleTaskDimmingEnabled, now, fourteenDaysMs]);
 
     if (isLoading && items.length === 0) return null;
 
@@ -832,6 +842,7 @@ interface ItemTileProps {
     isDragging?: boolean;
     isDragOver?: boolean;
     canDrop?: boolean;
+    isStale?: boolean;
     onDragStart?: (e: React.DragEvent) => void;
     onDragOver?: (e: React.DragEvent) => void;
     onDragEnter?: (e: React.DragEvent) => void;
@@ -842,7 +853,7 @@ interface ItemTileProps {
 const ItemTile = React.memo(({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
     onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
-    isDragging, isDragOver, canDrop,
+    isDragging, isDragOver, canDrop, isStale,
     onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
@@ -927,8 +938,8 @@ const ItemTile = React.memo(({
         return () => document.removeEventListener('mousedown', handler);
     }, [stylerOpen]);
 
-    const colorBg = getColorBg(itemStyle.color);
-    const textureStyle = getTextureStyle(itemStyle.texture);
+    const colorBg = isStale ? '#f1f5f9' : getColorBg(itemStyle.color);
+    const textureStyle = isStale ? {} : getTextureStyle(itemStyle.texture);
     const padding = '8px';
 
     const TileContent = (
@@ -941,7 +952,7 @@ const ItemTile = React.memo(({
             }}
             {...attributes}
             {...listeners}
-            className={cn("relative h-full w-full", (itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className)}
+            className={cn("relative h-full w-full", ((isStale || itemStyle.texture === 'shine-border') && !isExpanded) ? "" : className)}
         >
         <div
             onMouseMove={handleMouseMove}
@@ -952,14 +963,15 @@ const ItemTile = React.memo(({
                 ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
+                ${isStale && !isExpanded ? 'grayscale-[0.6] opacity-60' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black' : (itemStyle.texture === 'holographic' ? 'bg-slate-50' : 'bg-white')} text-slate-900
-                ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
-                ${itemStyle.texture === 'neon' ? 'animate-neon-flicker' : ''}
+                rounded-[10px] ${(isStale ? 'bg-slate-100' : (['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black' : (itemStyle.texture === 'holographic' ? 'bg-slate-50' : 'bg-white')))} text-slate-900
+                ${(isStale || itemStyle.texture === 'shine-border') && !isExpanded ? '' : className ?? ''}
+                ${itemStyle.texture === 'neon' && !isStale ? 'animate-neon-flicker' : ''}
                 transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: (['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg),
+                backgroundColor: isStale ? '#f1f5f9' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',

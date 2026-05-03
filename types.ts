@@ -144,6 +144,7 @@ export interface UserPersona {
     lastReminderSent?: number;
   };
   tileBoardViewEnabled?: boolean;
+  staleTaskDimmingEnabled?: boolean;
 }
 
 export interface AppState {
