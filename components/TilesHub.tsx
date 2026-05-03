@@ -975,7 +975,7 @@ const ItemTile = React.memo(({
                 transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: isStale ? '#e2e8f0' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
+                backgroundColor: isStale ? '#cbd5e1' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
