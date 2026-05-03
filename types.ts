@@ -231,6 +231,7 @@ export interface Item {
   style?: { color: string; texture: string; orientation?: 'h' | 'v' };
   isNew?: boolean;
   excerpts?: DumpItem[]; // Loaded on expansion
+  notes?: string;
 }
 
 export interface DumpItem {

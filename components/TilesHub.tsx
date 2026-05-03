@@ -8,6 +8,10 @@ import {
     CheckCircleIcon as CheckOutline,
     SwatchIcon,
     TrashIcon,
+    EyeIcon,
+    CalendarIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import {
     FlagIcon as FlagSolid,
@@ -349,6 +353,11 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         setItems(prev => prev.map(i => i.id === itemId ? { ...i, label: newLabel } : i));
     }, []);
 
+    const handleNotesChange = useCallback((itemId: string, newNotes: string) => {
+        setItems(prev => prev.map(i => i.id === itemId ? { ...i, notes: newNotes } : i));
+        databaseService.saveItemNotes(itemId, newNotes);
+    }, []);
+
     const handleStyleChange = useCallback((itemId: string, patch: Partial<ItemStyle>) => {
         setItemStyles(prev => {
             const current = prev[itemId] || { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
@@ -575,6 +584,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             item,
             isExpanded: expandedItemId === item.id,
             excerpts: excerpts[item.id] || [],
+            onNotesChange: (newNotes: string) => handleNotesChange(item.id, newNotes),
             onToggle: () => toggleExpand(item.id),
             onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
             onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
@@ -834,7 +844,7 @@ const CompletedRow: React.FC<CompletedRowProps> = ({ item, onComplete, onDelete 
             {item.label}
         </span>
         <button onClick={onDelete} className="shrink-0 p-1 text-slate-400 hover:text-slate-600 active:scale-90 transition-all">
-            <TrashIcon className="w-3.5 h-3.5" />
+                            <TrashIcon className="w-3.5 h-3.5" />
         </button>
     </div>
 );
@@ -850,6 +860,7 @@ interface ItemTileProps {
     onComplete: (e: React.MouseEvent) => void;
     onDelete: (e: React.MouseEvent) => void;
     onLabelChange?: (newLabel: string) => void;
+    onNotesChange?: (newNotes: string) => void;
     onStyleChange: (patch: Partial<ItemStyle>) => void;
     style: ItemStyle;
     size: 'flagged' | 'lg' | 'md' | 'sm';
@@ -869,7 +880,7 @@ interface ItemTileProps {
 
 const ItemTile = React.memo(({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
-    onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
+    onLabelChange, onNotesChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop, isStale, shouldMini,
     onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
 }: ItemTileProps) => {
@@ -892,6 +903,8 @@ const ItemTile = React.memo(({
 
     const tileRef = useRef<HTMLDivElement>(null);
     const [draftLabel, setDraftLabel] = useState(item.label);
+    const [draftNotes, setDraftNotes] = useState(item.notes || '');
+    const [showExcerpts, setShowExcerpts] = useState(false);
     const {
         attributes,
         listeners,
@@ -1250,43 +1263,75 @@ const ItemTile = React.memo(({
 
             {/* ── Expanded detail ── */}
             {isExpanded && (
-                <div className="mt-3 animate-in fade-in duration-300">
-                    {/* Metadata row */}
-                    <div className="flex items-center gap-4 mb-3 pb-3 border-b border-black/10">
-                        <div>
-                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Seen</span>
-                            <span className="text-[12px] font-semibold text-[#1a1a1a]">{item.mentionCount}×</span>
+                <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {/* Metadata Row (Subtle) */}
+                    <div className="flex items-center gap-4 mb-4 text-[11px] font-medium text-[#1a1a1a]/50">
+                        <div className="flex items-center gap-1.5">
+                            <EyeIcon className="w-3.5 h-3.5" />
+                            <span>Seen {item.mentionCount}×</span>
                         </div>
-                        <div className="w-px h-6 bg-black/10" />
-                        <div>
-                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Last noted</span>
-                            <span className="text-[12px] font-semibold text-[#1a1a1a]">{new Date(item.lastMentionedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <div className="flex items-center gap-1.5">
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            <span>Last noted {new Date(item.lastMentionedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         </div>
                     </div>
 
-                    {/* Excerpts */}
+                    {/* Notes Section */}
+                    <div className="mb-4">
+                        <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
+                        <textarea
+                            value={draftNotes}
+                            onChange={e => setDraftNotes(e.target.value)}
+                            onBlur={() => { if (draftNotes !== (item.notes || '')) onNotesChange?.(draftNotes); }}
+                            placeholder="Add details, links, or context..."
+                            onClick={e => e.stopPropagation()}
+                            className="w-full bg-white/30 backdrop-blur-sm border border-black/5 rounded-xl px-3 py-2 text-[12px] text-[#1a1a1a] placeholder:text-[#1a1a1a]/30 focus:outline-none focus:ring-1 focus:ring-black/10 transition-all min-h-[60px] resize-none"
+                        />
+                    </div>
+
+                    {/* Collapsible Excerpts */}
                     {excerpts.length > 0 && (
-                        <div className="space-y-1.5 mb-3">
-                            <span className="block text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-1">From your dumps</span>
-                            {excerpts.map(ex => (
-                                <div key={ex.id} className="rounded-xl px-3 py-2 text-[11px] italic text-[#1a1a1a]/70 leading-relaxed border border-black/10 bg-white/40">
-                                    "{ex.rawExcerpt}"
-                                </div>
-                            ))}
+                        <div className="mb-4">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setShowExcerpts(!showExcerpts); }}
+                                className="flex items-center gap-1.5 group"
+                            >
+                                <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 group-hover:text-[#1a1a1a]/60 transition-colors">From your dumps</span>
+                                {showExcerpts ? <ChevronUpIcon className="w-3 h-3 text-[#1a1a1a]/30" /> : <ChevronDownIcon className="w-3 h-3 text-[#1a1a1a]/30" />}
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showExcerpts && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="pt-2 space-y-1.5">
+                                            {excerpts.map(ex => (
+                                                <div key={ex.id} className="rounded-xl px-3 py-2 text-[11px] italic text-[#1a1a1a]/70 leading-relaxed border border-black/5 bg-white/20">
+                                                    "{ex.rawExcerpt}"
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-2 border-t border-black/10">
+                    <div className="flex items-center justify-between pt-3 border-t border-black/5">
                         <button
                             onClick={onDelete}
-                            className="text-[10px] font-semibold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95"
+                            className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95 px-2 py-1 -ml-2"
                         >
                             Delete
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); onToggle(); }}
-                            className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
+                            className="text-[10px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 hover:text-[#1a1a1a]/80 transition-colors active:scale-95 px-3 py-1 bg-black/5 rounded-full"
                         >
                             Close
                         </button>

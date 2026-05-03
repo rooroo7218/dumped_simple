@@ -677,6 +677,15 @@ export const databaseService = {
         if (!user) return;
         await supabase.from('items').update({ style }).eq('id', itemId);
     },
+    
+    async saveItemNotes(itemId: string, notes: string) {
+        const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
+        const item = items.find(i => i.id === itemId);
+        if (item) { item.notes = notes; localStorage.setItem('dumped_items', JSON.stringify(items)); }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('items').update({ notes }).eq('id', itemId);
+    },
 
     async deleteItem(itemId: string) {
         const { data: { user } } = await supabase.auth.getUser();
