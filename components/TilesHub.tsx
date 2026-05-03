@@ -523,7 +523,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     }, [flagged, active, persona?.tileBoardViewEnabled]);
 
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
-        const isStale = !!(persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
+        const isStale = !!(!item.isFlagged && persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
         const shouldMini = !!(isStale && persona?.miniaturizeStaleTasksEnabled);
         const count = item.mentionCount;
         const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
@@ -956,7 +956,7 @@ const ItemTile = React.memo(({
             }}
             {...attributes}
             {...listeners}
-            className={cn("relative h-full w-full", (itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className)}
+            className={cn("relative h-full w-full", (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className)}
         >
         <div
             onMouseMove={handleMouseMove}
@@ -969,8 +969,8 @@ const ItemTile = React.memo(({
                 ${isDragging ? 'opacity-40' : ''}
                 ${isStale && !isExpanded ? 'grayscale-[0.6] opacity-60' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${(isStale ? 'bg-slate-100' : (['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black' : (itemStyle.texture === 'holographic' ? 'bg-slate-50' : 'bg-white')))} text-slate-900
-                ${itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
+                rounded-[10px] ${(['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) && !isStale ? 'bg-black' : (itemStyle.texture === 'holographic' && !isStale ? 'bg-slate-50' : (isStale ? '' : 'bg-white')))} text-slate-900
+                ${!isStale && itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' && !isStale ? 'animate-neon-flicker' : ''}
                 transition-transform duration-500 ease-out will-change-transform
             `}
