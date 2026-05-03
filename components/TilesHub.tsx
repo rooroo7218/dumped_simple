@@ -514,6 +514,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         });
     }, [flagged, active, persona?.tileBoardViewEnabled]);
 
+    const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
         const isStale = !!(persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
         const shouldMini = !!(isStale && persona?.miniaturizeStaleTasksEnabled);
         const count = item.mentionCount;
