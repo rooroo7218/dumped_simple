@@ -22,6 +22,8 @@ function emitSync(status: SyncStatus) {
     }
 }
 
+let _personaTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const databaseService = {
     onSyncChange(cb: SyncListener | null) { _syncListener = cb; },
     onPersonaConflict(cb: ConflictListener | null) { _conflictListener = cb; },
@@ -77,31 +79,41 @@ export const databaseService = {
     async savePersona(persona: UserPersona) {
         const sanitized = this.sanitizePersona(persona);
 
-        // ALWAYS save to localStorage FIRST
+        // ALWAYS save to localStorage FIRST (Immediate feedback/persistence)
         localStorage.setItem('dumped_persona', JSON.stringify(sanitized));
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        // Debounce cloud sync to avoid Supabase Auth rate limits (429)
+        if (_personaTimer) clearTimeout(_personaTimer);
 
-        // 3.9 — Conflict detection: check if cloud version is newer than what we're about to overwrite
-        const cloudMeta = user.user_metadata?.persona_v1 as UserPersona | undefined;
-        const cloudTime = cloudMeta?.lastUpdated ?? 0;
-        const ourTime   = sanitized.lastUpdated ?? 0;
-        const loadedTime = _lastLoadedPersonaTimestamp;
-        // If cloud was updated after we last loaded, someone else saved — fire conflict event
-        if (cloudTime > loadedTime + 5000 && cloudTime > ourTime) {
-            _conflictListener?.(cloudMeta!);
-        }
+        return new Promise((resolve) => {
+            _personaTimer = setTimeout(async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    resolve(null);
+                    return;
+                }
 
-        const { data, error } = await supabase.auth.updateUser({
-            data: { persona_v1: sanitized }
+                // Conflict detection: check if cloud version is newer than what we're about to overwrite
+                const cloudMeta = user.user_metadata?.persona_v1 as UserPersona | undefined;
+                const cloudTime = cloudMeta?.lastUpdated ?? 0;
+                const ourTime   = sanitized.lastUpdated ?? 0;
+                const loadedTime = _lastLoadedPersonaTimestamp;
+                
+                if (cloudTime > loadedTime + 5000 && cloudTime > ourTime) {
+                    _conflictListener?.(cloudMeta!);
+                }
+
+                const { data, error } = await supabase.auth.updateUser({
+                    data: { persona_v1: sanitized }
+                });
+
+                if (error) {
+                    console.error("Failed to save Persona to Auth:", error);
+                }
+
+                resolve({ data, error });
+            }, 2000);
         });
-
-        if (error) {
-            console.error("Failed to save Persona to Auth:", error);
-        }
-
-        return { data, error };
     },
 
     async loadPersona(): Promise<UserPersona | null> {
