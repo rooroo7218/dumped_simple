@@ -535,27 +535,31 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
         if (shouldMini) {
             colSpan = 'col-span-1';
+            rowSpan = 'row-span-1';
             aspectRatio = '1 / 1';
         } else if (count <= 1) {
             colSpan = 'col-span-3';
+            rowSpan = 'row-span-3';
             aspectRatio = '1 / 1';
         } else if (count === 2) {
             if (orientation === 'v') {
                 colSpan = 'col-span-3';
-                rowSpan = 'row-span-2';
+                rowSpan = 'row-span-6';
                 aspectRatio = '1 / 2';
             } else {
                 colSpan = 'col-span-6';
+                rowSpan = 'row-span-3';
                 aspectRatio = '2 / 1';
             }
         } else {
             // count >= 3
             if (orientation === 'v') {
                 colSpan = 'col-span-3';
-                rowSpan = 'row-span-3';
+                rowSpan = 'row-span-9';
                 aspectRatio = '1 / 3';
             } else {
                 colSpan = 'col-span-9';
+                rowSpan = 'row-span-3';
                 aspectRatio = '3 / 1';
             }
         }
@@ -952,7 +956,8 @@ const ItemTile = React.memo(({
             style={{
                 ...sortableStyle,
                 zIndex: isSortableDragging ? 100 : (stylerOpen ? 150 : undefined),
-                overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden'
+                overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden',
+                ...(isExpanded ? {} : { aspectRatio })
             }}
             {...attributes}
             {...listeners}
@@ -981,7 +986,6 @@ const ItemTile = React.memo(({
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
                 transform: (!isExpanded && itemStyle.texture === 'holographic' && tiltMatrix) ? tiltMatrix : undefined,
                 transformStyle: 'preserve-3d',
-                ...(isExpanded ? {} : { aspectRatio }),
                 ...(itemStyle.texture === 'neon' && !isStale ? {
                     '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
                     '--neon-border-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#00ffff',
