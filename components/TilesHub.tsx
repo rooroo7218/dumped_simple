@@ -963,8 +963,9 @@ const ItemTile = React.memo(({
             {...listeners}
             className={cn(
                 "relative h-full w-full", 
-                (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className,
-                isExpanded ? (isStale ? 'col-span-3 row-span-3 z-50' : 'col-span-full z-50') : ''
+                isExpanded 
+                    ? (isStale ? 'col-span-3 row-span-3 z-50' : 'col-span-full z-50') 
+                    : ((!isStale && itemStyle.texture === 'shine-border') ? "" : className)
             )}
         >
         <div
