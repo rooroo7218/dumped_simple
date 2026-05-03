@@ -1085,7 +1085,8 @@ const ItemTile = React.memo(({
                             rows={2}
                             className={`
                                 w-full bg-transparent border-none resize-none
-                                tracking-tight font-normal leading-[1.75] text-[16px]
+                                tracking-tight leading-[1.75]
+                                ${isStale ? 'font-semibold text-[12px]' : 'font-normal text-[16px]'}
                                 ${!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (!isStale && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
