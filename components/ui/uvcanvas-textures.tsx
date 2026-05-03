@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export const XenonTexture = memo(({ isCompact = false }: { isCompact?: boolean }) => {
   return (
-    <div className="absolute -inset-[1px] pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
       <div className={cn(
         "absolute",
         isCompact 
@@ -21,7 +21,7 @@ export const XenonTexture = memo(({ isCompact = false }: { isCompact?: boolean }
 
 export const NovatrixTexture = memo(({ isCompact = false }: { isCompact?: boolean }) => {
   return (
-    <div className="absolute -inset-[1px] pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
       <div className={cn(
         "absolute",
         isCompact 
@@ -36,7 +36,7 @@ export const NovatrixTexture = memo(({ isCompact = false }: { isCompact?: boolea
 
 export const ZenithoTexture = memo(({ isCompact = false }: { isCompact?: boolean }) => {
   return (
-    <div className="absolute -inset-[1px] pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0" style={{ isolation: 'isolate' }}>
       <div className={cn(
         "absolute",
         isCompact 

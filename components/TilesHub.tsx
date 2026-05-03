@@ -958,7 +958,7 @@ const ItemTile = React.memo(({
                 ...sortableStyle,
                 zIndex: isSortableDragging ? 100 : (stylerOpen ? 150 : undefined),
                 overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden',
-                ...(isExpanded ? (isStale ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio })
+                ...(isExpanded ? (shouldMini ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio })
             }}
             {...attributes}
             {...listeners}
@@ -986,7 +986,7 @@ const ItemTile = React.memo(({
                 transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: isStale ? '#94a3b8' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
+                backgroundColor: (isStale && (!isExpanded || shouldMini)) ? '#94a3b8' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
@@ -1087,8 +1087,8 @@ const ItemTile = React.memo(({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight leading-[1.75]
-                                ${isStale ? 'font-semibold text-[12px]' : 'font-normal text-[16px]'}
-                                ${!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (!isStale && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
+                                ${(isStale && shouldMini) ? 'font-semibold text-[12px]' : 'font-normal text-[16px]'}
+                                ${(!isStale || (isExpanded && !shouldMini)) && itemStyle.texture === 'novatrix' ? 'text-black' : ((!isStale || (isExpanded && !shouldMini)) && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : ((!isStale || (isExpanded && !shouldMini)) && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}

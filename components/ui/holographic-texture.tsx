@@ -11,7 +11,7 @@ export const HolographicTexture = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("absolute -inset-[1px] pointer-events-none overflow-hidden rounded-[inherit] z-0", className)}>
+    <div className={cn("absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0", className)}>
       {/* ── Base metallic foil finish ── */}
       <div className="absolute inset-0 bg-slate-100 opacity-20" />
       
