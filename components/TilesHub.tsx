@@ -447,7 +447,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
     // ── Filter & group ───────────────────────────────────────────────────────
     const now = Date.now();
-    const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
     const flagged = useMemo(() => {
@@ -473,13 +473,13 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const active = displayItems.filter(i => {
         if (i.isCompleted || i.isFlagged) return false;
         if (persona?.staleTaskDimmingEnabled) return true;
-        return !i.lastMentionedAt || (now - i.lastMentionedAt < fourteenDaysMs);
+        return !i.lastMentionedAt || (now - i.lastMentionedAt < sevenDaysMs);
     });
     const completed = displayItems.filter(i => i.isCompleted);
     const faded = displayItems.filter(i => {
         if (i.isCompleted || i.isFlagged) return false;
         if (persona?.staleTaskDimmingEnabled) return false;
-        return i.lastMentionedAt && (now - i.lastMentionedAt >= fourteenDaysMs);
+        return i.lastMentionedAt && (now - i.lastMentionedAt >= sevenDaysMs);
     });
 
     const sortedActive = useMemo(() => {
@@ -523,7 +523,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     }, [flagged, active, persona?.tileBoardViewEnabled]);
 
     const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
-        const isStale = !!(persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= fourteenDaysMs));
+        const isStale = !!(persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
         const count = item.mentionCount;
         const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
         const orientation = style.orientation ?? 'h';
@@ -572,7 +572,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             aspectRatio,
             className: `${colSpan} ${rowSpan} ${extraClass ?? ''}`,
         };
-    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange, persona?.staleTaskDimmingEnabled, now, fourteenDaysMs]);
+    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange, persona?.staleTaskDimmingEnabled, now, sevenDaysMs]);
 
     if (isLoading && items.length === 0) return null;
 
