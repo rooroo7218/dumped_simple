@@ -577,6 +577,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             style,
             size: shouldMini ? 'sm' : size,
             isStale,
+            shouldMini,
             aspectRatio,
             className: `${colSpan} ${rowSpan} ${extraClass ?? ''}`,
         };
@@ -974,7 +975,7 @@ const ItemTile = React.memo(({
             onMouseLeave={handleMouseLeave}
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between h-full w-full
-                ${isExpanded ? 'border border-black/70 z-20 shadow-lg' : 'border border-black/70 shadow-sm'}
+                ${isExpanded ? 'z-20 shadow-lg' : 'shadow-sm'}
                 ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
@@ -1285,6 +1286,9 @@ const ItemTile = React.memo(({
                     </div>
                 </div>
             )}
+            
+            {/* ── Border Overlay (Ensure border is always on top of textures) ── */}
+            <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-black/70 z-30 shadow-sm" />
         </div>
         </div>
     );
