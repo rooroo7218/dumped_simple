@@ -12,6 +12,8 @@ import {
     CalendarIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    CheckIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
     FlagIcon as FlagSolid,
@@ -426,7 +428,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     const groupKey = isSameFlaggedGroup ? 'flagged' : String(activeItem.mentionCount);
                     const listToUse = isSameFlaggedGroup 
                         ? flagged 
-                        : activeGroups.find(g => g.count === activeItem.mentionCount)?.items;
+                        : sortedActive.filter(i => i.mentionCount === activeItem.mentionCount);
 
                     if (listToUse) {
                         const oldIndex = listToUse.findIndex(i => i.id === activeIdStr);
