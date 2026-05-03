@@ -957,18 +957,22 @@ const ItemTile = React.memo(({
                 ...sortableStyle,
                 zIndex: isSortableDragging ? 100 : (stylerOpen ? 150 : undefined),
                 overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden',
-                ...(isExpanded ? {} : { aspectRatio })
+                ...(isExpanded ? (isStale ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio })
             }}
             {...attributes}
             {...listeners}
-            className={cn("relative h-full w-full", (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className)}
+            className={cn(
+                "relative h-full w-full", 
+                (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) ? "" : className,
+                isExpanded ? (isStale ? 'col-span-3 row-span-3 z-50' : 'col-span-full z-50') : ''
+            )}
         >
         <div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between h-full w-full
-                ${isExpanded ? (isStale ? 'border border-black/70 z-20 col-span-3 row-span-3 shadow-lg' : 'border border-black/70 z-20 col-span-full shadow-lg') : 'border border-black/70 shadow-sm'}
+                ${isExpanded ? 'border border-black/70 z-20 shadow-lg' : 'border border-black/70 shadow-sm'}
                 ${stylerOpen ? 'z-40' : ''}
                 ${isDragOver && canDrop ? 'ring-[3px] ring-slate-900' : ''}
                 ${isDragging ? 'opacity-40' : ''}
