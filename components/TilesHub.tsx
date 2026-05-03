@@ -851,6 +851,7 @@ interface ItemTileProps {
     isDragOver?: boolean;
     canDrop?: boolean;
     isStale?: boolean;
+    shouldMini?: boolean;
     onDragStart?: (e: React.DragEvent) => void;
     onDragOver?: (e: React.DragEvent) => void;
     onDragEnter?: (e: React.DragEvent) => void;
@@ -861,7 +862,7 @@ interface ItemTileProps {
 const ItemTile = React.memo(({
     item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
     onLabelChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
-    isDragging, isDragOver, canDrop, isStale,
+    isDragging, isDragOver, canDrop, isStale, shouldMini,
     onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
@@ -1061,7 +1062,7 @@ const ItemTile = React.memo(({
 
             <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
-            {(!isStale || isExpanded) && (
+            {(!isStale || isExpanded || !shouldMini) && (
                 <div className="flex items-start gap-1.5">
                     <button
                         onClick={onComplete}
@@ -1107,7 +1108,7 @@ const ItemTile = React.memo(({
             )}
 
                 {/* ── Mention Count Pill ── */}
-                {item.mentionCount > 1 && !isExpanded && !isStale && (
+                {item.mentionCount > 1 && !isExpanded && (!isStale || !shouldMini) && (
                     <div className="flex items-center mt-1">
                         <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
                             <div
@@ -1123,7 +1124,7 @@ const ItemTile = React.memo(({
             </div>
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
-            {!isExpanded && !isStale && (
+            {!isExpanded && (!isStale || !shouldMini) && (
                 <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0">
                     {/* Flag Button */}
                     <button
