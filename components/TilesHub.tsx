@@ -974,7 +974,7 @@ const ItemTile = React.memo(({
                 transform: (!isExpanded && itemStyle.texture === 'holographic' && tiltMatrix) ? tiltMatrix : undefined,
                 transformStyle: 'preserve-3d',
                 ...(isExpanded ? {} : { aspectRatio }),
-                ...(itemStyle.texture === 'neon' ? {
+                ...(itemStyle.texture === 'neon' && !isStale ? {
                     '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
                     '--neon-border-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#00ffff',
                     '--neon-intensity': 1,
@@ -1049,8 +1049,8 @@ const ItemTile = React.memo(({
                         onClick={onComplete}
                         className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
                             item.isCompleted
-                                ? (itemStyle.texture === 'novatrix' ? 'text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
-                                : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
+                                ? (!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
+                                : (!isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                         }`}
                         title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -1068,7 +1068,7 @@ const ItemTile = React.memo(({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight font-normal leading-[1.75] text-[16px]
-                                ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
+                                ${!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (!isStale && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
                             `}
@@ -1077,7 +1077,7 @@ const ItemTile = React.memo(({
                     ) : (
                         <p className={`
                             tracking-tight font-semibold leading-snug
-                            ${itemStyle.texture === 'novatrix' ? 'text-black' : (['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
+                            ${!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : (!isStale && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-slate-900'))}
                             ${isSmall ? 'text-[11px]' : 'text-[12px]'}
                             ${item.isCompleted ? 'line-through opacity-40' : ''}
                         `}>
@@ -1109,9 +1109,9 @@ const ItemTile = React.memo(({
                     <button
                         onClick={onFlag}
                         className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
+                            !isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
                         } ${
-                            item.isFlagged ? (['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
+                            item.isFlagged ? (!isStale && ['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
@@ -1129,8 +1129,8 @@ const ItemTile = React.memo(({
                             }}
                             className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                                 stylerOpen 
-                                    ? (['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
-                                    : (itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
+                                    ? (!isStale && ['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
+                                    : (!isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                             }`}
                             title="Style"
                         >
