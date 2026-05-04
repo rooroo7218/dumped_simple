@@ -76,18 +76,18 @@ const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[]
     { key: 'slate',   label: 'Slate',   bg: 'rgba(203,213,225,0.55)',  dot: '#94a3b8' },
 ];
 
-const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperties }[] = [
-    { key: 'none',   label: <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">—</div>,    pattern: {} },
-    { key: 'dots',   label: (
+const TEXTURE_OPTIONS: { key: TextureKey; name: string; label: any; pattern: React.CSSProperties }[] = [
+    { key: 'none',   name: 'Clear', label: <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">—</div>,    pattern: {} },
+    { key: 'dots',   name: 'Zen Dots', label: (
         <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.4) 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
     ),  pattern: { backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 8px) calc(var(--tile-scale, 1) * 8px)' } },
-    { key: 'mesh',   label: (
+    { key: 'mesh',   name: 'Mesh Grid', label: (
         <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'linear-gradient(rgba(15,23,42,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.15) 1px, transparent 1px)', backgroundSize: '6px 6px' }} />
     ),   pattern: { backgroundImage: 'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
-    { key: 'linen',  label: (
+    { key: 'linen',  name: 'Linen Fabric', label: (
         <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
     ),  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
-    { key: 'animated-dots', label: (
+    { key: 'animated-dots', name: 'Falling Rain', label: (
         <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
              <AnimatedDots 
                 fullScreen={false} 
@@ -100,27 +100,27 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
              />
         </div>
     ), pattern: {} },
-    { key: 'aurora', label: (
+    { key: 'aurora', name: 'Aurora Glow', label: (
         <div className="relative w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7]" />
     ), pattern: {} },
-    { key: 'shine-border', label: (
+    { key: 'shine-border', name: 'Running Borders', label: (
         <div className="relative w-full h-full border-2 border-indigo-400 rounded-md bg-white/50" />
     ), pattern: {} },
-    { key: 'neon', label: (
+    { key: 'neon', name: 'Neon Pulse', label: (
         <div className="relative w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
             <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 5px #39ff14' }}>N</span>
         </div>
     ), pattern: {} },
-    { key: 'novatrix', label: (
+    { key: 'novatrix', name: 'Novatrix', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950"><NovatrixTexture isCompact={true} /></div>
     ), pattern: {} },
-    { key: 'lamp', label: (
+    { key: 'lamp', name: 'Spotlight', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-black"><SpotlightLamp isCompact={true} className="scale-150" /></div>
     ), pattern: {} },
-    { key: 'zenitho', label: (
+    { key: 'zenitho', name: 'Zenitho', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-teal-950"><ZenithoTexture isCompact={true} /></div>
     ), pattern: {} },
-    { key: 'dithering-wave', label: (
+    { key: 'dithering-wave', name: 'Dither Wave', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122]">
             <DitheringShader 
                 shape="wave" type="8x8" colorBack="#001122" colorFront="#00bfff" pxSize={1} speed={0.4}
@@ -128,7 +128,7 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
             />
         </div>
     ), pattern: {} },
-    { key: 'dithering-swirl', label: (
+    { key: 'dithering-swirl', name: 'Dither Swirl', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011]">
             <DitheringShader 
                 shape="swirl" type="4x4" colorBack="#220011" colorFront="#ff007f" pxSize={1} speed={0.5}
@@ -136,22 +136,22 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
             />
         </div>
     ), pattern: {} },
-    { key: 'holographic', label: (
+    { key: 'holographic', name: 'Glassmorphism', label: (
         <div className="relative w-full h-full bg-slate-100 rounded-md overflow-hidden">
             <div className="w-full h-full bg-gradient-to-tr from-white via-indigo-100 to-white opacity-80" />
         </div>
     ), pattern: {} },
-    { key: 'premium-holographic', label: (
+    { key: 'premium-holographic', name: 'Holographic', label: (
         <div className="relative w-full h-full flex items-center justify-center bg-slate-100 rounded-md overflow-hidden">
             <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
         </div>
     ), pattern: {} },
-    { key: 'matrix', label: (
+    { key: 'matrix', name: 'Matrix Code', label: (
         <div className="relative w-full h-full bg-slate-950 rounded-md flex items-center justify-center overflow-hidden">
             <span className="text-[9px] text-emerald-400 font-bold font-mono leading-none tracking-tighter">0101</span>
         </div>
     ), pattern: {} },
-    { key: 'shadow', label: (
+    { key: 'shadow', name: 'Ethereal Shadow', label: (
         <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
             <EtheralShadow isCompact={true} className="scale-125" />
         </div>
@@ -1311,7 +1311,7 @@ const ItemTile = React.memo(({
                                                     ? 'ring-2 ring-slate-900 ring-offset-1 shadow-md' 
                                                     : 'bg-black/5 hover:bg-black/10'}
                                             `}
-                                            title={typeof t.label === 'string' ? t.label : 'Texture'}
+                                            title={t.name}
                                         >
                                             <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
                                                 {t.label}
