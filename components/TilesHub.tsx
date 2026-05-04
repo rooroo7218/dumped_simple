@@ -1095,10 +1095,10 @@ const ItemTile = React.memo(({
             <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
             {(!isStale || isExpanded || !shouldMini) && (
-                <div className={cn("flex items-start", isExpanded ? "gap-3.5" : "gap-1.5")}>
+                <div className={cn("flex gap-3.5", isExpanded ? "items-center" : "items-start")}>
                     <button
                         onClick={onComplete}
-                        className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
+                        className={`shrink-0 ${isExpanded ? '' : 'mt-0.5'} transition-all active:scale-95 ${
                             item.isCompleted
                                 ? (!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
                                 : (!isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
