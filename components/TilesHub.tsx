@@ -1266,8 +1266,21 @@ const ItemTile = React.memo(({
             {/* ── Expanded detail ── */}
             {isExpanded && (
                 <div className="mt-1 pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {/* Notes Section */}
+                    <div className="mb-4">
+                        <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
+                        <textarea
+                            value={draftNotes}
+                            onChange={e => setDraftNotes(e.target.value)}
+                            onBlur={() => { if (draftNotes !== (item.notes || '')) onNotesChange?.(draftNotes); }}
+                            placeholder="Add details, links, or context..."
+                            onClick={e => e.stopPropagation()}
+                            className="w-full bg-white/30 backdrop-blur-sm border border-black/5 rounded-xl px-3 py-2 text-[12px] text-[#1a1a1a] placeholder:text-[#1a1a1a]/30 focus:outline-none focus:ring-1 focus:ring-black/10 transition-all min-h-[120px] resize-none"
+                        />
+                    </div>
+
                     {/* Metadata Row (Subtle) */}
-                    <div className="flex items-center gap-4 mb-3 text-[11px] font-medium text-[#1a1a1a]/50">
+                    <div className="flex items-center gap-4 mb-5 text-[11px] font-medium text-[#1a1a1a]/40">
                         <div className="flex items-center gap-1.5">
                             <EyeIcon className="w-3.5 h-3.5" />
                             <span>Seen {item.mentionCount}×</span>
@@ -1276,19 +1289,6 @@ const ItemTile = React.memo(({
                             <CalendarIcon className="w-3.5 h-3.5" />
                             <span>Last noted {new Date(item.lastMentionedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         </div>
-                    </div>
-
-                    {/* Notes Section */}
-                    <div className="mb-3">
-                        <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
-                        <textarea
-                            value={draftNotes}
-                            onChange={e => setDraftNotes(e.target.value)}
-                            onBlur={() => { if (draftNotes !== (item.notes || '')) onNotesChange?.(draftNotes); }}
-                            placeholder="Add details, links, or context..."
-                            onClick={e => e.stopPropagation()}
-                            className="w-full bg-white/30 backdrop-blur-sm border border-black/5 rounded-xl px-3 py-2 text-[12px] text-[#1a1a1a] placeholder:text-[#1a1a1a]/30 focus:outline-none focus:ring-1 focus:ring-black/10 transition-all min-h-[60px] resize-none"
-                        />
                     </div>
 
                     {/* Collapsible Excerpts */}
