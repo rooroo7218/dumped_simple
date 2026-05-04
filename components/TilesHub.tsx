@@ -1304,13 +1304,13 @@ const ItemTile = React.memo(({
                                 </div>
 
                                 <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Texture</p>
-                                <div className="flex gap-1.5 flex-wrap">
+                                <div className="grid grid-cols-4 gap-1.5">
                                     {TEXTURE_OPTIONS.map(t => (
                                         <button
                                             key={t.key}
                                             onClick={() => onStyleChange({ texture: t.key })}
                                             className={`
-                                                flex-1 min-w-[36px] h-8 flex items-center justify-center rounded-lg transition-all active:scale-95
+                                                h-8 flex items-center justify-center rounded-lg transition-all active:scale-95
                                                 ${itemStyle.texture === t.key 
                                                     ? 'ring-2 ring-slate-900 ring-offset-1 shadow-md' 
                                                     : 'bg-black/5 hover:bg-black/10'}
