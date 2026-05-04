@@ -1278,7 +1278,6 @@ const ItemTile = React.memo(({
                 <div className="mt-1 pl-5 animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Notes Section */}
                     <div className="mb-3">
-                        <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
                         <textarea
                             value={draftNotes}
                             onChange={e => setDraftNotes(e.target.value)}
