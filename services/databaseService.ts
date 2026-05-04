@@ -439,6 +439,7 @@ export const databaseService = {
             fadedAt: d.faded_at ? new Date(d.faded_at).getTime() : undefined,
             createdAt: d.created_at ? new Date(d.created_at).getTime() : Date.now(),
             style: d.style ?? undefined,
+            notes: d.notes ?? undefined,
         }));
 
         // One-time migration: push any localStorage items that aren't in Supabase yet

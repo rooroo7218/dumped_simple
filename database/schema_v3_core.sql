@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS public.items (
     completed_at TIMESTAMPTZ,
     faded_at TIMESTAMPTZ,
     style JSONB DEFAULT '{"color": "default", "texture": "none"}',
+    notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

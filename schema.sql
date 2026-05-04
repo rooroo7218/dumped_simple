@@ -73,6 +73,8 @@ CREATE TABLE IF NOT EXISTS items (
     is_completed BOOLEAN DEFAULT false,
     completed_at TIMESTAMPTZ,
     faded_at TIMESTAMPTZ,
+    style JSONB,
+    notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
