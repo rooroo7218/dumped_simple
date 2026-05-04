@@ -4,9 +4,10 @@ import { supabase } from './services/supabaseClient';
 import { LoginScreen } from './components/LoginScreen';
 import { AuthenticatedApp } from './components/AuthenticatedApp';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CookieNotice } from './components/Layout/CookieNotice';
 
 const App: React.FC = () => {
-  const { user, handleSignOut, signInWithGoogle, handleBypassLogin } = useAuth();
+  const { user, handleSignOut, signInWithGoogle, signInWithApple, handleBypassLogin } = useAuth();
 
   return (
     <>
@@ -33,6 +34,7 @@ const App: React.FC = () => {
           />
         )}
       </ErrorBoundary>
+      <CookieNotice />
     </>
   );
 };

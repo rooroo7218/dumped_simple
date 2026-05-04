@@ -11,6 +11,7 @@ interface BrainDumpHubProps {
     startSpeechToText: (onResult: (text: string) => void) => void;
     isListening: boolean;
     isGuest?: boolean;
+    thinkingCopy?: string;
 }
 
 
@@ -23,6 +24,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     startSpeechToText,
     isListening,
     isGuest = false,
+    thinkingCopy,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
@@ -139,6 +141,43 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Processing Banner — UI consistent with TilesHub */}
+            <AnimatePresence>
+                {isProcessing && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className="fixed top-8 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-md z-[60]"
+                    >
+                        <div className="bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[22px] px-6 py-4 flex items-center gap-4 shadow-xl shadow-indigo-500/5 overflow-hidden relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent animate-pulse" />
+                            <div className="relative flex items-center justify-center shrink-0">
+                                <ArrowPathIcon className="w-5 h-5 text-indigo-500 animate-[spin_2s_linear_infinite]" />
+                                <div className="absolute inset-0 w-5 h-5 bg-indigo-500/20 blur-xl animate-pulse" />
+                            </div>
+                            
+                            <div className="flex flex-col gap-0.5 relative">
+                                <span className="text-[14px] font-bold text-slate-900 tracking-tight leading-none min-h-[1.2em]">
+                                    {thinkingCopy || 'Processing...'}
+                                </span>
+                                <span className="text-[10px] font-medium text-slate-400 tracking-wide uppercase">AI is carefully arranging your items</span>
+                            </div>
+
+                            <div className="ml-auto flex items-center gap-1 relative">
+                                {[0, 1, 2].map(i => (
+                                    <div 
+                                        key={i} 
+                                        className="w-1.5 h-1.5 rounded-full bg-indigo-500/30"
+                                        style={{ animation: `pulse 1.5s ease-in-out ${i * 0.2}s infinite` }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {(hasText || isProcessing) && (

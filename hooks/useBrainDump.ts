@@ -30,6 +30,25 @@ export const useBrainDump = (
     const [isProcessing, setIsProcessing] = useState(false);
     const [thinkingCopy, setThinkingCopy] = useState('');
 
+    React.useEffect(() => {
+        let interval: any;
+        if (isProcessing) {
+            setThinkingCopy(THINKING_COPY[Math.floor(Math.random() * THINKING_COPY.length)]);
+            interval = setInterval(() => {
+                setThinkingCopy(prev => {
+                    let next = prev;
+                    while (next === prev) {
+                        next = THINKING_COPY[Math.floor(Math.random() * THINKING_COPY.length)];
+                    }
+                    return next;
+                });
+            }, 2500);
+        } else {
+            setThinkingCopy('');
+        }
+        return () => clearInterval(interval);
+    }, [isProcessing]);
+
     const handleBrainDumpSubmit = useCallback(async () => {
         if (isProcessing || !input.trim()) return;
 
@@ -40,7 +59,6 @@ export const useBrainDump = (
         // 1. CLEAR + NAVIGATE IMMEDIATELY — don't make user wait for AI
         setInput('');
         setAiStatus('processing');
-        setThinkingCopy(THINKING_COPY[Math.floor(Math.random() * THINKING_COPY.length)]);
         setLastAiError(null);
         onCommitSuccess(); // navigate to grid now
 
