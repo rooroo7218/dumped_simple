@@ -1089,7 +1089,7 @@ const ItemTile = React.memo(({
                 ${isDragging ? 'opacity-40' : ''}
                 ${isStale && !isExpanded ? 'grayscale-[0.6] opacity-60' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${(['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) && !isStale ? 'bg-black' : (itemStyle.texture === 'holographic' && !isStale ? 'bg-slate-50' : (isStale ? '' : 'bg-white')))} text-slate-900
+                rounded-[10px] ${(['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) && !isStale ? 'bg-black' : (['holographic', 'premium-holographic', 'aurora'].includes(itemStyle.texture) && !isStale ? 'bg-slate-50' : (isStale ? '' : 'bg-white')))} text-slate-900
                 ${!isStale && itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' && !isStale ? 'animate-neon-flicker' : ''}
                 transition-transform duration-500 ease-out will-change-transform
@@ -1127,9 +1127,9 @@ const ItemTile = React.memo(({
 
             {/* ── Aurora Glow Background ── */}
             {!isStale && itemStyle.texture === 'aurora' && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden blur-3xl opacity-60">
-                    <div className="absolute -inset-10 bg-gradient-to-tr from-[#bfdbfe] via-[#ddd6fe] to-[#bae6fd] opacity-80 animate-pulse" />
-                    <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-rose-200 to-transparent mix-blend-overlay opacity-40 animate-pulse delay-700" />
+                <div className="absolute inset-0 pointer-events-none overflow-hidden blur-3xl opacity-70">
+                    <div className="absolute -inset-10 bg-gradient-to-tr from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7] opacity-80 animate-pulse" />
+                    <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-rose-300 to-transparent mix-blend-overlay opacity-50 animate-pulse delay-700" />
                 </div>
             )}
             
