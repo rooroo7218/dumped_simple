@@ -1277,7 +1277,7 @@ const ItemTile = React.memo(({
             {isExpanded && (
                 <div className="mt-1 pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Notes Section */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                         <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
                         <textarea
                             value={draftNotes}
@@ -1290,7 +1290,7 @@ const ItemTile = React.memo(({
                     </div>
 
                     {/* Metadata Row (Subtle) */}
-                    <div className="flex items-center gap-4 mb-5 text-[11px] font-medium text-[#1a1a1a]/40">
+                    <div className="flex items-center gap-4 mb-2 text-[11px] font-medium text-[#1a1a1a]/40">
                         <div className="flex items-center gap-1.5">
                             <EyeIcon className="w-3.5 h-3.5" />
                             <span>Seen {item.mentionCount}×</span>
@@ -1303,7 +1303,7 @@ const ItemTile = React.memo(({
 
                     {/* Collapsible Excerpts */}
                     {excerpts.length > 0 && (
-                        <div className="mb-4">
+                        <div className="mb-2">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setShowExcerpts(!showExcerpts); }}
                                 className="flex items-center gap-1.5 group"
@@ -1334,7 +1334,7 @@ const ItemTile = React.memo(({
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-black/5">
+                    <div className="flex items-center justify-between pt-2 border-t border-black/5">
                         <button
                             onClick={onDelete}
                             className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95 px-2 py-1 -ml-2"
