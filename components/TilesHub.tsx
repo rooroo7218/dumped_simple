@@ -1453,22 +1453,22 @@ const ItemTile = React.memo(({
     );
 
     if (!isStale && itemStyle.texture === 'shine-border' && !isExpanded) {
-        const neonMap: Record<string, string> = {
-            'default': '#00FFFF',
-            'rose': '#FF00FF',
-            'amber': '#FFFF00',
-            'emerald': '#00FF00',
-            'violet': '#BC13FE',
-            'sky': '#00BFFF',
-            'slate': '#E0E0E0'
+        const borderMap: Record<string, string> = {
+            'default': '#94a3b8', // slate-400
+            'rose': '#e11d48',    // rose-600
+            'amber': '#d97706',   // amber-600
+            'emerald': '#059669', // emerald-600
+            'violet': '#7c3aed',  // violet-600
+            'sky': '#0284c7',     // sky-600
+            'slate': '#475569'    // slate-600
         };
-        const neonColor = neonMap[itemStyle.color] || '#00f2ff';
+        const borderColor = borderMap[itemStyle.color] || '#94a3b8';
         
         return (
             <ShineBorder
                 borderWidth={4}
                 duration={8}
-                color={neonColor}
+                color={borderColor}
                 className={cn("rounded-[10px]", className)}
                 overflowVisible={stylerOpen}
             >

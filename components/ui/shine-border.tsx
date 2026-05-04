@@ -56,10 +56,17 @@ export const ShineBorder = ({
         }}
       >
         <div
-          className="absolute -inset-[100%] animate-spin blur-[2px]"
+          className="absolute -inset-[100%] animate-spin blur-[8px] opacity-80"
           style={{ 
             animationDuration: `${duration}s`,
             backgroundImage: `conic-gradient(from 270deg, transparent, ${color}, white, ${color}, transparent)`
+          }}
+        />
+        <div
+          className="absolute -inset-[150%] animate-spin blur-[16px] opacity-30"
+          style={{ 
+            animationDuration: `${duration * 1.5}s`,
+            backgroundImage: `conic-gradient(from 0deg, transparent, ${color}, transparent)`
           }}
         />
       </div>
