@@ -1157,7 +1157,7 @@ const ItemTile = React.memo(({
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (!isStale || !shouldMini) && (
-                <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0">
+                <div className={cn("absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0", stylerOpen && "z-[250]")}>
                     {/* Flag Button */}
                     <button
                         onClick={onFlag}
@@ -1369,7 +1369,7 @@ const ItemTile = React.memo(({
             )}
             
             {/* ── Border Overlay (Ensure border is always on top of textures) ── */}
-            <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-black/70 z-30 shadow-sm" />
+            <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-black/70 z-5 shadow-sm" />
         </div>
         </div>
     );
