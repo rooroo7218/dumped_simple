@@ -1293,7 +1293,7 @@ const ItemTile = React.memo(({
                                         // Force blur to show it's "saved"
                                         if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                                     }}
-                                    className="absolute bottom-2 right-2 p-1.5 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition-colors z-20"
+                                    className="absolute bottom-2 right-2 p-1.5 text-[#1a1a1a]/30 hover:text-[#1a1a1a]/60 transition-colors z-20"
                                     title="Save notes"
                                 >
                                     <CheckIcon className="w-4 h-4" />
