@@ -106,11 +106,6 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
     { key: 'shine-border', label: (
         <div className="relative w-full h-full border-2 border-indigo-400 rounded-md bg-white/50" />
     ), pattern: {} },
-    { key: 'neon', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
-            <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 5px #39ff14' }}>N</span>
-        </div>
-    ), pattern: {} },
     { key: 'xenon', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950"><XenonTexture isCompact={true} /></div>
     ), pattern: {} },
