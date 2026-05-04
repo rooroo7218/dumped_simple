@@ -981,7 +981,7 @@ const ItemTile = React.memo(({
 
     const colorBg = isStale ? '#f1f5f9' : getColorBg(itemStyle.color);
     const textureStyle = isStale ? {} : getTextureStyle(itemStyle.texture);
-    const padding = isExpanded ? '16px 16px 24px 16px' : '8px';
+    const padding = isExpanded ? '12px 16px 16px 12px' : '8px';
 
     const TileContent = (
         <div
@@ -1095,7 +1095,7 @@ const ItemTile = React.memo(({
             <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
             {(!isStale || isExpanded || !shouldMini) && (
-                <div className={cn("flex gap-3.5", isExpanded ? "items-center" : "items-start")}>
+                <div className={cn("flex gap-2", isExpanded ? "items-center" : "items-start")}>
                     <button
                         onClick={onComplete}
                         className={`shrink-0 ${isExpanded ? '' : 'mt-0.5'} transition-all active:scale-95 ${
@@ -1275,7 +1275,7 @@ const ItemTile = React.memo(({
 
             {/* ── Expanded detail ── */}
             {isExpanded && (
-                <div className="mt-1 pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mt-1 pl-6 animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Notes Section */}
                     <div className="mb-3">
                         <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
