@@ -124,13 +124,19 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         <div className="relative w-full h-full overflow-hidden rounded-md bg-teal-950"><ZenithoTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'dithering-wave', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950">
-            <div className="w-full h-full opacity-80 bg-[radial-gradient(circle,rgba(0,191,255,0.6)_0%,transparent_80%)] animate-pulse" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122]">
+            <DitheringShader 
+                shape="wave" type="8x8" colorBack="#001122" colorFront="#00bfff" pxSize={1} speed={0.4}
+                className="absolute inset-0 pointer-events-none"
+            />
         </div>
     ), pattern: {} },
     { key: 'dithering-swirl', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950">
-            <div className="w-full h-full opacity-80 bg-[radial-gradient(circle,rgba(255,0,127,0.6)_0%,transparent_80%)] animate-pulse" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011]">
+            <DitheringShader 
+                shape="swirl" type="4x4" colorBack="#220011" colorFront="#ff007f" pxSize={1} speed={0.5}
+                className="absolute inset-0 pointer-events-none"
+            />
         </div>
     ), pattern: {} },
     { key: 'holographic', label: (
