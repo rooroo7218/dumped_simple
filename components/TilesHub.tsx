@@ -246,6 +246,30 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         };
     }, []);
 
+    // Close expanded item when clicking outside on the background
+    useEffect(() => {
+        if (!expandedItemId) return;
+
+        const handleGlobalClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // If the click is inside any item tile, don't collapse
+            if (target.closest('.item-tile-container')) return;
+            
+            // Otherwise, collapse the current detail view
+            setExpandedItemId(null);
+        };
+
+        // Small delay ensures the click that opened the tile doesn't immediately close it
+        const timer = setTimeout(() => {
+            document.addEventListener('click', handleGlobalClick);
+        }, 50);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('click', handleGlobalClick);
+        };
+    }, [expandedItemId]);
+
     // Per-group custom order, persisted in localStorage
     const [itemOrder, setItemOrder] = useState<Record<string, string[]>>(() => {
         try { return JSON.parse(localStorage.getItem('dumped_item_order') || '{}'); }
@@ -994,7 +1018,7 @@ const ItemTile = React.memo(({
             {...attributes}
             {...listeners}
             className={cn(
-                "relative h-full w-full", 
+                "relative h-full w-full item-tile-container", 
                 isExpanded 
                     ? (isStale ? 'col-span-3 row-span-3 z-50' : 'col-span-full z-50') 
                     : ((!isStale && itemStyle.texture === 'shine-border') ? "" : className)
