@@ -36,7 +36,7 @@ export const ShineBorder = ({
       className={cn("relative", className)}
     >
       {/* Content Layer */}
-      <div className="absolute inset-0 rounded-[inherit] overflow-hidden">
+      <div className="absolute inset-0 rounded-[inherit] overflow-visible">
         {children}
       </div>
 
