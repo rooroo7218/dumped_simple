@@ -180,9 +180,10 @@ interface TilesHubProps {
     aiStatus?: 'idle' | 'processing' | 'error' | 'success';
     thinkingCopy?: string;
     persona?: UserPersona;
+    user: { id: string };
 }
 
-export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thinkingCopy, persona }) => {
+export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thinkingCopy, persona, user }) => {
     const [items, setItems] = useState<Item[]>([]);
     const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
     const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
@@ -220,19 +221,23 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
     useEffect(() => {
         load();
-        const interval = setInterval(load, 3000); // Poll every 3s
         
-        // Slow down polling when tab is inactive to save battery/bandwidth
-        const slowDown = () => {
+        // Fast poll initially, then slow down
+        let interval = setInterval(() => {
+            if (document.visibilityState === 'visible') load();
+        }, 5000);
+
+        const slowDownTimer = setTimeout(() => {
             clearInterval(interval);
-            setInterval(load, 15000);
-        };
-        window.addEventListener('blur', slowDown);
+            interval = setInterval(() => {
+                if (document.visibilityState === 'visible') load();
+            }, 30000); // 30s background poll
+        }, 60000); // After 1 minute
 
         return () => {
             clearInterval(interval);
-            window.removeEventListener('blur', slowDown);
-            // On unmount (tab switch), fire all pending deletes immediately
+            clearTimeout(slowDownTimer);
+            // On unmount, fire all pending deletes immediately
             pendingDeleteTimers.current.forEach((timer, itemId) => {
                 clearTimeout(timer);
                 databaseService.deleteItem(itemId);
@@ -249,7 +254,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
     const load = async () => {
         setIsLoading(true);
-        let data = await databaseService.loadItems();
+        let data = await databaseService.loadItems(user.id);
         
         // Always filter out items currently pending deletion so polls don't restore them
         let filtered = data.filter(i => !pendingDeleteTimers.current.has(i.id));
@@ -280,17 +285,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         setIsLoading(false);
     };
 
-    useEffect(() => {
-        load();
-        // Fast poll for first 30s (catches immediate changes), then slow poll indefinitely
-        // so changes from other devices are always picked up without a page refresh.
-        let interval = setInterval(load, 3000);
-        const slowDown = setTimeout(() => {
-            clearInterval(interval);
-            interval = setInterval(load, 15000);
-        }, 30000);
-        return () => { clearInterval(interval); clearTimeout(slowDown); };
-    }, []);
+    // Removed redundant useEffect polling logic to save requests
 
     const toggleExpand = useCallback(async (itemId: string) => {
         if (expandedItemId === itemId) { setExpandedItemId(null); return; }

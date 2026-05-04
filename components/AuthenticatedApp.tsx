@@ -226,6 +226,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                                     aiStatus={aiStatus} 
                                     thinkingCopy={dump.thinkingCopy}
                                     persona={persona}
+                                    user={user}
                                 />
                             </ErrorBoundary>
                         </div>

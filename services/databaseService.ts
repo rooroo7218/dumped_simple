@@ -408,16 +408,21 @@ export const databaseService = {
         }
     },
 
-    async loadItems(): Promise<Item[]> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            return JSON.parse(localStorage.getItem('dumped_items') || '[]');
+    async loadItems(providedUserId?: string): Promise<Item[]> {
+        let userId = providedUserId;
+        
+        if (!userId) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                return JSON.parse(localStorage.getItem('dumped_items') || '[]');
+            }
+            userId = user.id;
         }
 
         const { data, error } = await supabase
             .from('items')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .order('mention_count', { ascending: false });
 
         if (error) {
@@ -450,7 +455,7 @@ export const databaseService = {
         if (unsynced.length > 0) {
             const rows = unsynced.map(i => ({
                 id: i.id,
-                user_id: user.id,
+                user_id: userId,
                 label: i.label,
                 mention_count: i.mentionCount,
                 last_mentioned_at: new Date(i.lastMentionedAt).toISOString(),
