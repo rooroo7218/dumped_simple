@@ -155,9 +155,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'shadow', label: (
-        <div className="relative w-full h-full bg-slate-800 rounded-md overflow-hidden flex items-center justify-center">
-            <div className="w-4 h-4 bg-white/20 blur-md rounded-full animate-pulse" />
-            <div className="w-2 h-2 bg-white/40 blur-sm rounded-full" />
+        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
+            <EtheralShadow isCompact={true} className="scale-125" />
         </div>
     ), pattern: {} },
 ];
