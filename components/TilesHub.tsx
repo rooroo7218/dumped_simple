@@ -972,7 +972,7 @@ const ItemTile = React.memo(({
 
     const colorBg = isStale ? '#f1f5f9' : getColorBg(itemStyle.color);
     const textureStyle = isStale ? {} : getTextureStyle(itemStyle.texture);
-    const padding = '8px';
+    const padding = isExpanded ? '16px 24px 24px 16px' : '8px';
 
     const TileContent = (
         <div
@@ -1086,7 +1086,7 @@ const ItemTile = React.memo(({
             <div className="relative z-10 flex flex-col gap-2">
                 {/* ── Top: Complete button + Title ── */}
             {(!isStale || isExpanded || !shouldMini) && (
-                <div className="flex items-start gap-1.5">
+                <div className={cn("flex items-start", isExpanded ? "gap-3.5" : "gap-1.5")}>
                     <button
                         onClick={onComplete}
                         className={`shrink-0 mt-0.5 transition-all active:scale-95 ${
@@ -1110,7 +1110,7 @@ const ItemTile = React.memo(({
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight leading-[1.75]
-                                ${(isStale && shouldMini) ? 'font-semibold text-[12px]' : 'font-normal text-[16px]'}
+                                ${(isStale && shouldMini) ? 'font-semibold text-[12px]' : 'font-normal text-[17px]'}
                                 ${(!isStale || (isExpanded && !shouldMini)) && itemStyle.texture === 'novatrix' ? 'text-black' : ((!isStale || (isExpanded && !shouldMini)) && ['xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-white' : ((!isStale || (isExpanded && !shouldMini)) && itemStyle.texture === 'neon' ? 'text-[var(--neon-text-color)]' : 'text-[#1a1a1a]'))}
                                 focus:outline-none focus:ring-0
                                 ${item.isCompleted ? 'line-through opacity-40' : ''}
@@ -1265,9 +1265,9 @@ const ItemTile = React.memo(({
 
             {/* ── Expanded detail ── */}
             {isExpanded && (
-                <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mt-1 pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Metadata Row (Subtle) */}
-                    <div className="flex items-center gap-4 mb-4 text-[11px] font-medium text-[#1a1a1a]/50">
+                    <div className="flex items-center gap-4 mb-3 text-[11px] font-medium text-[#1a1a1a]/50">
                         <div className="flex items-center gap-1.5">
                             <EyeIcon className="w-3.5 h-3.5" />
                             <span>Seen {item.mentionCount}×</span>
@@ -1279,7 +1279,7 @@ const ItemTile = React.memo(({
                     </div>
 
                     {/* Notes Section */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                         <span className="block text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 mb-1.5">Notes</span>
                         <textarea
                             value={draftNotes}
