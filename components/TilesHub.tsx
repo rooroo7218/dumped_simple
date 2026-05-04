@@ -88,7 +88,7 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         <div className="w-full h-full opacity-60" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
     ),  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'animated-dots', label: (
-        <div className="w-full h-full flex items-center justify-center bg-slate-900 rounded-md overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 rounded-md overflow-hidden">
              <div className="flex gap-0.5">
                 <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
                 <div className="w-1 h-1 bg-white rounded-full animate-pulse delay-150" />
@@ -97,55 +97,55 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'aurora', label: (
-        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7]" />
+        <div className="relative w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-[#ac5cff] via-[#38bdf8] to-[#6ee7b7]" />
     ), pattern: {} },
     { key: 'shine-border', label: (
-        <div className="w-full h-full border-2 border-indigo-400 rounded-md bg-white/50" />
+        <div className="relative w-full h-full border-2 border-indigo-400 rounded-md bg-white/50" />
     ), pattern: {} },
     { key: 'neon', label: (
-        <div className="w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
             <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 5px #39ff14' }}>N</span>
         </div>
     ), pattern: {} },
     { key: 'xenon', label: (
-        <div className="w-full h-full overflow-hidden rounded-md"><XenonTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md"><XenonTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'novatrix', label: (
-        <div className="w-full h-full overflow-hidden rounded-md"><NovatrixTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md"><NovatrixTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'lamp', label: (
-        <div className="w-full h-full overflow-hidden rounded-md bg-black relative"><SpotlightLamp isCompact={true} className="scale-150" /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-black"><SpotlightLamp isCompact={true} className="scale-150" /></div>
     ), pattern: {} },
     { key: 'zenitho', label: (
-        <div className="w-full h-full overflow-hidden rounded-md"><ZenithoTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md"><ZenithoTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'dithering-wave', label: (
-        <div className="w-full h-full overflow-hidden rounded-md bg-[#001122]">
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122]">
             <div className="w-full h-full opacity-60 bg-[radial-gradient(circle,rgba(255,0,136,0.5)_0%,transparent_70%)] animate-pulse" />
         </div>
     ), pattern: {} },
     { key: 'dithering-swirl', label: (
-        <div className="w-full h-full overflow-hidden rounded-md bg-[#220011]">
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011]">
             <div className="w-full h-full opacity-60 bg-[radial-gradient(circle,rgba(0,255,255,0.5)_0%,transparent_70%)] animate-pulse" />
         </div>
     ), pattern: {} },
     { key: 'holographic', label: (
-        <div className="w-full h-full bg-slate-100 rounded-md overflow-hidden">
+        <div className="relative w-full h-full bg-slate-100 rounded-md overflow-hidden">
             <div className="w-full h-full bg-gradient-to-tr from-white via-indigo-100 to-white opacity-80" />
         </div>
     ), pattern: {} },
     { key: 'premium-holographic', label: (
-        <div className="w-full h-full flex items-center justify-center bg-slate-100 rounded-md overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-100 rounded-md overflow-hidden">
             <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
         </div>
     ), pattern: {} },
     { key: 'matrix', label: (
-        <div className="w-full h-full bg-black rounded-md flex items-center justify-center overflow-hidden">
+        <div className="relative w-full h-full bg-black rounded-md flex items-center justify-center overflow-hidden">
             <span className="text-[7px] text-emerald-400 font-mono leading-none tracking-tighter">0101</span>
         </div>
     ), pattern: {} },
     { key: 'shadow', label: (
-        <div className="w-full h-full bg-slate-900 rounded-md overflow-hidden relative">
+        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
             <div className="absolute inset-0 bg-slate-400/20 blur-md rounded-full scale-150 animate-pulse" />
         </div>
     ), pattern: {} },
@@ -1307,7 +1307,7 @@ const ItemTile = React.memo(({
                                             `}
                                             title={typeof t.label === 'string' ? t.label : 'Texture'}
                                         >
-                                            <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
+                                            <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
                                                 {t.label}
                                             </div>
                                         </button>
