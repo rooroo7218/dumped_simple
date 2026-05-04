@@ -1272,7 +1272,7 @@ const ItemTile = React.memo(({
             {isExpanded && (
                 <div className="mt-1 pl-[4px] animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Notes Section */}
-                    <div className="mb-3">
+                    <div className="mb-3 relative group/notes">
                         <textarea
                             value={draftNotes}
                             onChange={e => setDraftNotes(e.target.value)}
@@ -1281,6 +1281,25 @@ const ItemTile = React.memo(({
                             onClick={e => e.stopPropagation()}
                             className="w-full bg-white/30 backdrop-blur-sm border border-black/5 rounded-xl px-3 py-2 text-[12px] text-[#1a1a1a] placeholder:text-[#1a1a1a]/30 focus:outline-none focus:ring-1 focus:ring-black/10 transition-all min-h-[120px] resize-none"
                         />
+                        <AnimatePresence>
+                            {draftNotes !== (item.notes || '') && (
+                                <motion.button
+                                    initial={{ opacity: 0, scale: 0.8, y: 5 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.8, y: 5 }}
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        onNotesChange?.(draftNotes);
+                                        // Force blur to show it's "saved"
+                                        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+                                    }}
+                                    className="absolute bottom-2 right-2 p-1.5 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition-colors z-20"
+                                    title="Save notes"
+                                >
+                                    <CheckIcon className="w-4 h-4" />
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Metadata Row (Subtle) */}
