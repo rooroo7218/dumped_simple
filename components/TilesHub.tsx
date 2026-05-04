@@ -886,10 +886,11 @@ const ItemTile = React.memo(({
     const [stylerOpen, setStylerOpen] = useState(false);
     const [stylerPosition, setStylerPosition] = useState<'left' | 'right'>('right');
     const stylerRef = useRef<HTMLDivElement>(null);
+    const popoutRef = useRef<HTMLDivElement>(null);
 
     useLayoutEffect(() => {
-        if (stylerOpen && stylerRef.current) {
-            const rect = stylerRef.current.getBoundingClientRect();
+        if (stylerOpen && popoutRef.current) {
+            const rect = popoutRef.current.getBoundingClientRect();
             if (rect.right > window.innerWidth - 20) {
                 setStylerPosition('left');
             } else {
@@ -966,7 +967,10 @@ const ItemTile = React.memo(({
     useEffect(() => {
         if (!stylerOpen) return;
         const handler = (e: MouseEvent) => {
-            if (stylerRef.current && !stylerRef.current.contains(e.target as Node)) {
+            const target = e.target as Node;
+            const inStyler = stylerRef.current?.contains(target);
+            const inPopout = popoutRef.current?.contains(target);
+            if (!inStyler && !inPopout) {
                 setStylerOpen(false);
             }
         };
@@ -983,7 +987,7 @@ const ItemTile = React.memo(({
             ref={setNodeRef}
             style={{
                 ...sortableStyle,
-                zIndex: isSortableDragging ? 100 : (stylerOpen ? 150 : undefined),
+                zIndex: isSortableDragging ? 100 : (stylerOpen ? 200 : undefined),
                 overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden',
                 ...(isExpanded ? (shouldMini ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio })
             }}
@@ -1188,18 +1192,18 @@ const ItemTile = React.memo(({
 
                         {stylerOpen && (
                             <div 
-                                ref={stylerRef}
+                                ref={popoutRef}
                                 onClick={(e) => e.stopPropagation()}
                                 className={`
-                                    absolute z-50 p-3 rounded-2xl shadow-2xl border border-white/20 text-black
+                                    absolute z-[210] p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 text-black
                                     ${stylerPosition === 'right' ? 'left-0' : 'right-0'}
                                     ${tileRef.current && tileRef.current.getBoundingClientRect().top < 300 ? 'top-full mt-2' : 'bottom-full mb-2'}
                                 `}
                                 style={{ 
-                                    background: 'rgba(255,255,255,0.95)', 
-                                    backdropFilter: 'blur(16px)', 
+                                    background: 'rgba(255,255,255,0.96)', 
+                                    backdropFilter: 'blur(20px)', 
                                     minWidth: 190,
-                                    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
+                                    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.3)'
                                 }}
                             >
                                 <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mb-2 opacity-50 uppercase tracking-widest text-left">Color</p>
