@@ -28,7 +28,7 @@ Dump text:
 "${input}"
 
 RULES:
-- Labels: 2–5 words, sentence case (First word capitalized). NEVER use all lowercase.
+- Labels: Concise but descriptive (3–8 words). Sentence case. NEVER use all lowercase. Do not truncate important details like quantities, specific names, or locations. Keep the essence of the user's intent.
 - CAPITALIZATION: Preserve capitalization for personal pronouns (e.g., "I") and all-caps acronyms (e.g., "API", "GSD", "ROI").
 - Assign when semantic overlap is clear (e.g., "milk" and "buy milk" are the same)
 - Create only when genuinely new
