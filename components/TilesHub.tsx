@@ -77,22 +77,22 @@ const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[]
 ];
 
 const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperties }[] = [
-    { key: 'none',   label: <span className="opacity-40">—</span>,    pattern: {} },
+    { key: 'none',   label: <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">—</div>,    pattern: {} },
     { key: 'dots',   label: (
-        <div className="w-full h-full opacity-60" style={{ backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.4) 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+        <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.4) 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
     ),  pattern: { backgroundImage: 'radial-gradient(circle, rgba(15,23,42,0.12) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 8px) calc(var(--tile-scale, 1) * 8px)' } },
     { key: 'mesh',   label: (
-        <div className="w-full h-full opacity-60" style={{ backgroundImage: 'linear-gradient(rgba(15,23,42,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.15) 1px, transparent 1px)', backgroundSize: '6px 6px' }} />
+        <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'linear-gradient(rgba(15,23,42,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.15) 1px, transparent 1px)', backgroundSize: '6px 6px' }} />
     ),   pattern: { backgroundImage: 'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'linen',  label: (
-        <div className="w-full h-full opacity-60" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
+        <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
     ),  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'animated-dots', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 rounded-md overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-800 rounded-md overflow-hidden">
              <div className="flex gap-0.5">
-                <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
-                <div className="w-1 h-1 bg-white rounded-full animate-pulse delay-150" />
-                <div className="w-1 h-1 bg-white rounded-full animate-pulse delay-300" />
+                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse delay-150" />
+                <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse delay-300" />
              </div>
         </div>
     ), pattern: {} },
@@ -108,25 +108,25 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'xenon', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md"><XenonTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950"><XenonTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'novatrix', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md"><NovatrixTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950"><NovatrixTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'lamp', label: (
         <div className="relative w-full h-full overflow-hidden rounded-md bg-black"><SpotlightLamp isCompact={true} className="scale-150" /></div>
     ), pattern: {} },
     { key: 'zenitho', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md"><ZenithoTexture isCompact={true} /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-teal-950"><ZenithoTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'dithering-wave', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122]">
-            <div className="w-full h-full opacity-60 bg-[radial-gradient(circle,rgba(255,0,136,0.5)_0%,transparent_70%)] animate-pulse" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950">
+            <div className="w-full h-full opacity-80 bg-[radial-gradient(circle,rgba(0,191,255,0.6)_0%,transparent_80%)] animate-pulse" />
         </div>
     ), pattern: {} },
     { key: 'dithering-swirl', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011]">
-            <div className="w-full h-full opacity-60 bg-[radial-gradient(circle,rgba(0,255,255,0.5)_0%,transparent_70%)] animate-pulse" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950">
+            <div className="w-full h-full opacity-80 bg-[radial-gradient(circle,rgba(255,0,127,0.6)_0%,transparent_80%)] animate-pulse" />
         </div>
     ), pattern: {} },
     { key: 'holographic', label: (
@@ -140,13 +140,14 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'matrix', label: (
-        <div className="relative w-full h-full bg-black rounded-md flex items-center justify-center overflow-hidden">
-            <span className="text-[7px] text-emerald-400 font-mono leading-none tracking-tighter">0101</span>
+        <div className="relative w-full h-full bg-slate-950 rounded-md flex items-center justify-center overflow-hidden">
+            <span className="text-[9px] text-emerald-400 font-bold font-mono leading-none tracking-tighter">0101</span>
         </div>
     ), pattern: {} },
     { key: 'shadow', label: (
-        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
-            <div className="absolute inset-0 bg-slate-400/20 blur-md rounded-full scale-150 animate-pulse" />
+        <div className="relative w-full h-full bg-slate-800 rounded-md overflow-hidden flex items-center justify-center">
+            <div className="w-4 h-4 bg-white/20 blur-md rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-white/40 blur-sm rounded-full" />
         </div>
     ), pattern: {} },
 ];
