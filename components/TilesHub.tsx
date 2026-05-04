@@ -88,12 +88,16 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
     ),  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'animated-dots', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-800 rounded-md overflow-hidden">
-             <div className="flex gap-0.5">
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
-                <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse delay-150" />
-                <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse delay-300" />
-             </div>
+        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
+             <AnimatedDots 
+                fullScreen={false} 
+                dotsNum={8} 
+                dotRadius={3} 
+                dotSpacing={2}
+                speedRange={[0.4, 1.2]}
+                backgroundColor="transparent"
+                className="opacity-90"
+             />
         </div>
     ), pattern: {} },
     { key: 'aurora', label: (
