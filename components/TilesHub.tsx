@@ -88,12 +88,16 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         <div className="w-full h-full opacity-60 bg-white" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.15) 0px, rgba(15,23,42,0.15) 1px, transparent 1px, transparent 4px)', backgroundSize: '6px 6px' }} />
     ),  pattern: { backgroundImage: 'repeating-linear-gradient(45deg, rgba(15,23,42,0.05) 0px, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 7px)', backgroundSize: 'calc(var(--tile-scale, 1) * 10px) calc(var(--tile-scale, 1) * 10px)' } },
     { key: 'animated-dots', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 rounded-md overflow-hidden">
-             <div className="flex gap-0.5">
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
-                <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse delay-150" />
-                <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse delay-300" />
-             </div>
+        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
+             <AnimatedDots 
+                fullScreen={false} 
+                dotsNum={8} 
+                dotRadius={3} 
+                dotSpacing={2}
+                speedRange={[0.4, 1.2]}
+                backgroundColor="transparent"
+                className="opacity-90"
+             />
         </div>
     ), pattern: {} },
     { key: 'aurora', label: (
@@ -108,37 +112,31 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'xenon', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950 flex items-center justify-center">
-            <div className="w-full h-full bg-gradient-to-br from-indigo-500/30 to-transparent animate-pulse" />
-        </div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-indigo-950"><XenonTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'novatrix', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950 flex items-center justify-center">
-            <div className="w-full h-full bg-gradient-to-tr from-rose-500/30 to-transparent animate-pulse" />
-        </div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-rose-950"><NovatrixTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'lamp', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-black flex items-center justify-center">
-            <div className="w-4 h-4 bg-white/40 blur-md rounded-full -translate-y-1" />
-        </div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-black"><SpotlightLamp isCompact={true} className="scale-150" /></div>
     ), pattern: {} },
     { key: 'zenitho', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-teal-950 flex items-center justify-center">
-            <div className="w-full h-full bg-gradient-to-bl from-teal-500/30 to-transparent animate-pulse" />
-        </div>
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-teal-950"><ZenithoTexture isCompact={true} /></div>
     ), pattern: {} },
     { key: 'dithering-wave', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122] flex flex-col justify-center gap-1 opacity-80">
-            <div className="h-[2px] w-full bg-indigo-400/40 animate-pulse" />
-            <div className="h-[2px] w-full bg-indigo-400/20" />
-            <div className="h-[2px] w-full bg-indigo-400/40 animate-pulse delay-75" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#001122]">
+            <DitheringShader 
+                shape="wave" type="8x8" colorBack="#001122" colorFront="#00bfff" pxSize={1} speed={0.4}
+                className="absolute inset-0 pointer-events-none"
+            />
         </div>
     ), pattern: {} },
     { key: 'dithering-swirl', label: (
-        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011] flex flex-col justify-center gap-1 opacity-80">
-            <div className="h-[1px] w-full bg-rose-400/40" />
-            <div className="h-[1px] w-full bg-rose-400/60 animate-pulse" />
-            <div className="h-[1px] w-full bg-rose-400/40" />
+        <div className="relative w-full h-full overflow-hidden rounded-md bg-[#220011]">
+            <DitheringShader 
+                shape="swirl" type="4x4" colorBack="#220011" colorFront="#ff007f" pxSize={1} speed={0.5}
+                className="absolute inset-0 pointer-events-none"
+            />
         </div>
     ), pattern: {} },
     { key: 'holographic', label: (
@@ -157,9 +155,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'shadow', label: (
-        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden flex items-center justify-center">
-            <div className="w-4 h-4 bg-white/10 blur-md rounded-full animate-pulse" />
-            <div className="w-1.5 h-1.5 bg-white/20 blur-sm rounded-full" />
+        <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
+            <EtheralShadow isCompact={true} className="scale-125" />
         </div>
     ), pattern: {} },
 ];
@@ -1477,6 +1474,7 @@ const ItemTile = React.memo(({
                 duration={8}
                 color={neonColor}
                 className={cn("rounded-[10px]", className)}
+                overflowVisible={stylerOpen}
             >
                 {TileContent}
             </ShineBorder>

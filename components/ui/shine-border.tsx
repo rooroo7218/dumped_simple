@@ -22,6 +22,7 @@ type ShineBorderProps = {
   borderWidth?: number;
   duration?: number;
   color?: string;
+  overflowVisible?: boolean;
 };
 
 export const ShineBorder = ({
@@ -30,13 +31,14 @@ export const ShineBorder = ({
   borderWidth = 2,
   duration = 3,
   color = "#00f2ff",
+  overflowVisible = false,
 }: ShineBorderProps) => {
   return (
     <div
       className={cn("relative", className)}
     >
       {/* Content Layer */}
-      <div className="absolute inset-0 rounded-[inherit] overflow-visible">
+      <div className={cn("absolute inset-0 rounded-[inherit]", overflowVisible ? "" : "overflow-hidden")}>
         {children}
       </div>
 
