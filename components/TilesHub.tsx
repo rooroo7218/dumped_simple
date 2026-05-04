@@ -907,6 +907,15 @@ const ItemTile = React.memo(({
     const [draftLabel, setDraftLabel] = useState(item.label);
     const [draftNotes, setDraftNotes] = useState(item.notes || '');
     const [showExcerpts, setShowExcerpts] = useState(false);
+    const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useLayoutEffect(() => {
+        if (isExpanded && titleTextareaRef.current) {
+            const ta = titleTextareaRef.current;
+            ta.style.height = 'auto';
+            ta.style.height = `${ta.scrollHeight}px`;
+        }
+    }, [isExpanded, draftLabel]);
     const {
         attributes,
         listeners,
@@ -972,7 +981,7 @@ const ItemTile = React.memo(({
 
     const colorBg = isStale ? '#f1f5f9' : getColorBg(itemStyle.color);
     const textureStyle = isStale ? {} : getTextureStyle(itemStyle.texture);
-    const padding = isExpanded ? '16px 24px 24px 16px' : '8px';
+    const padding = isExpanded ? '16px 16px 24px 16px' : '8px';
 
     const TileContent = (
         <div
@@ -1101,12 +1110,13 @@ const ItemTile = React.memo(({
 
                     {isExpanded ? (
                         <textarea
+                            ref={titleTextareaRef}
                             value={draftLabel}
                             onChange={e => setDraftLabel(e.target.value)}
                             onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) onLabelChange?.(draftLabel.trim()); }}
                             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
                             onClick={e => e.stopPropagation()}
-                            rows={2}
+                            rows={1}
                             className={`
                                 w-full bg-transparent border-none resize-none
                                 tracking-tight leading-[1.75]
