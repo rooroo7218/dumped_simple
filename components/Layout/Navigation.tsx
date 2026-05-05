@@ -73,6 +73,8 @@ export const Navigation: React.FC<NavigationProps> = ({
     const [isSceneryOpen,       setIsSceneryOpen]       = useState(false);
     const [isUserMenuOpen,      setIsUserMenuOpen]      = useState(false);
     const [isMobileMenuOpen,    setIsMobileMenuOpen]    = useState(false);
+    const [isMobileBgOpen,      setIsMobileBgOpen]      = useState(false);
+    const [isMobileMusicOpen,   setIsMobileMusicOpen]   = useState(false);
     const [isFullscreen,        setIsFullscreen]        = useState(false);
     const [isDeletingAccount,   setIsDeletingAccount]   = useState(false);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -506,61 +508,79 @@ export const Navigation: React.FC<NavigationProps> = ({
                             </div>
 
                         {/* Background */}
-                        <div className="px-4 py-3 border-b border-black/10">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Background</span>
-                            <div className="grid grid-cols-3 gap-1.5">
-                                {backgroundScenes.map((scene) => (
-                                    <button
-                                        key={scene.id}
-                                        onClick={() => { updateBrutalistBackground(scene.id); setIsMobileMenuOpen(false); }}
-                                        className={`relative aspect-video rounded-lg overflow-hidden transition-all active:scale-95 ${
-                                            persona.brutalistBackground === scene.id
-                                                ? 'ring-2 ring-[#1a1a1a] ring-offset-1'
-                                                : 'border border-black/15'
-                                        }`}
-                                    >
-                                        {scene.preview ? (
-                                            <div className="w-full h-full" style={{ background: scene.preview }} />
-                                        ) : (
-                                            <div className="w-full h-full bg-slate-50" />
-                                        )}
-                                        <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-[7px] py-0.5 px-1 font-medium truncate">
-                                            {scene.name}
-                                        </div>
-                                    </button>
-                                ))}
+                        <div className="border-b border-black/10">
+                            <button 
+                                onClick={() => setIsMobileBgOpen(!isMobileBgOpen)}
+                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                            >
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Background</span>
+                                <ChevronDownIcon className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${isMobileBgOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            <div className={`overflow-hidden transition-all duration-300 ${isMobileBgOpen ? 'max-h-64 px-4 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {backgroundScenes.map((scene) => (
+                                        <button
+                                            key={scene.id}
+                                            onClick={() => { updateBrutalistBackground(scene.id); }}
+                                            className={`relative aspect-video rounded-lg overflow-hidden transition-all active:scale-95 ${
+                                                persona.brutalistBackground === scene.id
+                                                    ? 'ring-2 ring-[#1a1a1a] ring-offset-1'
+                                                    : 'border border-black/15'
+                                            }`}
+                                        >
+                                            {scene.preview ? (
+                                                <div className="w-full h-full" style={{ background: scene.preview }} />
+                                            ) : (
+                                                <div className="w-full h-full bg-slate-50" />
+                                            )}
+                                            <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-[7px] py-0.5 px-1 font-medium truncate">
+                                                {scene.name}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
                         {/* Music */}
-                        <div className="px-4 py-3">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Music</span>
-                            <div className="flex items-center gap-2 mb-2">
-                                <button onClick={player.togglePlay} className="p-1.5 rounded-full bg-[#1a1a1a] text-white active:scale-90 transition-all shrink-0">
-                                    {player.isPlaying ? <PauseIcon className="w-3 h-3" /> : <PlayIcon className="w-3 h-3 ml-px" />}
-                                </button>
-                                <span className="flex-1 text-[11px] font-medium text-slate-600 truncate">
-                                    {player.isPlaying ? player.currentTrack.title : 'Not playing'}
-                                </span>
-                                <button onClick={player.toggleMute} className="shrink-0 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 transition-all active:scale-90">
-                                    {player.isMuted ? <SpeakerXMarkIcon className="w-3.5 h-3.5" /> : <SpeakerWaveIcon className="w-3.5 h-3.5" />}
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-1">
-                                {TRACKS.map((track, idx) => (
-                                    <button
-                                        key={track.id}
-                                        onClick={() => { player.selectTrack(idx); setIsMobileMenuOpen(false); }}
-                                        className={`px-2.5 py-1.5 rounded-lg text-left transition-all active:scale-95 border ${
-                                            idx === player.currentTrackIndex
-                                                ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
-                                                : 'text-slate-600 bg-white border-black/10 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        <div className="text-[10px] font-semibold truncate">{track.title}</div>
-                                        <div className="text-[8px] opacity-50 mt-0.5">{track.genre}</div>
+                        <div className="border-b border-black/10">
+                            <button 
+                                onClick={() => setIsMobileMusicOpen(!isMobileMusicOpen)}
+                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                            >
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Music</span>
+                                <ChevronDownIcon className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${isMobileMusicOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <div className={`overflow-hidden transition-all duration-300 ${isMobileMusicOpen ? 'max-h-64 px-4 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <button onClick={player.togglePlay} className="p-1.5 rounded-full bg-[#1a1a1a] text-white active:scale-90 transition-all shrink-0">
+                                        {player.isPlaying ? <PauseIcon className="w-3 h-3" /> : <PlayIcon className="w-3 h-3 ml-px" />}
                                     </button>
-                                ))}
+                                    <span className="flex-1 text-[11px] font-medium text-slate-600 truncate">
+                                        {player.isPlaying ? player.currentTrack.title : 'Not playing'}
+                                    </span>
+                                    <button onClick={player.toggleMute} className="shrink-0 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 transition-all active:scale-90">
+                                        {player.isMuted ? <SpeakerXMarkIcon className="w-3.5 h-3.5" /> : <SpeakerWaveIcon className="w-3.5 h-3.5" />}
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1">
+                                    {TRACKS.map((track, idx) => (
+                                        <button
+                                            key={track.id}
+                                            onClick={() => { player.selectTrack(idx); }}
+                                            className={`px-2.5 py-1.5 rounded-lg text-left transition-all active:scale-95 border ${
+                                                idx === player.currentTrackIndex
+                                                    ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
+                                                    : 'text-slate-600 bg-white border-black/10 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <div className="text-[10px] font-semibold truncate">{track.title}</div>
+                                            <div className="text-[8px] opacity-50 mt-0.5">{track.genre}</div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
