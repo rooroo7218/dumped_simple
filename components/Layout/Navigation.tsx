@@ -6,6 +6,8 @@ import {
     ArrowRightStartOnRectangleIcon,
     Squares2X2Icon,
     TrashIcon,
+    ChevronDownIcon,
+    Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
@@ -371,6 +373,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
                                 </div>
                                 <button
+                                    onClick={() => { setIsUserMenuOpen(false); setActiveTab('persona'); }}
+                                    className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                                >
+                                    <Cog6ToothIcon className="w-4 h-4" />
+                                    Profile & Settings
+                                </button>
+                                <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
                                 >
@@ -425,6 +434,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <span className="text-[10px] text-slate-400 truncate">{user.email}</span>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                    onClick={() => { setIsMobileMenuOpen(false); setActiveTab('persona'); }}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all active:scale-90"
+                                    title="Settings"
+                                >
+                                    <Cog6ToothIcon className="w-4 h-4" />
+                                </button>
                                 <button
                                     onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
                                     className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-90"
@@ -610,14 +626,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                     <button
                         ref={mobileButtonRef}
                         onClick={() => setIsMobileMenuOpen(p => !p)}
-                        className="flex items-center justify-center p-2 transition-all active:scale-90"
+                        className="flex items-center justify-center transition-all active:scale-90 w-[40px] h-[40px] rounded-full overflow-hidden"
                     >
                         {player.isPlaying ? (
-                            <div className="flex gap-[1.5px] items-end h-[22px] w-[22px] justify-center">
+                            <div className="flex gap-[1.5px] items-end h-[18px] w-[18px] justify-center relative z-10">
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-1" />
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-2" />
                                 <div className="w-[3px] bg-slate-900 rounded-sm animate-music-bar-3" />
                             </div>
+                        ) : user.picture ? (
+                            <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full object-cover border-2 border-slate-200" />
                         ) : (
                             <UserIcon className="w-[22px] h-[22px] text-slate-500" />
                         )}
