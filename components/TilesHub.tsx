@@ -107,9 +107,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         <div className="relative w-full h-full border-2 border-indigo-400 rounded-md bg-white/50" />
     ), pattern: {} },
     { key: 'neon', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
-            <div className="absolute inset-1 border border-[#39ff14]/30 rounded-sm animate-pulse" />
-            <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 8px #39ff14' }}>NEON</span>
+        <div className="relative w-full h-full bg-black rounded-md overflow-hidden flex items-center justify-center p-1.5">
+            <div className="w-full h-full border-2 border-[#39ff14] rounded-sm animate-neon-flicker" style={{ boxShadow: '0 0 10px #39ff14, inset 0 0 5px #39ff14' }} />
         </div>
     ), pattern: {} },
     { key: 'novatrix', label: (
