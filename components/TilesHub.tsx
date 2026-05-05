@@ -136,11 +136,7 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
             />
         </div>
     ), pattern: {} },
-    { key: 'holographic', label: (
-        <div className="relative w-full h-full bg-slate-100 rounded-md overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-tr from-white via-indigo-100 to-white opacity-80" />
-        </div>
-    ), pattern: {} },
+
     { key: 'premium-holographic', label: (
         <div className="relative w-full h-full flex items-center justify-center bg-slate-100 rounded-md overflow-hidden">
             <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
@@ -1152,7 +1148,7 @@ const ItemTile = React.memo(({
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-            {!isStale && itemStyle.texture === 'holographic' && <HolographicTexture mouseX={mousePos.x} mouseY={mousePos.y} />}
+
             {!isStale && itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
 
             {/* ── Animated Background ── */}
