@@ -1142,13 +1142,13 @@ const ItemTile = React.memo(({
             
             {!isStale && itemStyle.texture === 'dithering-wave' && (
                 <DitheringShader 
-                    shape="wave" type="8x8" colorBack="#001122" colorFront="#ff0088" pxSize={3} speed={0.6}
+                    shape="wave" type="8x8" colorBack="#001122" colorFront="#00bfff" pxSize={3} speed={0.6}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
             {!isStale && itemStyle.texture === 'dithering-swirl' && (
                 <DitheringShader 
-                    shape="swirl" type="4x4" colorBack="#220011" colorFront="#00ffff" pxSize={4} speed={0.9}
+                    shape="swirl" type="4x4" colorBack="#220011" colorFront="#ff007f" pxSize={4} speed={0.9}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
