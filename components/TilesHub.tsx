@@ -108,7 +108,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
     ), pattern: {} },
     { key: 'neon', label: (
         <div className="relative w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
-            <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 5px #39ff14' }}>N</span>
+            <div className="absolute inset-1 border border-[#39ff14]/30 rounded-sm animate-pulse" />
+            <span className="text-[10px] font-bold text-[#39ff14]" style={{ textShadow: '0 0 8px #39ff14' }}>NEON</span>
         </div>
     ), pattern: {} },
     { key: 'novatrix', label: (
@@ -147,8 +148,8 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
     { key: 'matrix', label: (
-        <div className="relative w-full h-full bg-slate-950 rounded-md flex items-center justify-center overflow-hidden">
-            <span className="text-[9px] text-emerald-400 font-bold font-mono leading-none tracking-tighter">0101</span>
+        <div className="relative w-full h-full bg-slate-950 rounded-md overflow-hidden">
+            <MatrixRain color="#10b981" speed={0.8} fontSize={6} />
         </div>
     ), pattern: {} },
     { key: 'shadow', label: (
