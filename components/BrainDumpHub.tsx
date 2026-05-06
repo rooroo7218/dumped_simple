@@ -116,17 +116,17 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', zIndex: 10 }}
             >
                 {/* Notebook margin line */}
-                <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-red-500/10 z-10 pointer-events-none" />
+
 
                 {/* Scrollable writing area */}
                 <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
                     {/* Notebook Header */}
                     <div className="px-5 pt-12 pb-4 relative z-20 max-w-4xl mx-auto">
                         <div className="flex justify-between items-baseline mb-2">
-                            <div className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                            <div className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">
                                 {dateTime.date}
                             </div>
-                            <div className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                            <div className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">
                                 {dateTime.time}
                             </div>
                         </div>
