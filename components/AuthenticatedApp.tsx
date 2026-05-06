@@ -143,31 +143,44 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
         const checkReminder = () => {
             const [hour, minute] = settings.time.split(':').map(Number);
             const now = new Date();
-            const lastSent = settings.lastReminderSent || 0;
             
-            // Check if we already dumped today
+            // Only proceed if it's the right hour/minute window
+            if (now.getHours() !== hour || now.getMinutes() < minute) return;
+
+            const lastSent = settings.lastReminderSent || 0;
+            const twelveHours = 12 * 60 * 60 * 1000;
+            if (now.getTime() - lastSent < twelveHours) return;
+
+            // Check if we already dumped today - optimize by looking from the end of the array
+            // since memories are likely sorted by timestamp or at least recent ones are at the end.
             const startOfDay = new Date();
             startOfDay.setHours(0,0,0,0);
-            const hasDumpedToday = memories.some(m => m.timestamp >= startOfDay.getTime());
+            const startOfDayTime = startOfDay.getTime();
+            
+            let hasDumpedToday = false;
+            for (let i = memories.length - 1; i >= 0; i--) {
+                if (memories[i].timestamp >= startOfDayTime) {
+                    hasDumpedToday = true;
+                    break;
+                }
+                // If we encounter an old memory, we can stop if they are sorted
+                if (memories[i].timestamp < startOfDayTime - 86400000) break; 
+            }
+            
             if (hasDumpedToday) return;
 
-            // Trigger if it's the right time and we haven't triggered in the last 12 hours
-            if (now.getHours() === hour && now.getMinutes() >= minute) {
-                const twelveHours = 12 * 60 * 60 * 1000;
-                if (now.getTime() - lastSent > twelveHours) {
-                    showToast(
-                        `Time for your ${settings.timeOfDay} ritual!`, 
-                        'info', 
-                        `Don't forget to do your ${settings.timeOfDay} brain dump.`
-                    );
-                    data.handleUpdatePersona({ 
-                        reminderSettings: { ...settings, lastReminderSent: now.getTime() } 
-                    });
-                }
-            }
+            showToast(
+                `Time for your ${settings.timeOfDay} ritual!`, 
+                'info', 
+                `Don't forget to do your ${settings.timeOfDay} brain dump.`
+            );
+            data.handleUpdatePersona({ 
+                reminderSettings: { ...settings, lastReminderSent: now.getTime() } 
+            });
         };
 
-        const interval = setInterval(checkReminder, 60000); // Check once a minute
+        // Check every 2 minutes instead of 1 to reduce background noise
+        const interval = setInterval(checkReminder, 120000); 
         checkReminder();
         return () => clearInterval(interval);
     }, [persona.reminderSettings, memories, showToast, data.handleUpdatePersona]);

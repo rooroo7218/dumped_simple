@@ -279,7 +279,22 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
 
             {/* ── How you work ── */}
             <div className={`${card} p-6 space-y-5`}>
-                <p className={sectionTitle}>How you work</p>
+                <div className="flex items-center justify-between">
+                    <p className={sectionTitle}>How you work</p>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Free Reordering</span>
+                        <button 
+                            onClick={() => {
+                                const newVal = !p.freeReorderingEnabled;
+                                save({ ...p, freeReorderingEnabled: newVal });
+                            }}
+                            className={`w-10 h-5 rounded-full transition-all relative ${p.freeReorderingEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                            title={p.freeReorderingEnabled ? 'Manual order takes priority' : 'Frequency determines position'}
+                        >
+                            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${p.freeReorderingEnabled ? 'left-6' : 'left-1'}`} />
+                        </button>
+                    </div>
+                </div>
 
                 <div className="space-y-4">
                     <div>

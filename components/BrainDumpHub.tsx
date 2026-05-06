@@ -55,17 +55,31 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         return () => clearTimeout(t);
     }, []);
 
-    // Auto-grow textarea
+    // Auto-grow textarea with optimized reflow
     const growTextarea = useCallback(() => {
         const ta = textareaRef.current;
         if (!ta) return;
-        ta.style.height = 'auto';
-        ta.style.height = `${ta.scrollHeight}px`;
+        
+        // Use requestAnimationFrame to avoid blocking the current execution frame
+        // and prevent "Forced Reflow" violations during rapid typing.
+        requestAnimationFrame(() => {
+            if (!ta) return;
+            // Only update if we actually need to change height
+            const oldHeight = ta.style.height;
+            ta.style.height = 'auto';
+            const newHeight = `${ta.scrollHeight}px`;
+            
+            if (oldHeight !== newHeight) {
+                ta.style.height = newHeight;
+            } else {
+                ta.style.height = oldHeight; // Restore if no change
+            }
+        });
     }, []);
 
-
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInput(e.target.value);
+        const val = e.target.value;
+        setInput(val);
         growTextarea();
     };
 

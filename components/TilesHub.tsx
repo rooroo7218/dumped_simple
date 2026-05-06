@@ -267,6 +267,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
     const pendingDeleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
     const styleCooldowns = useRef<Map<string, number>>(new Map());
+    const pendingStyleUpdates = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
     useEffect(() => {
         load();
@@ -292,6 +293,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                 databaseService.deleteItem(itemId);
             });
             pendingDeleteTimers.current.clear();
+
+            // Clear pending style updates
+            pendingStyleUpdates.current.forEach(timer => clearTimeout(timer));
+            pendingStyleUpdates.current.clear();
         };
     }, []);
 
@@ -428,19 +433,30 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         databaseService.saveItemNotes(itemId, newNotes);
     }, []);
 
+
     const handleStyleChange = useCallback((itemId: string, patch: Partial<ItemStyle>) => {
         setItemStyles(prev => {
             const current = prev[itemId] || { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
             const merged = { ...current, ...patch } as ItemStyle;
             const next = { ...prev, [itemId]: merged };
             
-            // Persist to localStorage immediately
+            // 1. Persist to localStorage immediately for instant local feel
             saveStyles(next);
-            // Persist to Supabase in background
-            databaseService.saveItemStyle(itemId, merged);
             
-            // Set sync cooldown to prevent polling from reverting this change
-            styleCooldowns.current.set(itemId, Date.now() + 8000); // 8 second cooldown
+            // 2. Set sync cooldown to prevent polling from reverting this change
+            styleCooldowns.current.set(itemId, Date.now() + 8000); 
+
+            // 3. Throttle Supabase persistence (debounce 2 seconds)
+            if (pendingStyleUpdates.current.has(itemId)) {
+                clearTimeout(pendingStyleUpdates.current.get(itemId));
+            }
+
+            const timer = setTimeout(() => {
+                databaseService.saveItemStyle(itemId, merged);
+                pendingStyleUpdates.current.delete(itemId);
+            }, 2000);
+
+            pendingStyleUpdates.current.set(itemId, timer);
             
             return next;
         });
@@ -466,16 +482,21 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
         if (!activeItem || !overItem) return;
 
-        // Still detect group for visual grouping constraints if needed
-        const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
-        const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
+        // Visual feedback for grouping constraints is still useful if free reordering is OFF
+        if (!persona?.freeReorderingEnabled) {
+            const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
+            const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
 
-        if (!isSameFlaggedGroup && !isSameMentionGroup) {
-            setDraggedGroup(null);
-            return;
+            if (!isSameFlaggedGroup && !isSameMentionGroup) {
+                setDraggedGroup(null);
+                // We DON'T return early here anymore, allowing dnd-kit to track the 'over' state
+            } else {
+                setDraggedGroup(isSameFlaggedGroup ? -1 : activeItem.mentionCount);
+            }
+        } else {
+            // In free mode, just show we are in a section
+            setDraggedGroup(overItem.isFlagged ? -1 : 0);
         }
-
-        setDraggedGroup(isSameFlaggedGroup ? -1 : activeItem.mentionCount);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -489,23 +510,79 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             const overItem = items.find(i => i.id === overIdStr);
 
             if (activeItem && overItem) {
-                const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
-                const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
+                // 1. Cross-section dragging (Flagged <-> Active)
+                // In both modes, dropping in a different section toggles flagged status
+                if (activeItem.isFlagged !== overItem.isFlagged) {
+                    const nextFlagged = overItem.isFlagged;
+                    setItems(prev => prev.map(i => i.id === activeIdStr ? { ...i, isFlagged: nextFlagged } : i));
+                    databaseService.toggleFlag(activeIdStr, nextFlagged);
+                }
 
-                if (isSameFlaggedGroup || isSameMentionGroup) {
-                    const groupKey = isSameFlaggedGroup ? 'flagged' : String(activeItem.mentionCount);
-                    const listToUse = isSameFlaggedGroup 
-                        ? flagged 
-                        : sortedActive.filter(i => i.mentionCount === activeItem.mentionCount);
+                // 2. Manual Order Update
+                if (persona?.freeReorderingEnabled) {
+                    // Free Reordering: Single global list for the target section
+                    const sectionKey = overItem.isFlagged ? 'flagged' : 'active_free';
+                    const targetList = overItem.isFlagged ? flagged : sortedActive;
+                    
+                    const oldIndex = targetList.findIndex(i => i.id === activeIdStr);
+                    const newIndex = targetList.findIndex(i => i.id === overIdStr);
 
-                    if (listToUse) {
+                    // Note: if moving between sections, activeItem won't be in targetList yet.
+                    // We'll treat it as coming from the "outside" and landing at the over position.
+                    const currentIds = targetList.filter(i => i.id !== activeIdStr).map(i => i.id);
+                    const adjustedNewIndex = targetList.findIndex(i => i.id === overIdStr);
+                    
+                    let newOrderIds;
+                    if (oldIndex !== -1) {
+                        newOrderIds = arrayMove(targetList.map(i => i.id), oldIndex, newIndex);
+                    } else {
+                        // Insert at the over position
+                        newOrderIds = [...currentIds];
+                        newOrderIds.splice(adjustedNewIndex, 0, activeIdStr);
+                    }
+
+                    const newOrder = { ...itemOrder, [sectionKey]: newOrderIds };
+                    setItemOrder(newOrder);
+                    localStorage.setItem('dumped_item_order', JSON.stringify(newOrder));
+                } else {
+                    // Frequency-First Mode (Default)
+                    const isSameFlaggedGroup = activeItem.isFlagged && overItem.isFlagged;
+                    const isSameMentionGroup = (!activeItem.isFlagged && !overItem.isFlagged && activeItem.mentionCount === overItem.mentionCount);
+
+                    if (isSameFlaggedGroup || isSameMentionGroup) {
+                        const groupKey = isSameFlaggedGroup ? 'flagged' : String(activeItem.mentionCount);
+                        const listToUse = isSameFlaggedGroup 
+                            ? flagged 
+                            : sortedActive.filter(i => i.mentionCount === activeItem.mentionCount);
+
                         const oldIndex = listToUse.findIndex(i => i.id === activeIdStr);
                         const newIndex = listToUse.findIndex(i => i.id === overIdStr);
 
                         if (oldIndex !== -1 && newIndex !== -1) {
                             const currentOrder = itemOrder[groupKey] || listToUse.map(i => i.id);
-                            const newOrderIds = arrayMove(currentOrder, oldIndex, newIndex);
+                            // Ensure all current items are in the order list to prevent index drift
+                            const syncedOrder = listToUse.map(i => i.id); 
+                            const newOrderIds = arrayMove(syncedOrder, oldIndex, newIndex);
                             
+                            const newOrder = { ...itemOrder, [groupKey]: newOrderIds };
+                            setItemOrder(newOrder);
+                            localStorage.setItem('dumped_item_order', JSON.stringify(newOrder));
+                        }
+                    } else if (!activeItem.isFlagged && !overItem.isFlagged) {
+                        // Dropped cross-frequency in active list: move to top/bottom of own bucket
+                        const groupKey = String(activeItem.mentionCount);
+                        const listToUse = sortedActive.filter(i => i.mentionCount === activeItem.mentionCount);
+                        const oldIndex = listToUse.findIndex(i => i.id === activeIdStr);
+                        
+                        // If we dropped "above" our bucket, move to top. If "below", move to bottom.
+                        const activeItemOverallIdx = sortedActive.findIndex(i => i.id === activeIdStr);
+                        const overItemOverallIdx = sortedActive.findIndex(i => i.id === overIdStr);
+                        
+                        const newIndex = overItemOverallIdx < activeItemOverallIdx ? 0 : listToUse.length - 1;
+                        
+                        if (oldIndex !== -1) {
+                            const syncedOrder = listToUse.map(i => i.id);
+                            const newOrderIds = arrayMove(syncedOrder, oldIndex, newIndex);
                             const newOrder = { ...itemOrder, [groupKey]: newOrderIds };
                             setItemOrder(newOrder);
                             localStorage.setItem('dumped_item_order', JSON.stringify(newOrder));
@@ -525,7 +602,14 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     };
 
     // ── Filter & group ───────────────────────────────────────────────────────
-    const now = Date.now();
+    // --- Optimization: Stabilize "now" to avoid re-creating callbacks and re-rendering everything ---
+    // We only need to check staleness (7 days), so rounding to the hour is more than enough.
+    const now = useMemo(() => {
+        const d = new Date();
+        d.setMinutes(0, 0, 0);
+        return d.getTime();
+    }, [aiStatus, items.length]); // Refresh only when data or status changes significantly
+    
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
@@ -565,11 +649,13 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                 if (!isStaleA && isStaleB) return -1;
             }
 
-            // Level 1: Frequency (mentionCount)
-            if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            // Level 1: Frequency (Conditional)
+            if (!persona?.freeReorderingEnabled) {
+                if (b.mentionCount !== a.mentionCount) return b.mentionCount - a.mentionCount;
+            }
             
-            // Level 2: Manual Order (if both in storedIds for that frequency)
-            const groupKey = String(a.mentionCount);
+            // Level 2: Manual Order
+            const groupKey = persona?.freeReorderingEnabled ? 'active_free' : String(a.mentionCount);
             const groupOrder = storedOrders[groupKey] || [];
             const idxA = groupOrder.indexOf(a.id);
             const idxB = groupOrder.indexOf(b.id);
@@ -580,7 +666,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             // Level 3: Recency
             return b.lastMentionedAt - a.lastMentionedAt;
         });
-    }, [active, itemOrder]);
+    }, [active, itemOrder, persona?.freeReorderingEnabled, persona?.staleTaskDimmingEnabled, now, sevenDaysMs]);
 
     const boardItems = useMemo(() => {
         if (!persona?.tileBoardViewEnabled) return [];
@@ -608,7 +694,18 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         });
     }, [flagged, active, persona?.staleTaskDimmingEnabled, now, sevenDaysMs, persona?.tileBoardViewEnabled]);
 
-    const tileProps = useCallback((item: Item, size: 'flagged' | 'lg' | 'md' | 'sm', extraClass?: string) => {
+    // --- Optimization: Memoize handlers to keep them stable across renders ---
+    const stableHandlers = useMemo(() => ({
+        onToggle: toggleExpand,
+        onFlag: handleToggleFlag,
+        onComplete: handleToggleComplete,
+        onDelete: handleDelete,
+        onLabelChange: handleLabelChange,
+        onNotesChange: handleNotesChange,
+        onStyleChange: handleStyleChange,
+    }), [toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleNotesChange, handleStyleChange]);
+
+    const getTileLayout = useCallback((item: Item) => {
         const isStale = !!(!item.isFlagged && persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
         const shouldMini = !!(isStale && persona?.miniaturizeStaleTasksEnabled);
         const count = item.mentionCount;
@@ -650,25 +747,8 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             }
         }
 
-        return {
-            item,
-            isExpanded: expandedItemId === item.id,
-            excerpts: excerpts[item.id] || [],
-            onNotesChange: (newNotes: string) => handleNotesChange(item.id, newNotes),
-            onToggle: () => toggleExpand(item.id),
-            onFlag: (e: React.MouseEvent) => handleToggleFlag(e, item),
-            onComplete: (e: React.MouseEvent) => handleToggleComplete(e, item),
-            onDelete: (e: React.MouseEvent) => handleDelete(e, item),
-            onLabelChange: (newLabel: string) => handleLabelChange(item.id, newLabel),
-            onStyleChange: (patch: Partial<ItemStyle>) => handleStyleChange(item.id, patch),
-            style,
-            size: shouldMini ? 'sm' : size,
-            isStale,
-            shouldMini,
-            aspectRatio,
-            className: `${colSpan} ${rowSpan} ${extraClass ?? ''}`,
-        };
-    }, [itemStyles, expandedItemId, excerpts, toggleExpand, handleToggleFlag, handleToggleComplete, handleDelete, handleLabelChange, handleStyleChange, persona?.staleTaskDimmingEnabled, persona?.miniaturizeStaleTasksEnabled, now, sevenDaysMs]);
+        return { isStale, shouldMini, colSpan, rowSpan, aspectRatio, style };
+    }, [persona, now, sevenDaysMs, itemStyles]);
 
     if (isLoading && items.length === 0) return null;
 
@@ -777,12 +857,21 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     </div>
                     <SortableContext items={boardItems.map(i => i.id)} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                            {boardItems.map(item => (
-                                <ItemTile
-                                    key={item.id}
-                                    {...tileProps(item, 'md')}
-                                />
-                            ))}
+                            {boardItems.map(item => {
+                                const layout = getTileLayout(item);
+                                return (
+                                    <ItemTile
+                                        key={item.id}
+                                        item={item}
+                                        isExpanded={expandedItemId === item.id}
+                                        excerpts={excerpts[item.id] || []}
+                                        handlers={stableHandlers}
+                                        {...layout}
+                                        size={layout.shouldMini ? 'sm' : 'md'}
+                                        className={cn(layout.colSpan, layout.rowSpan)}
+                                    />
+                                );
+                            })}
                         </div>
                     </SortableContext>
                 </section>
@@ -800,12 +889,21 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                             </div>
                             <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
                                 <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                                    {flagged.map(item => (
-                                        <ItemTile
-                                            key={item.id}
-                                            {...tileProps(item, 'md')}
-                                        />
-                                    ))}
+                                    {flagged.map(item => {
+                                        const layout = getTileLayout(item);
+                                        return (
+                                            <ItemTile
+                                                key={item.id}
+                                                item={item}
+                                                isExpanded={expandedItemId === item.id}
+                                                excerpts={excerpts[item.id] || []}
+                                                handlers={stableHandlers}
+                                                {...layout}
+                                                size={layout.shouldMini ? 'sm' : 'md'}
+                                                className={cn(layout.colSpan, layout.rowSpan)}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </SortableContext>
                         </section>
@@ -822,12 +920,21 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                         </div>
                             <SortableContext items={sortedActive.map(i => i.id)} strategy={rectSortingStrategy}>
                                 <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
-                                    {sortedActive.map(item => (
-                                        <ItemTile
-                                            key={item.id}
-                                            {...tileProps(item, 'md')}
-                                        />
-                                    ))}
+                                    {sortedActive.map(item => {
+                                        const layout = getTileLayout(item);
+                                        return (
+                                            <ItemTile
+                                                key={item.id}
+                                                item={item}
+                                                isExpanded={expandedItemId === item.id}
+                                                excerpts={excerpts[item.id] || []}
+                                                handlers={stableHandlers}
+                                                {...layout}
+                                                size={layout.shouldMini ? 'sm' : 'md'}
+                                                className={cn(layout.colSpan, layout.rowSpan)}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </SortableContext>
                     </section>
@@ -884,14 +991,24 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             </div>
 
             <DragOverlay adjustScale={true}>
-                {activeId ? (
-                    <div style={{ transform: 'scale(1.05)', cursor: 'grabbing', pointerEvents: 'none' }}>
-                        <ItemTile
-                            {...tileProps(items.find(i => i.id === activeId)!, 'md', 'shadow-2xl')}
-                            isDragging={true}
-                        />
-                    </div>
-                ) : null}
+                {activeId ? (() => {
+                    const item = items.find(i => i.id === activeId)!;
+                    const layout = getTileLayout(item);
+                    return (
+                        <div style={{ transform: 'scale(1.05)', cursor: 'grabbing', pointerEvents: 'none' }}>
+                            <ItemTile
+                                item={item}
+                                isExpanded={expandedItemId === item.id}
+                                excerpts={excerpts[item.id] || []}
+                                handlers={stableHandlers}
+                                {...layout}
+                                size={layout.shouldMini ? 'sm' : 'md'}
+                                className="shadow-2xl"
+                                isDragging={true}
+                            />
+                        </div>
+                    );
+                })() : null}
             </DragOverlay>
         </DndContext>
     );
@@ -921,17 +1038,21 @@ const CompletedRow: React.FC<CompletedRowProps> = ({ item, onComplete, onDelete 
 
 // ── ItemTile ────────────────────────────────────────────────────────────────
 
+interface TileHandlers {
+    onToggle: (itemId: string) => void;
+    onFlag: (e: React.MouseEvent, item: Item) => void;
+    onComplete: (e: React.MouseEvent, item: Item) => void;
+    onDelete: (e: React.MouseEvent, item: Item) => void;
+    onLabelChange: (itemId: string, newLabel: string) => void;
+    onNotesChange: (itemId: string, newNotes: string) => void;
+    onStyleChange: (itemId: string, patch: Partial<ItemStyle>) => void;
+}
+
 interface ItemTileProps {
     item: Item;
     isExpanded: boolean;
     excerpts: DumpItem[];
-    onToggle: () => void;
-    onFlag: (e: React.MouseEvent) => void;
-    onComplete: (e: React.MouseEvent) => void;
-    onDelete: (e: React.MouseEvent) => void;
-    onLabelChange?: (newLabel: string) => void;
-    onNotesChange?: (newNotes: string) => void;
-    onStyleChange: (patch: Partial<ItemStyle>) => void;
+    handlers: TileHandlers;
     style: ItemStyle;
     size: 'flagged' | 'lg' | 'md' | 'sm';
     aspectRatio?: string;
@@ -941,21 +1062,15 @@ interface ItemTileProps {
     canDrop?: boolean;
     isStale?: boolean;
     shouldMini?: boolean;
-    onDragStart?: (e: React.DragEvent) => void;
-    onDragOver?: (e: React.DragEvent) => void;
-    onDragEnter?: (e: React.DragEvent) => void;
-    onDrop?: () => void;
-    onDragEnd?: () => void;
 }
 
 const ItemTile = React.memo(({
-    item, isExpanded, excerpts, onToggle, onFlag, onComplete, onDelete,
-    onLabelChange, onNotesChange, onStyleChange, style: itemStyle, size, aspectRatio, className,
+    item, isExpanded, excerpts, handlers,
+    style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop, isStale, shouldMini,
-    onDragStart, onDragOver, onDragEnter, onDrop, onDragEnd,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
-    const draggable = !!onDragStart;
+    const draggable = true; // useSortable handles draggability
     const [stylerOpen, setStylerOpen] = useState(false);
     const [stylerPosition, setStylerPosition] = useState<'left' | 'right'>('right');
     const stylerRef = useRef<HTMLDivElement>(null);
@@ -1110,7 +1225,7 @@ const ItemTile = React.memo(({
                 if (item.isNew) {
                     databaseService.markItemRead(item.id);
                 }
-                onToggle();
+                handlers.onToggle(item.id);
             }}
         >
             {/* ── iMessage-style unread indicator ── */}
@@ -1169,7 +1284,7 @@ const ItemTile = React.memo(({
             {(!isStale || isExpanded || !shouldMini) && (
                 <div className={cn("flex gap-1", isExpanded ? "items-center" : "items-start")}>
                     <button
-                        onClick={onComplete}
+                        onClick={(e) => handlers.onComplete(e, item)}
                         className={`shrink-0 ${isExpanded ? '' : 'mt-0.5'} transition-all active:scale-95 ${
                             item.isCompleted
                                 ? (!isStale && itemStyle.texture === 'novatrix' ? 'text-black' : (!isStale && ['aurora', 'xenon', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'text-emerald-400' : 'text-emerald-600'))
@@ -1185,7 +1300,7 @@ const ItemTile = React.memo(({
                             ref={titleTextareaRef}
                             value={draftLabel}
                             onChange={e => setDraftLabel(e.target.value)}
-                            onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) onLabelChange?.(draftLabel.trim()); }}
+                            onBlur={() => { if (draftLabel.trim() && draftLabel !== item.label) handlers.onLabelChange(item.id, draftLabel.trim()); }}
                             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
                             onClick={e => e.stopPropagation()}
                             rows={1}
@@ -1233,7 +1348,7 @@ const ItemTile = React.memo(({
                 <div className={cn("absolute bottom-1.5 left-1.5 z-20 flex items-center gap-0", stylerOpen && "z-[250]")}>
                     {/* Flag Button */}
                     <button
-                        onClick={onFlag}
+                        onClick={(e) => handlers.onFlag(e, item)}
                         className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                             !isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
                         } ${
@@ -1284,7 +1399,7 @@ const ItemTile = React.memo(({
                                     {COLOR_OPTIONS.map(c => (
                                         <button
                                             key={c.key}
-                                            onClick={() => onStyleChange({ color: c.key })}
+                                            onClick={() => handlers.onStyleChange(item.id, { color: c.key })}
                                             title={c.label}
                                             className="w-6 h-6 rounded-full transition-all active:scale-90 hover:scale-110"
                                             style={{
@@ -1301,7 +1416,7 @@ const ItemTile = React.memo(({
                                     {TEXTURE_OPTIONS.map(t => (
                                         <button
                                             key={t.key}
-                                            onClick={() => onStyleChange({ texture: t.key })}
+                                            onClick={() => handlers.onStyleChange(item.id, { texture: t.key })}
                                             className={`
                                                 h-8 flex items-center justify-center rounded-lg transition-all active:scale-95
                                                 ${itemStyle.texture === t.key 
@@ -1327,7 +1442,7 @@ const ItemTile = React.memo(({
                                             ].map(o => (
                                                 <button
                                                     key={o.key}
-                                                    onClick={() => onStyleChange({ orientation: o.key as 'h' | 'v' })}
+                                                    onClick={() => handlers.onStyleChange(item.id, { orientation: o.key as 'h' | 'v' })}
                                                     className={`
                                                         flex-1 h-8 flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95
                                                         ${(itemStyle.orientation ?? 'h') === o.key 
@@ -1355,7 +1470,7 @@ const ItemTile = React.memo(({
                         <textarea
                             value={draftNotes}
                             onChange={e => setDraftNotes(e.target.value)}
-                            onBlur={() => { if (draftNotes !== (item.notes || '')) onNotesChange?.(draftNotes); }}
+                            onBlur={() => { if (draftNotes !== (item.notes || '')) handlers.onNotesChange(item.id, draftNotes); }}
                             placeholder="Add details, links, or context..."
                             onClick={e => e.stopPropagation()}
                             className="w-full bg-white/30 backdrop-blur-sm border border-black/5 rounded-xl px-3 py-2 text-[12px] text-[#1a1a1a] placeholder:text-[#1a1a1a]/30 focus:outline-none focus:ring-1 focus:ring-black/10 transition-all min-h-[120px] resize-none"
@@ -1368,7 +1483,7 @@ const ItemTile = React.memo(({
                                     exit={{ opacity: 0, scale: 0.8, y: 5 }}
                                     onClick={(e) => { 
                                         e.stopPropagation(); 
-                                        onNotesChange?.(draftNotes);
+                                        handlers.onNotesChange(item.id, draftNotes);
                                         // Force blur to show it's "saved"
                                         if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                                     }}
@@ -1428,13 +1543,13 @@ const ItemTile = React.memo(({
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t border-black/5">
                         <button
-                            onClick={onDelete}
+                            onClick={(e) => handlers.onDelete(e, item)}
                             className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95 px-2 py-1 -ml-2"
                         >
                             Delete
                         </button>
                         <button
-                            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+                            onClick={(e) => { e.stopPropagation(); handlers.onToggle(item.id); }}
                             className="text-[10px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 hover:text-[#1a1a1a]/80 transition-colors active:scale-95 px-3 py-1 bg-black/5 rounded-full"
                         >
                             Close
