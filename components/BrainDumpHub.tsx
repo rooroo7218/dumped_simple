@@ -29,6 +29,16 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
     const [fadeOpacity, setFadeOpacity] = useState(1);
+    
+    // Formatting for notebook aesthetic
+    const [dateTime] = useState(() => {
+        const now = new Date();
+        return {
+            date: now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+            time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        };
+    });
+
     // Track keyboard height via visualViewport
     useEffect(() => {
         const vv = window.visualViewport;
@@ -105,8 +115,24 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 onClick={() => textareaRef.current?.focus()}
                 style={{ position: 'fixed', inset: 0, height: '100dvh', overflow: 'hidden', zIndex: 10 }}
             >
+                {/* Notebook margin line */}
+                <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-red-500/10 z-10 pointer-events-none" />
+
                 {/* Scrollable writing area */}
                 <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                    {/* Notebook Header */}
+                    <div className="px-5 pt-12 pb-4 relative z-20 max-w-4xl mx-auto">
+                        <div className="flex justify-between items-baseline mb-2">
+                            <div className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                {dateTime.date}
+                            </div>
+                            <div className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                {dateTime.time}
+                            </div>
+                        </div>
+                        <div className="h-[1px] w-full bg-slate-900/5" />
+                    </div>
+
                     <textarea
                         ref={textareaRef}
                         value={input}
@@ -124,8 +150,10 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             opacity: fadeOpacity,
                             transition: 'opacity 0.18s ease',
                             width: '100%',
+                            maxWidth: '56rem', // max-w-4xl equivalent
+                            margin: '0 auto',
                             minHeight: '20dvh',
-                            padding: `calc(3rem + env(safe-area-inset-top)) 20px calc(${submitBottom}px + 100px)`,
+                            padding: `1rem 20px calc(${submitBottom}px + 100px)`,
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
