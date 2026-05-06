@@ -121,7 +121,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 {/* Scrollable writing area */}
                 <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
                     {/* Notebook Header */}
-                    <div className="px-5 pt-12 pb-4 relative z-20 max-w-4xl mx-auto">
+                    <div className="px-8 pt-12 pb-2 relative z-20 max-w-4xl mx-auto">
                         <div className="flex justify-between items-baseline mb-2">
                             <div className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">
                                 {dateTime.date}
@@ -153,7 +153,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             maxWidth: '56rem', // max-w-4xl equivalent
                             margin: '0 auto',
                             minHeight: '20dvh',
-                            padding: `1rem 20px calc(${submitBottom}px + 100px)`,
+                            padding: `0.5rem 32px calc(${submitBottom}px + 100px)`,
                             border: 'none',
                             outline: 'none',
                             resize: 'none',
