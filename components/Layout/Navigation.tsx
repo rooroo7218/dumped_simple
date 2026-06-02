@@ -8,6 +8,7 @@ import {
     TrashIcon,
     ChevronDownIcon,
     Cog6ToothIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
     PlayIcon, PauseIcon,
@@ -15,6 +16,7 @@ import {
     PlusIcon as PlusIconSolid,
     UserIcon as UserIconSolid,
     Squares2X2Icon as Squares2X2IconSolid,
+    ClockIcon as ClockIconSolid,
 } from '@heroicons/react/24/solid';
 
 const CircleIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -59,6 +61,7 @@ interface NavigationProps {
 const MAIN_TABS = [
     { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
     { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Tiles',      mobileLabel: 'Tiles' },
+    { id: 'rhythm',       icon: ClockIcon,           solidIcon: ClockIconSolid,           label: 'Rhythm',     mobileLabel: 'Rhythm' },
     { id: 'streak',       icon: CircleIcon,          solidIcon: CircleIcon,               label: 'Pattern',    mobileLabel: 'Pattern' },
 ];
 

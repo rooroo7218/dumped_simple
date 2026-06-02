@@ -19,6 +19,7 @@ import { BrainDumpHub } from './BrainDumpHub';
 import { TilesHub } from './TilesHub';
 import { PatternHub } from './PatternHub';
 import { PersonaEditor } from './Persona/PersonaEditor';
+import { RhythmCalendar } from './RhythmCalendar';
 
 // Modals & Notifications
 import { ToastList } from './Notifications/Toast';
@@ -243,6 +244,17 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                                 />
                             </ErrorBoundary>
                         </div>
+                    </main>
+                )}
+
+                {activeTab === 'rhythm' && (
+                    <main className="main-content-pad-top flex-1 w-full relative z-10 px-5 md:px-16 pb-48">
+                        <ErrorBoundary inline>
+                            <RhythmCalendar 
+                                persona={persona} 
+                                onUpdatePersona={data.handleUpdatePersona} 
+                            />
+                        </ErrorBoundary>
                     </main>
                 )}
 

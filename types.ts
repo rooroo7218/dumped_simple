@@ -147,6 +147,18 @@ export interface UserPersona {
   staleTaskDimmingEnabled?: boolean;
   miniaturizeStaleTasksEnabled?: boolean;
   freeReorderingEnabled?: boolean;
+  rhythmCalendar?: RhythmCalendarData;
+}
+
+export interface RhythmCategory {
+  id: string;
+  label: string;
+  color: string;
+}
+
+export interface RhythmCalendarData {
+  grid: Record<string, string>;
+  categories: RhythmCategory[];
 }
 
 export interface AppState {
