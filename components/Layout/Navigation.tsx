@@ -61,7 +61,7 @@ interface NavigationProps {
 const MAIN_TABS = [
     { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
     { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Tiles',      mobileLabel: 'Tiles' },
-    { id: 'rhythm',       icon: ClockIcon,           solidIcon: ClockIconSolid,           label: 'Rhythm',     mobileLabel: 'Rhythm' },
+    // { id: 'rhythm',       icon: ClockIcon,           solidIcon: ClockIconSolid,           label: 'Rhythm',     mobileLabel: 'Rhythm' },
     { id: 'streak',       icon: CircleIcon,          solidIcon: CircleIcon,               label: 'Pattern',    mobileLabel: 'Pattern' },
 ];
 
@@ -261,7 +261,11 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             {scene.url ? (
                                                 <img src={scene.url} alt={scene.name} className="w-full h-full object-cover" />
                                             ) : scene.preview ? (
-                                                <div className="w-full h-full" style={{ background: scene.preview }} />
+                                                scene.preview.startsWith('bg-') ? (
+                                                    <div className={`w-full h-full ${scene.preview}`} />
+                                                ) : (
+                                                    <div className="w-full h-full" style={{ background: scene.preview }} />
+                                                )
                                             ) : (
                                                 <div className="w-full h-full bg-slate-50 flex items-center justify-center text-[8px] font-medium text-slate-500">Default</div>
                                             )}
@@ -549,7 +553,11 @@ export const Navigation: React.FC<NavigationProps> = ({
                                             }`}
                                         >
                                             {scene.preview ? (
-                                                <div className="w-full h-full" style={{ background: scene.preview }} />
+                                                scene.preview.startsWith('bg-') ? (
+                                                    <div className={`w-full h-full ${scene.preview}`} />
+                                                ) : (
+                                                    <div className="w-full h-full" style={{ background: scene.preview }} />
+                                                )
                                             ) : (
                                                 <div className="w-full h-full bg-slate-50" />
                                             )}

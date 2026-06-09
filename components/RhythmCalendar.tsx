@@ -14,18 +14,18 @@ import { PlayIcon } from '@heroicons/react/24/solid';
 
 // Curated modern Zen color palette for user-defined categories
 const PRESET_COLORS = [
-    '#6366f1', // Indigo (Sleep/Rest)
-    '#3b82f6', // Blue (Work/Focus)
-    '#10b981', // Emerald (Growth/Health)
-    '#e11d48', // Rose (Family/Love)
-    '#f59e0b', // Amber (Hobbies/Leisure)
-    '#a855f7', // Purple (Mindfulness/Spirit)
-    '#14b8a6', // Teal (Creativity/Projects)
-    '#f97316', // Orange (Activity/Energy)
-    '#06b6d4', // Cyan (Study/Reading)
-    '#ec4899', // Pink (Social/Play)
-    '#8b5cf6', // Violet (Journaling)
-    '#64748b', // Slate (Admin/Chores)
+    '#c7d2fe', // Soft Indigo (Sleep/Rest)
+    '#bae6fd', // Soft Blue (Work/Focus)
+    '#a7f3d0', // Soft Emerald (Growth/Health)
+    '#fecdd3', // Soft Rose (Family/Love)
+    '#fed7aa', // Soft Peach (Hobbies/Leisure)
+    '#f5d0fe', // Soft Lilac (Mindfulness/Spirit)
+    '#99f6e4', // Soft Teal (Creativity/Projects)
+    '#ffedd5', // Soft Coral (Activity/Energy)
+    '#c5f2f7', // Soft Cyan (Study/Reading)
+    '#fbcfe8', // Soft Pink (Social/Play)
+    '#ddd6fe', // Soft Violet (Journaling)
+    '#cbd5e1', // Soft Slate (Admin/Chores)
 ];
 
 const DAYS_OF_WEEK = [
@@ -39,11 +39,27 @@ const DAYS_OF_WEEK = [
 ];
 
 const DEFAULT_CATEGORIES: RhythmCategory[] = [
-    { id: 'sleep', label: 'Sleep', color: '#6366f1' },
-    { id: 'work', label: 'Work', color: '#3b82f6' },
-    { id: 'personal', label: 'Personal Time', color: '#10b981' },
-    { id: 'family', label: 'Family', color: '#e11d48' },
+    { id: 'sleep', label: 'Sleep', color: '#c7d2fe' },
+    { id: 'work', label: 'Work', color: '#bae6fd' },
+    { id: 'personal', label: 'Personal Time', color: '#a7f3d0' },
+    { id: 'family', label: 'Family', color: '#fecdd3' },
 ];
+
+// Migration map for old non-pastel colors to new pastel colors
+const COLOR_MIGRATION_MAP: Record<string, string> = {
+    '#6366f1': '#c7d2fe', // Indigo -> Soft Indigo
+    '#3b82f6': '#bae6fd', // Blue -> Soft Blue
+    '#10b981': '#a7f3d0', // Emerald -> Soft Emerald
+    '#e11d48': '#fecdd3', // Rose -> Soft Rose
+    '#f59e0b': '#fed7aa', // Amber -> Soft Peach
+    '#a855f7': '#f5d0fe', // Purple -> Soft Lilac
+    '#14b8a6': '#99f6e4', // Teal -> Soft Teal
+    '#f97316': '#ffedd5', // Orange -> Soft Coral
+    '#06b6d4': '#c5f2f7', // Cyan -> Soft Cyan
+    '#ec4899': '#fbcfe8', // Pink -> Soft Pink
+    '#8b5cf6': '#ddd6fe', // Violet -> Soft Violet
+    '#64748b': '#cbd5e1', // Slate -> Soft Slate
+};
 
 interface RhythmCalendarProps {
     persona: UserPersona;
@@ -53,7 +69,18 @@ interface RhythmCalendarProps {
 export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdatePersona }) => {
     // ─── State initialization ───
     const calendarData = persona.rhythmCalendar || { grid: {}, categories: DEFAULT_CATEGORIES };
-    const { grid, categories } = calendarData;
+    const { grid, categories: rawCategories } = calendarData;
+
+    // Apply client-side color migration immediately on render
+    const categories = React.useMemo(() => {
+        return rawCategories.map(cat => {
+            const lowerColor = cat.color.toLowerCase();
+            if (COLOR_MIGRATION_MAP[lowerColor]) {
+                return { ...cat, color: COLOR_MIGRATION_MAP[lowerColor] };
+            }
+            return cat;
+        });
+    }, [rawCategories]);
 
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>('sleep'); // Default to sleep
     const [isEditingCategories, setIsEditingCategories] = useState<boolean>(false);
@@ -69,6 +96,27 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
     // Click-and-drag painting mechanics
     const isDrawingRef = useRef<boolean>(false);
     const [isDrawingState, setIsDrawingState] = useState<boolean>(false); // for UI indicators
+
+    // Update the rhythm calendar in parent persona state
+    const saveCalendarData = useCallback((nextGrid: Record<string, string>, nextCategories: RhythmCategory[]) => {
+        onUpdatePersona({
+            rhythmCalendar: {
+                grid: nextGrid,
+                categories: nextCategories
+            }
+        });
+    }, [onUpdatePersona]);
+
+    // Auto-save migrated categories with pastel colors to database/localStorage
+    useEffect(() => {
+        const hasOldColors = rawCategories.some(cat => {
+            const lowerColor = cat.color.toLowerCase();
+            return !!COLOR_MIGRATION_MAP[lowerColor];
+        });
+        if (hasOldColors) {
+            saveCalendarData(grid, categories);
+        }
+    }, [rawCategories, categories, grid, saveCalendarData]);
 
     // Handle global mouse up to stop painting
     useEffect(() => {
@@ -97,15 +145,6 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
         return h > 12 ? `${h - 12}p` : `${h}a`;
     };
 
-    // Update the rhythm calendar in parent persona state
-    const saveCalendarData = useCallback((nextGrid: Record<string, string>, nextCategories: RhythmCategory[]) => {
-        onUpdatePersona({
-            rhythmCalendar: {
-                grid: nextGrid,
-                categories: nextCategories
-            }
-        });
-    }, [onUpdatePersona]);
 
     // Cell painting actions
     const paintCell = useCallback((dayIdx: number, hourIdx: number) => {
@@ -365,15 +404,15 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
     };
 
     return (
-        <div className="max-w-6xl mx-auto w-full pb-24 animate-in fade-in duration-700">
+        <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700">
             {/* Header section matching TilesHub premium layout */}
-            <div className="mb-6 mx-1 pb-4 border-b border-slate-100/60 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1.5">
                         <ClockIcon className="w-4 h-4 text-indigo-400" />
                         <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Weekly Rhythm</span>
                     </div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Your routine, visualised.</h2>
+                    <h2 className="text-xl font-medium tracking-tight text-slate-900">Your routine, visualised.</h2>
                     <p className="text-xs text-slate-600 mt-1 max-w-xl">
                         Map out your weekly flow of work, sleep, family, and hobbies. Drag your mouse or finger over the grid below to paint color blocks and align your actual time with your values.
                     </p>
@@ -408,137 +447,121 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                 </div>
             </div>
 
-            {/* ─── MAIN CONTAINER (Glassmorphic) ─── */}
-            <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-[32px] shadow-xl overflow-hidden p-6 md:p-8 space-y-8">
-                
-                {/* Visualizer canvas */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                            {isDrawingState ? '🖌️ Painting Flow...' : '✨ Paint Canvas (Drag to Color)'}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                            Double click / Eraser mode to clear cells
-                        </span>
-                    </div>
+            {/* Visualizer canvas */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                        {isDrawingState ? '🖌️ Painting Flow...' : '✨ Paint Canvas (Drag to Color)'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                        Double click / Eraser mode to clear cells
+                    </span>
+                </div>
 
-                    {/* Scrollable grid frame */}
-                    <div className="relative calendar-grid-container bg-slate-900/[0.02] border-2 border-slate-950/5 rounded-2xl overflow-x-auto no-scrollbar shadow-inner">
-                        
-                        {/* Hover Tooltip (Absolute relative to grid container) */}
-                        {hoveredCell && (
-                            <div 
-                                className="absolute pointer-events-none z-50 bg-slate-950 text-white rounded-lg px-2.5 py-1.5 text-[10px] font-medium leading-tight shadow-xl flex flex-col items-center gap-0.5 -translate-x-1/2 transition-all duration-75"
-                                style={{ 
-                                    left: `${hoveredCell.x}px`, 
-                                    top: `${hoveredCell.y}px` 
-                                }}
-                            >
-                                <span className="text-white/60 font-semibold">{DAYS_OF_WEEK[hoveredCell.dayIdx].label}</span>
-                                <span className="font-bold text-[11px]">{formatHour(hoveredCell.hourIdx)} - {formatHour((hoveredCell.hourIdx + 1) % 24)}</span>
-                                {grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`] ? (
-                                    <div className="flex items-center gap-1 mt-1 font-bold">
-                                        <div 
-                                            className="w-2 h-2 rounded-full" 
-                                            style={{ backgroundColor: categories.find(c => c.id === grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`])?.color }} 
-                                        />
-                                        <span className="text-white">
-                                            {categories.find(c => c.id === grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`])?.label}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <span className="text-white/40 italic mt-0.5">Free / Unplanned</span>
-                                )}
-                                {/* Arrow */}
-                                <div className="w-1.5 h-1.5 bg-slate-950 rotate-45 absolute bottom-[-3px] left-1/2 -translate-x-1/2" />
-                            </div>
-                        )}
-
-                        <div className="min-w-[960px] p-4 pr-6 select-none flex flex-col gap-1.5">
-                            {/* TOP HEADER: Hours 0 to 23 */}
-                            <div className="flex items-center">
-                                {/* Left offset matching sticky day column */}
-                                <div className="w-20 shrink-0" />
-                                <div className="flex-1 grid grid-cols-24 gap-1 text-center">
-                                    {Array.from({ length: 24 }).map((_, h) => (
-                                        <div 
-                                            key={h} 
-                                            className="text-[9px] font-bold text-slate-400 uppercase tracking-tight"
-                                            title={formatHour(h)}
-                                        >
-                                            {/* Labels every 2 hours to avoid clutter */}
-                                            {h % 2 === 0 ? formatHourShort(h) : ''}
-                                        </div>
-                                    ))}
+                <div className="relative calendar-grid-container w-full">
+                    {/* Hover Tooltip (Absolute relative to grid container) */}
+                    {hoveredCell && (
+                        <div 
+                            className="absolute pointer-events-none z-50 bg-slate-950 text-white rounded-lg px-2.5 py-1.5 text-[10px] font-medium leading-tight shadow-xl flex flex-col items-center gap-0.5 -translate-x-1/2 transition-all duration-75"
+                            style={{ 
+                                left: `${hoveredCell.x}px`, 
+                                top: `${hoveredCell.y}px` 
+                            }}
+                        >
+                            <span className="text-white/60 font-semibold">{DAYS_OF_WEEK[hoveredCell.dayIdx].label}</span>
+                            <span className="font-bold text-[11px]">{formatHour(hoveredCell.hourIdx)} - {formatHour((hoveredCell.hourIdx + 1) % 24)}</span>
+                            {grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`] ? (
+                                <div className="flex items-center gap-1 mt-1 font-bold">
+                                    <div 
+                                        className="w-2 h-2 rounded-full" 
+                                        style={{ backgroundColor: categories.find(c => c.id === grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`])?.color }} 
+                                    />
+                                    <span className="text-white">
+                                        {categories.find(c => c.id === grid[`${hoveredCell.dayIdx}-${hoveredCell.hourIdx}`])?.label}
+                                    </span>
                                 </div>
-                            </div>
-
-                            {/* ROWS: Days of week */}
-                            {DAYS_OF_WEEK.map((day, dayIdx) => (
-                                <div key={dayIdx} className="flex items-center h-9">
-                                    
-                                    {/* Sticky left day indicator */}
-                                    <div className="w-20 shrink-0 flex items-center pr-3">
-                                        <span className="text-xs font-bold text-slate-600 tracking-tight">
-                                            {day.label}
-                                        </span>
-                                    </div>
-
-                                    {/* 24 Hour tiles for this day */}
-                                    <div className="flex-1 grid grid-cols-24 gap-1 h-full">
-                                        {Array.from({ length: 24 }).map((_, hourIdx) => {
-                                            const cellKey = `${dayIdx}-${hourIdx}`;
-                                            const categoryId = grid[cellKey];
-                                            const category = categories.find(c => c.id === categoryId);
-
-                                            return (
-                                                <div
-                                                    key={hourIdx}
-                                                    data-cell-id={cellKey}
-                                                    onMouseDown={(e) => handleCellMouseDown(dayIdx, hourIdx, e)}
-                                                    onMouseEnter={(e) => handleCellMouseEnter(dayIdx, hourIdx, e)}
-                                                    onMouseLeave={handleCellMouseLeave}
-                                                    onTouchStart={(e) => handleTouchStart(dayIdx, hourIdx, e)}
-                                                    onTouchMove={handleTouchMove}
-                                                    onDoubleClick={() => {
-                                                        const nextGrid = { ...grid };
-                                                        delete nextGrid[cellKey];
-                                                        saveCalendarData(nextGrid, categories);
-                                                    }}
-                                                    className={`
-                                                        aspect-square w-full rounded-md border cursor-crosshair transition-all duration-150 relative overflow-hidden
-                                                        ${category 
-                                                            ? 'border-transparent shadow-sm scale-95 hover:scale-100 hover:ring-2 hover:ring-slate-900/10' 
-                                                            : 'border-slate-300/30 bg-slate-500/[0.04] hover:bg-slate-500/[0.1] hover:border-slate-300/60'
-                                                        }
-                                                    `}
-                                                    style={{
-                                                        backgroundColor: category ? category.color : undefined,
-                                                        // Subtle micro-shadow overlay for texture
-                                                        backgroundImage: category ? 'linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.04))' : undefined
-                                                    }}
-                                                >
-                                                    {/* Double border texture when painted */}
-                                                    {category && (
-                                                        <div className="absolute inset-[1px] rounded-[5px] border border-white/20 pointer-events-none" />
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
+                            ) : (
+                                <span className="text-white/40 italic mt-0.5">Free / Unplanned</span>
+                            )}
+                            {/* Arrow */}
+                            <div className="w-1.5 h-1.5 bg-slate-950 rotate-45 absolute bottom-[-3px] left-1/2 -translate-x-1/2" />
                         </div>
+                    )}
+
+                    <div className="grid grid-cols-[2.5rem_repeat(7,_1fr)] gap-[2px] w-full select-none items-center">
+                        {/* TOP HEADER */}
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center justify-end pr-1.5 h-8">
+                            Hour
+                        </div>
+                        {DAYS_OF_WEEK.map((day) => (
+                            <div 
+                                key={day.short} 
+                                className="text-[11px] font-bold text-slate-600 tracking-tight flex items-center justify-center h-8"
+                                title={day.label}
+                            >
+                                <span className="hidden sm:inline">{day.label}</span>
+                                <span className="inline sm:hidden">{day.short}</span>
+                            </div>
+                        ))}
+
+                        {/* Hour rows flat list */}
+                        {Array.from({ length: 24 }).map((_, hourIdx) => (
+                            <React.Fragment key={hourIdx}>
+                                {/* Hour Label */}
+                                <div className="text-[10px] font-bold text-slate-450 tracking-tight pr-1.5 flex items-center justify-end h-full">
+                                    {formatHourShort(hourIdx)}
+                                </div>
+
+                                {/* 7 Day cells */}
+                                {DAYS_OF_WEEK.map((day, dayIdx) => {
+                                    const cellKey = `${dayIdx}-${hourIdx}`;
+                                    const categoryId = grid[cellKey];
+                                    const category = categories.find(c => c.id === categoryId);
+
+                                    return (
+                                        <div
+                                            key={dayIdx}
+                                            data-cell-id={cellKey}
+                                            onMouseDown={(e) => handleCellMouseDown(dayIdx, hourIdx, e)}
+                                            onMouseEnter={(e) => handleCellMouseEnter(dayIdx, hourIdx, e)}
+                                            onMouseLeave={handleCellMouseLeave}
+                                            onTouchStart={(e) => handleTouchStart(dayIdx, hourIdx, e)}
+                                            onTouchMove={handleTouchMove}
+                                            onDoubleClick={() => {
+                                                const nextGrid = { ...grid };
+                                                delete nextGrid[cellKey];
+                                                saveCalendarData(nextGrid, categories);
+                                            }}
+                                            className={`
+                                                aspect-square w-full rounded-[3px] border cursor-crosshair transition-all duration-150 relative overflow-hidden
+                                                ${category 
+                                                    ? 'border-transparent shadow-sm hover:ring-2 hover:ring-slate-900/10' 
+                                                    : 'border-slate-300/30 bg-slate-500/[0.04] hover:bg-slate-500/[0.1] hover:border-slate-300/60'
+                                                }
+                                            `}
+                                            style={{
+                                                backgroundColor: category ? category.color : undefined,
+                                                backgroundImage: category ? 'linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.04))' : undefined
+                                            }}
+                                        >
+                                            {category && (
+                                                <div className="absolute inset-[1px] rounded-[2px] border border-white/20 pointer-events-none" />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </React.Fragment>
+                        ))}
                     </div>
                 </div>
 
                 {/* ─── LEGEND & PAINT CHOOSER ─── */}
-                <div className="flex flex-col lg:flex-row gap-8 pt-2">
+                <div className="flex flex-col md:flex-row gap-6 pt-6 border-t border-slate-100">
                     
                     {/* Legend select area */}
                     <div className="flex-1 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Paint Color</span>
+                        <div className="flex items-center justify-between border-b border-slate-100/60 pb-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Select Paint Color</span>
                             <button
                                 onClick={() => setIsEditingCategories(!isEditingCategories)}
                                 className="flex items-center gap-1 text-[11px] font-semibold text-indigo-500 hover:text-indigo-600 transition-colors"
@@ -548,25 +571,33 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                             </button>
                         </div>
 
-                        <div className="flex flex-wrap gap-2.5">
+                        <div className="flex flex-wrap gap-2">
                             {categories.map((cat) => {
                                 const isSelected = selectedCategoryId === cat.id;
                                 return (
                                     <div key={cat.id} className="relative group">
-                                        <button
+                                        <div
                                             onClick={() => {
                                                 if (!isEditingCategories) {
                                                     setSelectedCategoryId(cat.id);
                                                 }
                                             }}
                                             className={`
-                                                flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 border-2
+                                                flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-350 border
                                                 ${isSelected && !isEditingCategories
                                                     ? 'bg-slate-900 border-slate-900 text-white shadow-md scale-102 ring-2 ring-slate-800 ring-offset-2'
-                                                    : 'bg-white border-slate-100 hover:bg-slate-50/50 hover:border-slate-200 text-slate-700'
+                                                    : 'bg-white/50 border-slate-200 hover:bg-white/80 hover:border-slate-300 text-slate-700'
                                                 }
                                                 ${isEditingCategories ? 'cursor-default' : 'cursor-pointer active:scale-95'}
                                             `}
+                                            role="button"
+                                            tabIndex={isEditingCategories ? -1 : 0}
+                                            onKeyDown={(e) => {
+                                                if (!isEditingCategories && (e.key === 'Enter' || e.key === ' ')) {
+                                                    e.preventDefault();
+                                                    setSelectedCategoryId(cat.id);
+                                                }
+                                            }}
                                         >
                                             <div 
                                                 className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0 transition-transform duration-300"
@@ -604,7 +635,7 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
 
                                             {/* Action buttons during edit mode */}
                                             {isEditingCategories && editingCategoryId !== cat.id && (
-                                                <div className="flex items-center gap-1 pl-1 ml-1 border-l border-slate-150">
+                                                <div className="flex items-center gap-1 pl-1 ml-1 border-l border-slate-200">
                                                     <button
                                                         onClick={() => startEditingCategory(cat)}
                                                         className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded transition-colors"
@@ -621,7 +652,7 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                                     </button>
                                                 </div>
                                             )}
-                                        </button>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -631,10 +662,10 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                 <button
                                     onClick={() => setSelectedCategoryId('eraser')}
                                     className={`
-                                        flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 border-2
+                                        flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300 border
                                         ${selectedCategoryId === 'eraser'
                                             ? 'bg-rose-950 border-rose-950 text-white shadow-md ring-2 ring-rose-900 ring-offset-2'
-                                            : 'bg-white border-slate-100 text-slate-700 hover:bg-rose-50/20 hover:border-rose-100'
+                                            : 'bg-white/50 border-slate-200 text-slate-700 hover:bg-rose-50/20 hover:border-rose-100'
                                         }
                                         active:scale-95 cursor-pointer
                                     `}
@@ -653,7 +684,7 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                         value={newCategoryLabel}
                                         onChange={(e) => setNewCategoryLabel(e.target.value)}
                                         placeholder="New activity (e.g. Gym)"
-                                        className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs w-36 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-inner font-medium"
+                                        className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs w-36 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-inner font-medium"
                                         maxLength={18}
                                     />
                                     <div className="flex items-center gap-1.5">
@@ -676,18 +707,18 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                         </div>
                     </div>
 
-                    {/* Weekly Allocations Metrics & Statistics */}
-                    <div className="w-full lg:w-96 bg-slate-500/[0.02] border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm self-start">
+                    {/* Weekly Allocations Metrics & Statistics (Glass Card) */}
+                    <div className="w-full md:w-80 bg-white/40 backdrop-blur-md border border-slate-200/60 rounded-[20px] p-5 space-y-4 shadow-sm self-start">
                         <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Time Allocation Insight</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Time Allocation Insight</span>
                             <p className="text-[11px] text-slate-600 font-semibold mt-1 leading-relaxed italic">
                                 "{getZenInsight()}"
                             </p>
                         </div>
 
                         {/* Breakdown stat bars */}
-                        <div className="space-y-3.5 border-t border-slate-100 pt-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Weekly Breakdown (168h total)</span>
+                        <div className="space-y-3 border-t border-slate-100/80 pt-3">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Weekly Breakdown</span>
                             
                             <div className="space-y-2.5 max-h-[190px] overflow-y-auto no-scrollbar pr-0.5">
                                 {categoryStats.map((stat) => (
@@ -695,14 +726,14 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                         <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                                             <div className="flex items-center gap-1.5">
                                                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: stat.color }} />
-                                                <span className="truncate max-w-[140px]">{stat.label}</span>
+                                                <span className="truncate max-w-[120px]">{stat.label}</span>
                                             </div>
                                             <span className="text-[11px] text-slate-500">
                                                 <strong className="text-slate-850 font-bold">{stat.hours}h</strong> ({stat.percentage}%)
                                             </span>
                                         </div>
                                         {/* Premium Progress Bar */}
-                                        <div className="w-full h-2 bg-slate-200/50 rounded-full overflow-hidden">
+                                        <div className="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden">
                                             <div 
                                                 className="h-full rounded-full transition-all duration-700 ease-out"
                                                 style={{ 
@@ -725,7 +756,7 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                             <strong className="text-slate-750 font-bold">{unallocatedHours}h</strong> ({unallocatedPercentage}%)
                                         </span>
                                     </div>
-                                    <div className="w-full h-2 bg-slate-200/50 rounded-full overflow-hidden">
+                                    <div className="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden">
                                         <div 
                                             className="h-full bg-slate-200 rounded-full transition-all duration-700 ease-out"
                                             style={{ width: `${unallocatedPercentage}%` }}
@@ -734,17 +765,12 @@ export const RhythmCalendar: React.FC<RhythmCalendarProps> = ({ persona, onUpdat
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
-
             </div>
 
-            {/* Custom CSS for 24-column CSS grid system and scroll styling */}
+            {/* Custom CSS for grid scroll styling */}
             <style>{`
-                .grid-cols-24 {
-                    grid-template-columns: repeat(24, minmax(0, 1fr));
-                }
                 .no-scrollbar::-webkit-scrollbar {
                     display: none;
                 }
