@@ -99,6 +99,18 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
     const end = endOfDay(new Date());
     const start = startOfDay(subYears(end, 1));
 
+    const [hoveredDay, setHoveredDay] = React.useState<Activity | null>(null);
+    const [clickedDay, setClickedDay] = React.useState<Activity | null>(null);
+
+    React.useEffect(() => {
+        if (!clickedDay) return;
+        const handleGlobalClick = () => {
+            setClickedDay(null);
+        };
+        document.addEventListener('click', handleGlobalClick);
+        return () => document.removeEventListener('click', handleGlobalClick);
+    }, [clickedDay]);
+
     const weeks = useMemo(() => {
         const built = buildWeeks(data, start, end);
 
@@ -183,19 +195,98 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                             gridTemplateColumns: 'repeat(7, 1fr)',
                             gap: 3,
                         }}>
-                            {week.days.map((day, di) => (
-                                <div
-                                    key={di}
-                                    title={day ? `${format(day.date, 'MMM d')}: ${day.count} dump${day.count !== 1 ? 's' : ''}` : ''}
-                                    style={{
-                                        aspectRatio: '1',
-                                        borderRadius: '50%',
-                                        background: day ? LEVELS[day.level] : 'transparent',
-                                        outline: day ? '1px solid rgba(0,0,0,0.7)' : 'none',
-                                        transition: 'background 0.15s',
-                                    }}
-                                />
-                            ))}
+                            {week.days.map((day, di) => {
+                                const isHovered = hoveredDay?.date.getTime() === day?.date.getTime();
+                                const isClicked = clickedDay?.date.getTime() === day?.date.getTime();
+                                const showTooltip = day && (isHovered || isClicked);
+                                const tooltipAlign = di === 0 ? 'left' : di === 6 ? 'right' : 'center';
+
+                                return (
+                                    <div
+                                        key={di}
+                                        style={{ position: 'relative', width: '100%', aspectRatio: '1' }}
+                                    >
+                                        <div
+                                            onMouseEnter={() => day && setHoveredDay(day)}
+                                            onMouseLeave={() => setHoveredDay(null)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!day) return;
+                                                setClickedDay(prev => prev?.date.getTime() === day.date.getTime() ? null : day);
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                borderRadius: '50%',
+                                                background: day ? LEVELS[day.level] : 'transparent',
+                                                outline: day ? '1px solid rgba(0,0,0,0.7)' : 'none',
+                                                transition: 'all 0.2s ease-in-out',
+                                                cursor: day ? 'pointer' : 'default',
+                                                transform: showTooltip ? 'scale(1.25)' : 'none',
+                                                boxShadow: showTooltip ? '0 0 12px rgba(124, 58, 237, 0.5)' : 'none',
+                                            }}
+                                        />
+                                        {showTooltip && (
+                                            <div
+                                                style={{
+                                                    position: 'absolute',
+                                                    bottom: '100%',
+                                                    left: tooltipAlign === 'left' ? 0 : tooltipAlign === 'right' ? 'auto' : '50%',
+                                                    right: tooltipAlign === 'right' ? 0 : 'auto',
+                                                    transform: tooltipAlign === 'center' ? 'translateX(-50%) translateY(-8px)' : 'translateY(-8px)',
+                                                    background: 'rgba(15, 23, 42, 0.95)',
+                                                    backdropFilter: 'blur(8px)',
+                                                    color: '#fff',
+                                                    padding: '6px 10px',
+                                                    borderRadius: '8px',
+                                                    fontSize: '10px',
+                                                    fontWeight: 500,
+                                                    whiteSpace: 'nowrap',
+                                                    zIndex: 100,
+                                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                                                    pointerEvents: 'none',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 2,
+                                                    alignItems: tooltipAlign === 'center' ? 'center' : 'flex-start',
+                                                }}
+                                            >
+                                                <div style={{ opacity: 0.6, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                                                    {format(day.date, 'EEEE, MMM d')}
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700 }}>
+                                                    <span 
+                                                        style={{ 
+                                                            display: 'inline-block', 
+                                                            width: 5, 
+                                                            height: 5, 
+                                                            borderRadius: '50%', 
+                                                            background: LEVELS[day.level],
+                                                            border: day.level === 0 ? '1px solid rgba(255,255,255,0.3)' : 'none'
+                                                        }} 
+                                                    />
+                                                    {day.count} dump{day.count !== 1 ? 's' : ''}
+                                                </div>
+                                                {/* Tooltip Arrow */}
+                                                <div
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: '100%',
+                                                        left: tooltipAlign === 'left' ? '8px' : tooltipAlign === 'right' ? 'auto' : '50%',
+                                                        right: tooltipAlign === 'right' ? '8px' : 'auto',
+                                                        transform: tooltipAlign === 'center' ? 'translateX(-50%)' : 'none',
+                                                        width: 0,
+                                                        height: 0,
+                                                        borderLeft: '5px solid transparent',
+                                                        borderRight: '5px solid transparent',
+                                                        borderTop: '5px solid rgba(15, 23, 42, 0.95)',
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
