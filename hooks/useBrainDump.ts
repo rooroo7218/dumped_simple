@@ -29,6 +29,7 @@ export const useBrainDump = (
     const [input, setInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [thinkingCopy, setThinkingCopy] = useState('');
+    const recognitionRef = React.useRef<any>(null);
 
     React.useEffect(() => {
         let interval: any;
@@ -109,18 +110,64 @@ export const useBrainDump = (
     const startSpeechToText = (onResult: (text: string) => void) => {
         const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
         if (!SpeechRecognition) return;
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-        recognition.onstart = () => setIsListening(true);
-        recognition.onend = () => setIsListening(false);
-        recognition.onerror = () => setIsListening(false);
-        recognition.onresult = (event: any) => {
-            const transcript = event.results[0][0].transcript;
-            onResult(transcript);
-        };
-        recognition.start();
+
+        if (isListening) {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.stop();
+                } catch (e) {
+                    console.warn("Error stopping recognition:", e);
+                }
+            }
+            setIsListening(false);
+            return;
+        }
+
+        try {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            let finalTranscript = '';
+
+            recognition.onstart = () => {
+                setIsListening(true);
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+                recognitionRef.current = null;
+            };
+
+            recognition.onerror = (event: any) => {
+                console.error("Speech recognition error:", event.error);
+                setIsListening(false);
+                recognitionRef.current = null;
+                if (event.error === 'not-allowed') {
+                    showToast("Microphone permission denied. Please allow microphone access in settings.", "error");
+                }
+            };
+
+            recognition.onresult = (event: any) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                onResult(finalTranscript + interimTranscript);
+            };
+
+            recognitionRef.current = recognition;
+            recognition.start();
+        } catch (err) {
+            console.error("Failed to start speech recognition:", err);
+            setIsListening(false);
+            recognitionRef.current = null;
+        }
     };
 
     return {

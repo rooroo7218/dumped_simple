@@ -87,6 +87,20 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         });
     }, []);
 
+    const micBaseText = useRef('');
+    const isSpeechSupported = typeof window !== 'undefined' && (!!(window as any).webkitSpeechRecognition || !!(window as any).SpeechRecognition);
+
+    const handleMicClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!isListening) {
+            micBaseText.current = input;
+        }
+        startSpeechToText((transcript) => {
+            setInput(micBaseText.current + (micBaseText.current ? ' ' : '') + transcript);
+            setTimeout(growTextarea, 50);
+        });
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const val = e.target.value;
         setInput(val);
@@ -311,6 +325,37 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
                         Listening…
                     </span>
+                </div>
+            )}
+
+            {/* Speech to Text Floating Button */}
+            {isSpeechSupported && !isProcessing && (
+                <div
+                    className="fixed z-40 transition-all duration-300 pointer-events-auto"
+                    style={{
+                        bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom) + 2px)`,
+                        right: '24px',
+                    }}
+                >
+                    <button
+                        onClick={handleMicClick}
+                        className={`w-11 h-11 rounded-full flex items-center justify-center border-2 border-slate-950 shadow-lg active:scale-95 transition-all duration-300 ${
+                            isListening 
+                                ? 'bg-red-500 border-red-600 text-white animate-pulse' 
+                                : 'bg-white/90 backdrop-blur-md text-slate-800 hover:bg-slate-50'
+                        }`}
+                        title={isListening ? "Stop listening" : "Voice dictation"}
+                    >
+                        {isListening ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 0 3-3v-6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" />
+                            </svg>
+                        )}
+                    </button>
                 </div>
             )}
 
