@@ -47,7 +47,8 @@ import {
     type DragEndEvent,
     TouchSensor,
     MouseSensor,
-    MeasuringStrategy
+    MeasuringStrategy,
+    useDroppable
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -64,7 +65,38 @@ import { CSS } from '@dnd-kit/utilities';
 type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
 type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic' | 'premium-holographic' | 'matrix' | 'shadow';
 
-interface ItemStyle { color: ColorKey; texture: TextureKey; orientation?: 'h' | 'v' }
+interface ItemStyle { color: ColorKey; texture: TextureKey; orientation?: 'h' | 'v'; space?: 'personal' | 'work' }
+
+interface SpaceTabProps {
+    space: 'personal' | 'work';
+    activeSpace: 'personal' | 'work';
+    onClick: () => void;
+    label: string;
+}
+
+const SpaceTab: React.FC<SpaceTabProps> = ({ space, activeSpace, onClick, label }) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `space-tab-${space}`,
+        data: { type: 'space-tab', space }
+    });
+
+    return (
+        <button
+            ref={setNodeRef}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all select-none ${
+                activeSpace === space
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'
+            } ${isOver ? 'ring-2 ring-indigo-500 ring-offset-2 scale-105 bg-indigo-50/50' : ''}`}
+        >
+            {label}
+        </button>
+    );
+};
 
 const COLOR_OPTIONS: { key: ColorKey; label: string; bg: string; dot: string }[] = [
     { key: 'default', label: 'Clear',   bg: 'rgba(255,255,255,0.42)',  dot: '#e2e8f0' },
@@ -238,6 +270,15 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const [excerpts, setExcerpts] = useState<Record<string, DumpItem[]>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [itemStyles, setItemStyles] = useState<Record<string, ItemStyle>>(loadStyles);
+    const [activeSpace, setActiveSpace] = useState<'personal' | 'work'>(() => {
+        const saved = localStorage.getItem('dumped_active_space');
+        return (saved === 'personal' || saved === 'work') ? saved : 'personal';
+    });
+
+    const handleSpaceChange = useCallback((space: 'personal' | 'work') => {
+        setActiveSpace(space);
+        localStorage.setItem('dumped_active_space', space);
+    }, []);
 
     const [showCompleted, setShowCompleted] = useState(false);
     
@@ -472,11 +513,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
-        if (!over || active.id === over.id) return;
+        const overIdStr = String(over.id);
+        if (overIdStr.startsWith('space-tab-')) return;
 
         const activeIdStr = String(active.id);
-        const overIdStr = String(over.id);
-
         const activeItem = items.find(i => i.id === activeIdStr);
         const overItem = items.find(i => i.id === overIdStr);
 
@@ -502,6 +542,18 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         
+        if (over) {
+            const overIdStr = String(over.id);
+            if (overIdStr.startsWith('space-tab-')) {
+                const targetSpace = overIdStr.replace('space-tab-', '') as 'personal' | 'work';
+                const activeIdStr = String(active.id);
+                handleStyleChange(activeIdStr, { space: targetSpace });
+                setActiveId(null);
+                setDraggedGroup(null);
+                return;
+            }
+        }
+
         if (over && active.id !== over.id) {
             const activeIdStr = String(active.id);
             const overIdStr = String(over.id);
@@ -613,8 +665,30 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
+
+    const spaceFilteredItems = useMemo(() => {
+        return displayItems.filter(i => {
+            const style = itemStyles[i.id];
+            const space = style?.space || 'personal';
+            return space === activeSpace;
+        });
+    }, [displayItems, itemStyles, activeSpace]);
+
+    const spaceCounts = useMemo(() => {
+        let personal = 0;
+        let work = 0;
+        displayItems.forEach(i => {
+            if (i.isCompleted) return;
+            const style = itemStyles[i.id];
+            const space = style?.space || 'personal';
+            if (space === 'work') work++;
+            else personal++;
+        });
+        return { personal, work };
+    }, [displayItems, itemStyles]);
+
     const flagged = useMemo(() => {
-        const raw = displayItems.filter(i => !i.isCompleted && i.isFlagged);
+        const raw = spaceFilteredItems.filter(i => !i.isCompleted && i.isFlagged);
         const storedIds = itemOrder['flagged'] ?? [];
         
         return [...raw].sort((a, b) => {
@@ -631,10 +705,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             // Level 3: Recency
             return b.lastMentionedAt - a.lastMentionedAt;
         });
-    }, [displayItems, itemOrder]);
+    }, [spaceFilteredItems, itemOrder]);
 
-    const active = displayItems.filter(i => !i.isCompleted && !i.isFlagged);
-    const completed = displayItems.filter(i => i.isCompleted);
+    const active = spaceFilteredItems.filter(i => !i.isCompleted && !i.isFlagged);
+    const completed = spaceFilteredItems.filter(i => i.isCompleted);
     const faded: Item[] = []; // Stale tasks now stay in active and fade visually via isStale logic
 
     const sortedActive = useMemo(() => {
@@ -709,7 +783,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         const isStale = !!(!item.isFlagged && persona?.staleTaskDimmingEnabled && item.lastMentionedAt && (now - item.lastMentionedAt >= sevenDaysMs));
         const shouldMini = !!(isStale && persona?.miniaturizeStaleTasksEnabled);
         const count = item.mentionCount;
-        const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const };
+        const style = itemStyles[item.id] ?? { color: 'default' as ColorKey, texture: 'none' as TextureKey, orientation: 'h' as const, space: 'personal' as const };
         const orientation = style.orientation ?? 'h';
 
         let colSpan: string;
@@ -784,6 +858,22 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             onDragCancel={handleDragCancel}
         >
             <div className="max-w-3xl mx-auto w-full pt-4 pb-24 animate-in fade-in duration-700 overflow-visible">
+                {/* ── Space Switcher Tabs ── */}
+                <div className="mb-6 mx-1 flex justify-between items-center bg-white/40 backdrop-blur-md border border-slate-200/50 p-1 rounded-2xl shadow-sm w-fit">
+                    <SpaceTab 
+                        space="personal" 
+                        activeSpace={activeSpace} 
+                        onClick={() => handleSpaceChange('personal')} 
+                        label={`Personal (${spaceCounts.personal})`} 
+                    />
+                    <SpaceTab 
+                        space="work" 
+                        activeSpace={activeSpace} 
+                        onClick={() => handleSpaceChange('work')} 
+                        label={`Work (${spaceCounts.work})`} 
+                    />
+                </div>
+
                 {aiStatus === 'processing' && (
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -1456,6 +1546,27 @@ const ItemTile = React.memo(({
                                         </div>
                                     </>
                                 )}
+
+                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mt-4 mb-2 opacity-50 uppercase tracking-widest text-left">Space</p>
+                                <div className="flex gap-1.5">
+                                    {[
+                                        { key: 'personal', label: 'Personal' },
+                                        { key: 'work', label: 'Work' }
+                                    ].map(s => (
+                                        <button
+                                            key={s.key}
+                                            onClick={() => handlers.onStyleChange(item.id, { space: s.key as 'personal' | 'work' })}
+                                            className={`
+                                                flex-1 h-8 flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95
+                                                ${(itemStyle.space ?? 'personal') === s.key 
+                                                    ? 'bg-slate-900 text-white shadow-md' 
+                                                    : 'bg-black/5 text-slate-600 hover:bg-black/10'}
+                                            `}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -1547,6 +1658,16 @@ const ItemTile = React.memo(({
                             className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors active:scale-95 px-2 py-1 -ml-2"
                         >
                             Delete
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const nextSpace = (itemStyle.space || 'personal') === 'personal' ? 'work' : 'personal';
+                                handlers.onStyleChange(item.id, { space: nextSpace });
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors active:scale-95 px-2 py-1"
+                        >
+                            Move to {(itemStyle.space || 'personal') === 'personal' ? 'Work' : 'Personal'}
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); handlers.onToggle(item.id); }}
