@@ -148,6 +148,7 @@ export interface UserPersona {
   miniaturizeStaleTasksEnabled?: boolean;
   freeReorderingEnabled?: boolean;
   rhythmCalendar?: RhythmCalendarData;
+  taskSpacesEnabled?: boolean;
 }
 
 export interface RhythmCategory {
@@ -241,7 +242,7 @@ export interface Item {
   completedAt?: number;
   fadedAt?: number;
   createdAt: number;
-  style?: { color: string; texture: string; orientation?: 'h' | 'v' };
+  style?: { color: string; texture: string; orientation?: 'h' | 'v'; space?: 'personal' | 'work' };
   isNew?: boolean;
   excerpts?: DumpItem[]; // Loaded on expansion
   notes?: string;

@@ -686,7 +686,7 @@ export const databaseService = {
         await supabase.from('items').update(updates).eq('id', itemId);
     },
 
-    async saveItemStyle(itemId: string, style: { color: string; texture: string; orientation?: 'h' | 'v' }) {
+    async saveItemStyle(itemId: string, style: { color: string; texture: string; orientation?: 'h' | 'v'; space?: 'personal' | 'work' }) {
         const items: Item[] = JSON.parse(localStorage.getItem('dumped_items') || '[]');
         const item = items.find(i => i.id === itemId);
         if (item) { item.style = style; localStorage.setItem('dumped_items', JSON.stringify(items)); }

@@ -356,6 +356,19 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Task Spaces</span>
+                                        <button 
+                                            onClick={() => {
+                                                onUpdatePersona({ taskSpacesEnabled: !persona.taskSpacesEnabled });
+                                            }}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.taskSpacesEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                            title="Enable Personal/Work tabs"
+                                        >
+                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.taskSpacesEnabled ? 'left-[18px]' : 'left-0.5'}`} />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center justify-between mb-1 mt-2">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dim Stale</span>
                                         <button 
                                             onClick={() => {
@@ -502,6 +515,19 @@ export const Navigation: React.FC<NavigationProps> = ({
                                         className={`w-10 h-5 rounded-full relative transition-colors ${persona.tileBoardViewEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                                     >
                                         <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.tileBoardViewEnabled ? 'left-6' : 'left-1'}`} />
+                                    </button>
+                               </div>
+
+                               <div className="flex items-center justify-between mb-1 mt-2">
+                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Task Spaces</span>
+                                   <button 
+                                        onClick={() => {
+                                            onUpdatePersona({ taskSpacesEnabled: !persona.taskSpacesEnabled });
+                                        }}
+                                        className={`w-10 h-5 rounded-full relative transition-colors ${persona.taskSpacesEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                        title="Enable Personal/Work tabs"
+                                    >
+                                        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.taskSpacesEnabled ? 'left-6' : 'left-1'}`} />
                                     </button>
                                </div>
 

@@ -667,12 +667,15 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     const displayItems = items.filter(i => !pendingDeletes.has(i.id));
 
     const spaceFilteredItems = useMemo(() => {
+        if (!persona?.taskSpacesEnabled) {
+            return displayItems;
+        }
         return displayItems.filter(i => {
             const style = itemStyles[i.id];
             const space = style?.space || 'personal';
             return space === activeSpace;
         });
-    }, [displayItems, itemStyles, activeSpace]);
+    }, [displayItems, itemStyles, activeSpace, persona?.taskSpacesEnabled]);
 
     const spaceCounts = useMemo(() => {
         let personal = 0;
@@ -859,20 +862,22 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         >
             <div className="max-w-3xl mx-auto w-full pt-4 pb-24 animate-in fade-in duration-700 overflow-visible">
                 {/* ── Space Switcher Tabs ── */}
-                <div className="mb-6 mx-1 flex justify-between items-center bg-white/40 backdrop-blur-md border border-slate-200/50 p-1 rounded-2xl shadow-sm w-fit">
-                    <SpaceTab 
-                        space="personal" 
-                        activeSpace={activeSpace} 
-                        onClick={() => handleSpaceChange('personal')} 
-                        label={`Personal (${spaceCounts.personal})`} 
-                    />
-                    <SpaceTab 
-                        space="work" 
-                        activeSpace={activeSpace} 
-                        onClick={() => handleSpaceChange('work')} 
-                        label={`Work (${spaceCounts.work})`} 
-                    />
-                </div>
+                {persona?.taskSpacesEnabled && (
+                    <div className="mb-6 mx-1 flex justify-between items-center bg-white/40 backdrop-blur-md border border-slate-200/50 p-1 rounded-2xl shadow-sm w-fit">
+                        <SpaceTab 
+                            space="personal" 
+                            activeSpace={activeSpace} 
+                            onClick={() => handleSpaceChange('personal')} 
+                            label={`Personal (${spaceCounts.personal})`} 
+                        />
+                        <SpaceTab 
+                            space="work" 
+                            activeSpace={activeSpace} 
+                            onClick={() => handleSpaceChange('work')} 
+                            label={`Work (${spaceCounts.work})`} 
+                        />
+                    </div>
+                )}
 
                 {aiStatus === 'processing' && (
                     <motion.div 
@@ -959,6 +964,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                         {...layout}
                                         size={layout.shouldMini ? 'sm' : 'md'}
                                         className={cn(layout.colSpan, layout.rowSpan)}
+                                        taskSpacesEnabled={persona?.taskSpacesEnabled}
                                     />
                                 );
                             })}
@@ -991,6 +997,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                                 {...layout}
                                                 size={layout.shouldMini ? 'sm' : 'md'}
                                                 className={cn(layout.colSpan, layout.rowSpan)}
+                                                taskSpacesEnabled={persona?.taskSpacesEnabled}
                                             />
                                         );
                                     })}
@@ -1022,6 +1029,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                                 {...layout}
                                                 size={layout.shouldMini ? 'sm' : 'md'}
                                                 className={cn(layout.colSpan, layout.rowSpan)}
+                                                taskSpacesEnabled={persona?.taskSpacesEnabled}
                                             />
                                         );
                                     })}
@@ -1095,6 +1103,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                 size={layout.shouldMini ? 'sm' : 'md'}
                                 className="shadow-2xl"
                                 isDragging={true}
+                                taskSpacesEnabled={persona?.taskSpacesEnabled}
                             />
                         </div>
                     );
@@ -1152,12 +1161,14 @@ interface ItemTileProps {
     canDrop?: boolean;
     isStale?: boolean;
     shouldMini?: boolean;
+    taskSpacesEnabled?: boolean;
 }
 
 const ItemTile = React.memo(({
     item, isExpanded, excerpts, handlers,
     style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop, isStale, shouldMini,
+    taskSpacesEnabled,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
     const draggable = true; // useSortable handles draggability
@@ -1547,26 +1558,30 @@ const ItemTile = React.memo(({
                                     </>
                                 )}
 
-                                <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mt-4 mb-2 opacity-50 uppercase tracking-widest text-left">Space</p>
-                                <div className="flex gap-1.5">
-                                    {[
-                                        { key: 'personal', label: 'Personal' },
-                                        { key: 'work', label: 'Work' }
-                                    ].map(s => (
-                                        <button
-                                            key={s.key}
-                                            onClick={() => handlers.onStyleChange(item.id, { space: s.key as 'personal' | 'work' })}
-                                            className={`
-                                                flex-1 h-8 flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95
-                                                ${(itemStyle.space ?? 'personal') === s.key 
-                                                    ? 'bg-slate-900 text-white shadow-md' 
-                                                    : 'bg-black/5 text-slate-600 hover:bg-black/10'}
-                                            `}
-                                        >
-                                            {s.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                {taskSpacesEnabled && (
+                                    <>
+                                        <p className="text-[11px] font-medium text-[#1a1a1a] leading-[1.75] mt-4 mb-2 opacity-50 uppercase tracking-widest text-left">Space</p>
+                                        <div className="flex gap-1.5">
+                                            {[
+                                                { key: 'personal', label: 'Personal' },
+                                                { key: 'work', label: 'Work' }
+                                            ].map(s => (
+                                                <button
+                                                    key={s.key}
+                                                    onClick={() => handlers.onStyleChange(item.id, { space: s.key as 'personal' | 'work' })}
+                                                    className={`
+                                                        flex-1 h-8 flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95
+                                                        ${(itemStyle.space ?? 'personal') === s.key 
+                                                            ? 'bg-slate-900 text-white shadow-md' 
+                                                            : 'bg-black/5 text-slate-600 hover:bg-black/10'}
+                                                    `}
+                                                >
+                                                    {s.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1659,16 +1674,18 @@ const ItemTile = React.memo(({
                         >
                             Delete
                         </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const nextSpace = (itemStyle.space || 'personal') === 'personal' ? 'work' : 'personal';
-                                handlers.onStyleChange(item.id, { space: nextSpace });
-                            }}
-                            className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors active:scale-95 px-2 py-1"
-                        >
-                            Move to {(itemStyle.space || 'personal') === 'personal' ? 'Work' : 'Personal'}
-                        </button>
+                        {taskSpacesEnabled && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const nextSpace = (itemStyle.space || 'personal') === 'personal' ? 'work' : 'personal';
+                                    handlers.onStyleChange(item.id, { space: nextSpace });
+                                }}
+                                className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors active:scale-95 px-2 py-1"
+                            >
+                                Move to {(itemStyle.space || 'personal') === 'personal' ? 'Work' : 'Personal'}
+                            </button>
+                        )}
                         <button
                             onClick={(e) => { e.stopPropagation(); handlers.onToggle(item.id); }}
                             className="text-[10px] font-bold uppercase tracking-widest text-[#1a1a1a]/40 hover:text-[#1a1a1a]/80 transition-colors active:scale-95 px-3 py-1 bg-black/5 rounded-full"
