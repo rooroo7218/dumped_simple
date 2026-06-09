@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
           short_name: 'Dumped',
           description: 'AI-powered personal operating system for your brain.',
           display: 'standalone',
+          orientation: 'portrait',
           background_color: '#ffffff',
           theme_color: '#ffffff',
           icons: [

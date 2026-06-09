@@ -162,10 +162,37 @@
         .animate-pulse-gentle {
             animation: pulse-gentle 4s ease-in-out infinite;
         }
+
+        /* Block horizontal (landscape) view on mobile/tablet devices */
+        @media screen and (orientation: landscape) and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+            #portrait-only-overlay {
+                display: flex !important;
+            }
+            #root {
+                display: none !important;
+            }
+        }
+
+        @keyframes rotate-device {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+        }
+        .animate-rotate-device {
+            animation: rotate-device 2.2s ease-in-out infinite;
+        }
     </style>
 </head>
 
 <body>
+    <div id="portrait-only-overlay" style="display: none; position: fixed; inset: 0; background: #ffffff; color: #0f172a; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif;">
+        <div class="animate-rotate-device" style="margin-bottom: 20px; color: #6366f1;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 48px; height: 48px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+            </svg>
+        </div>
+        <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; color: #1e293b;">Portrait view is best.</h2>
+        <p style="font-size: 13px; color: #64748b; max-width: 260px; line-height: 1.6;">Please rotate your device vertically. Dumped is designed exclusively for vertical focus.</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
