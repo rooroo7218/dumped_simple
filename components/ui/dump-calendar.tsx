@@ -204,7 +204,12 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                 return (
                                     <div
                                         key={di}
-                                        style={{ position: 'relative', width: '100%', aspectRatio: '1' }}
+                                        style={{ 
+                                            position: 'relative', 
+                                            width: '100%', 
+                                            aspectRatio: '1',
+                                            zIndex: showTooltip ? 20 : 1 
+                                        }}
                                     >
                                         <div
                                             onMouseEnter={() => day && setHoveredDay(day)}
@@ -218,8 +223,8 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                                 width: '100%',
                                                 height: '100%',
                                                 borderRadius: '50%',
-                                                background: day ? LEVELS[day.level] : 'transparent',
-                                                outline: day ? '1px solid rgba(0,0,0,0.7)' : 'none',
+                                                background: day ? (day.level === 0 && showTooltip ? '#f8fafc' : LEVELS[day.level]) : 'transparent',
+                                                outline: day ? (showTooltip ? '1.5px solid #0f172a' : '1px solid rgba(0,0,0,0.7)') : 'none',
                                                 transition: 'all 0.2s ease-in-out',
                                                 cursor: day ? 'pointer' : 'default',
                                                 transform: showTooltip ? 'scale(1.25)' : 'none',
