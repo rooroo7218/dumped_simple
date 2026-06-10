@@ -30,8 +30,6 @@ import { SpotlightLamp } from './ui/spotlight-lamp';
 import { EtheralShadow } from './ui/etheral-shadow';
 import MatrixRain from './ui/matrix-code';
 import { DitheringShader } from './ui/dithering-shader';
-import { HolographicTexture } from './ui/holographic-texture';
-import { PremiumHolographic } from './ui/premium-holographic';
 import { cn } from '@/lib/utils';
 import {
     DndContext,
@@ -64,7 +62,7 @@ import { CSS } from '@dnd-kit/utilities';
 // ── Style system ────────────────────────────────────────────────────────────
 
 type ColorKey = 'default' | 'rose' | 'amber' | 'emerald' | 'violet' | 'sky' | 'slate';
-type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'holographic' | 'premium-holographic' | 'matrix' | 'shadow';
+type TextureKey = 'none' | 'dots' | 'mesh' | 'linen' | 'animated-dots' | 'aurora' | 'shine-border' | 'neon' | 'xenon' | 'novatrix' | 'lamp' | 'zenitho' | 'dithering-wave' | 'dithering-swirl' | 'matrix' | 'shadow';
 
 interface ItemStyle { color: ColorKey; texture: TextureKey; orientation?: 'h' | 'v'; space?: 'personal' | 'work' }
 
@@ -170,11 +168,6 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
         </div>
     ), pattern: {} },
 
-    { key: 'premium-holographic', label: (
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-100 rounded-md overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-tr from-rose-400 via-amber-400 to-sky-400 opacity-60 animate-pulse" />
-        </div>
-    ), pattern: {} },
     { key: 'matrix', label: (
         <div className="relative w-full h-full bg-slate-950 rounded-md overflow-hidden">
             <MatrixRain color="#10b981" speed={0.8} fontSize={6} />
@@ -1456,41 +1449,10 @@ const ItemTile = React.memo(({
         data: { type: 'item', item }
     });
 
-    const [tiltMatrix, setTiltMatrix] = useState("");
-    const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-
     const sortableStyle = {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isSortableDragging ? 0 : 1, // The DragOverlay will show the active tile
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (isExpanded || isDragging || !['holographic', 'premium-holographic'].includes(itemStyle.texture)) return;
-        const rect = tileRef.current?.getBoundingClientRect();
-        if (!rect) return;
-
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        // Percent for shaders (0-100)
-        setMousePos({ 
-            x: (x / rect.width) * 100, 
-            y: (y / rect.height) * 100 
-        });
-
-        // Tilt calculation (max 12deg)
-        const rotateX = ((y - centerY) / centerY) * -12;
-        const rotateY = ((x - centerX) / centerX) * 12;
-        
-        setTiltMatrix(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
-    };
-
-    const handleMouseLeave = () => {
-        setTiltMatrix("");
-        setMousePos({ x: 50, y: 50 });
     };
 
     useEffect(() => { setDraftLabel(item.label); }, [item.label]);
@@ -1541,8 +1503,6 @@ const ItemTile = React.memo(({
         >
         <div
             ref={tileRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
             className={`
                 relative overflow-${stylerOpen ? 'visible' : 'hidden'} group select-none text-left flex flex-col justify-between h-full w-full
                 ${isExpanded ? 'z-20 shadow-lg' : 'shadow-sm'}
@@ -1551,17 +1511,16 @@ const ItemTile = React.memo(({
                 ${isDragging ? 'opacity-40' : ''}
                 ${isStale && !isExpanded ? 'grayscale-[0.6] opacity-60' : ''}
                 ${draggable && !isExpanded ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                rounded-[10px] ${(['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) && !isStale ? 'bg-black' : (['holographic', 'premium-holographic', 'aurora'].includes(itemStyle.texture) && !isStale ? 'bg-slate-50' : (isStale ? '' : 'bg-white')))} text-slate-900
+                rounded-[10px] ${(['neon', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) && !isStale ? 'bg-black' : (itemStyle.texture === 'aurora' && !isStale ? 'bg-slate-50' : (isStale ? '' : 'bg-white')))} text-slate-900
                 ${!isStale && itemStyle.texture === 'shine-border' && !isExpanded ? '' : className ?? ''}
                 ${itemStyle.texture === 'neon' && !isStale ? 'animate-neon-flicker' : ''}
                 transition-transform duration-500 ease-out will-change-transform
             `}
             style={{
-                backgroundColor: (isStale && (!isExpanded || shouldMini)) ? '#94a3b8' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : (['holographic', 'premium-holographic'].includes(itemStyle.texture) ? '#f8fafc' : colorBg)),
+                backgroundColor: (isStale && (!isExpanded || shouldMini)) ? '#94a3b8' : ((['neon', 'xenon', 'novatrix', 'lamp', 'zenitho', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture)) ? '#000' : colorBg),
                 ...textureStyle,
                 padding,
                 '--tile-scale': size === 'flagged' ? '1.5' : size === 'lg' ? '1.3' : size === 'md' ? '1.1' : '1',
-                transform: (!isExpanded && ['holographic', 'premium-holographic'].includes(itemStyle.texture) && tiltMatrix) ? tiltMatrix : undefined,
                 transformStyle: 'preserve-3d',
                 ...(itemStyle.texture === 'neon' && !isStale ? {
                     '--neon-text-color': COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot || '#39ff14',
@@ -1614,8 +1573,6 @@ const ItemTile = React.memo(({
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-
-            {!isStale && itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
 
             {!isStale && itemStyle.texture === 'animated-dots' && (
                 <div className="absolute inset-0 pointer-events-none opacity-40">
