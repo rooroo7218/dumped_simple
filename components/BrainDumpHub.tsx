@@ -341,9 +341,9 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 >
                     <button
                         onClick={handleMicClick}
-                        className={`w-11 h-11 rounded-full flex items-center justify-center border-2 border-slate-950 shadow-lg active:scale-95 transition-all duration-300 ${
+                        className={`w-11 h-11 rounded-full flex items-center justify-center border-2 border-black shadow-lg active:scale-95 transition-all duration-300 ${
                             isListening 
-                                ? 'bg-red-500 border-red-600 text-white animate-pulse' 
+                                ? 'bg-red-500 text-white animate-pulse' 
                                 : 'bg-white/90 backdrop-blur-md text-slate-800 hover:bg-slate-50'
                         }`}
                         title={isListening ? "Stop listening" : "Voice dictation"}
