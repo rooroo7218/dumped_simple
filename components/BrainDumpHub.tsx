@@ -249,31 +249,16 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             bottom: `calc(${submitBottom}px + env(safe-area-inset-bottom))`,
                         }}
                     >
-                        <div className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-2xl rounded-full flex items-center justify-center min-h-[44px] w-fit mx-auto overflow-hidden pointer-events-auto relative">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isProcessing}
-                                className="flex-1 flex items-center justify-start pl-6 pr-16 py-2 rounded-full text-[13px] font-semibold text-slate-800 transition-all active:scale-95 relative"
-                            >
-                                {!isProcessing && (
-                                    <img 
-                                        src="/phew-logo.svg" 
-                                        alt="" 
-                                        className="absolute right-[-4px] w-12 h-12 flex-shrink-0"
-                                        style={{ 
-                                            imageRendering: '-webkit-optimize-contrast' as any,
-                                            top: '50%',
-                                            transform: 'translateY(-50%) translate3d(0, 0, 0)',
-                                            filter: 'brightness(1.02) contrast(1.1) drop-shadow(0 0 0.2px rgba(0,0,0,0.5))'
-                                        }}
-                                    />
-                                )}
-                                {isProcessing
-                                    ? <ArrowPathIcon className="w-4 h-4 text-slate-400 animate-spin" />
-                                    : 'put it all down'
-                                }
-                            </button>
-                        </div>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isProcessing}
+                            className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-lg rounded-full flex items-center justify-center min-h-[44px] px-8 py-2 text-[13px] font-semibold text-slate-800 transition-all active:scale-95 relative pointer-events-auto mx-auto w-fit"
+                        >
+                            {isProcessing
+                                ? <ArrowPathIcon className="w-4 h-4 text-slate-400 animate-spin" />
+                                : 'put it all down'
+                            }
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
