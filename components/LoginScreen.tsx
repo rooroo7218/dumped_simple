@@ -18,7 +18,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ signInWithGoogle, sign
                     <img 
                         src="/phew-logo.svg" 
                         alt="Logo" 
-                        className="w-32 h-32 object-contain"
+                        className="w-48 h-48 object-contain"
                         style={{ imageRendering: '-webkit-optimize-contrast' as any }}
                     />
                 </div>
