@@ -3,17 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const STEPS = [
     {
-        emoji: '🧠',
         title: 'dump anything.',
         body: 'Every task, worry, or half-baked idea — just get it out. No categories, no checkboxes, no right way to do it. Just you and a blank page.',
     },
     {
-        emoji: '📈',
         title: 'what keeps coming up, comes to the top.',
         body: "The more you mention something in your dumps, the bigger its tile grows. No manual sorting. The pile organises itself around what's actually rattling around in your head.",
     },
     {
-        emoji: '🎨',
         title: 'make it yours.',
         body: "Customise tiles with textures, colours, and animated backgrounds. Old tasks that haven't come up in a while fade out on their own. Your headspace, how you want it.",
     },
@@ -73,7 +70,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onDone, userId }) => {
                 onClick={e => e.stopPropagation()}
                 className="w-full max-w-sm bg-white border-2 border-black rounded-3xl shadow-2xl px-7 py-7"
             >
-                <div className="text-3xl mb-4">{current.emoji}</div>
                 <h2 className="text-[20px] font-bold text-slate-900 mb-2">{current.title}</h2>
                 <p className="text-[14px] text-slate-500 leading-relaxed mb-6">{current.body}</p>
 
