@@ -30,19 +30,6 @@ export const ZenPlayer: React.FC<ZenPlayerProps> = ({ player }) => {
 
     return (
         <>
-            {/* Audio — always rendered regardless of screen size */}
-            <div className="hidden">
-                {isPlaying && (
-                    <iframe
-                        width="0"
-                        height="0"
-                        src={`https://www.youtube.com/embed/${currentTrack.id}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0`}
-                        title="Zen Player"
-                        allow="autoplay"
-                    />
-                )}
-            </div>
-
             {/* Desktop UI — hidden on mobile */}
             <div
                 ref={containerRef}

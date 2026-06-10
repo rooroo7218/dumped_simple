@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export const TRACKS = [
-    { id: 'jfKfPfyJRdk', title: 'Lofi Girl',      genre: 'Lofi Hip Hop' },
-    { id: 'hIH1joP9_FU', title: 'Deep Focus',      genre: 'Instrumental' },
-    { id: 'TtkFsfOP9QI', title: 'Peaceful Piano',  genre: 'Classical' },
-    { id: 'fNjQBXADm44', title: 'Nature Sounds',   genre: 'Rain & Forest' },
-    { id: 'Dx5qFachd3A', title: 'Coffee House',    genre: 'Smooth Jazz' },
-    { id: 'vYIYIVmOo3Q', title: 'Study Radio',     genre: 'Lofi Beats' },
-    { id: 'jXAEIWcGXwE', title: 'Chill Radio',     genre: 'Lofi Beats' },
-    { id: 'blAFxjhg62k', title: 'Focus Radio',     genre: 'Ambient' },
+    { id: 'groovesalad',  title: 'Groove Salad',    genre: 'Ambient · Downtempo',   streamUrl: 'https://ice1.somafm.com/groovesalad-256-mp3' },
+    { id: 'dronezone',    title: 'Drone Zone',       genre: 'Deep Ambient',           streamUrl: 'https://ice1.somafm.com/dronezone-256-mp3' },
+    { id: 'spacestation', title: 'Space Station',    genre: 'Space Ambient',          streamUrl: 'https://ice2.somafm.com/spacestation-128-mp3' },
+    { id: 'illstreet',    title: 'Cocktail Lounge',  genre: 'Lounge · Jazz',          streamUrl: 'https://ice1.somafm.com/illstreet-128-mp3' },
+    { id: 'cliqhop',      title: 'Cliq Hop',         genre: 'Beats · Electronic',     streamUrl: 'https://ice2.somafm.com/cliqhop-256-mp3' },
+    { id: 'bootliquor',   title: 'Boot Liquor',      genre: 'Americana · Roots',      streamUrl: 'https://ice1.somafm.com/bootliquor-256-mp3' },
+    { id: 'secretagent',  title: 'Secret Agent',     genre: 'Jazz · Cinematic',       streamUrl: 'https://ice4.somafm.com/secretagent-128-mp3' },
+    { id: 'lush',         title: 'Lush',             genre: 'Chillout · Grooves',     streamUrl: 'https://ice1.somafm.com/lush-128-mp3' },
 ];
 
 export interface ZenPlayerState {
@@ -25,6 +25,33 @@ export function useZenPlayer(): ZenPlayerState {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        audioRef.current = new Audio();
+        audioRef.current.preload = 'none';
+        return () => {
+            audioRef.current?.pause();
+            audioRef.current = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        if (isPlaying) {
+            audio.src = TRACKS[currentTrackIndex].streamUrl;
+            audio.muted = isMuted;
+            audio.play().catch(() => setIsPlaying(false));
+        } else {
+            audio.pause();
+            audio.src = '';
+        }
+    }, [isPlaying, currentTrackIndex]);
+
+    useEffect(() => {
+        if (audioRef.current) audioRef.current.muted = isMuted;
+    }, [isMuted]);
 
     return {
         isPlaying,
