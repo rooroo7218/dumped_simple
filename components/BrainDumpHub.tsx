@@ -31,12 +31,16 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     const [fadeOpacity, setFadeOpacity] = useState(1);
     
     // Formatting for notebook aesthetic
-    const [dateTime] = useState(() => {
+    const [date] = useState(() => {
         const now = new Date();
-        return {
-            date: now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-            time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-        };
+        const base = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        // Insert ordinal suffix: "June 10" → "June 10th"
+        return base.replace(/(\d+)$/, (d) => {
+            const n = parseInt(d);
+            const s = ['th','st','nd','rd'];
+            const v = n % 100;
+            return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        });
     });
 
     // Track keyboard height via visualViewport
@@ -142,12 +146,9 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                             <SparklesIcon className="w-4 h-4 text-sky-400" />
                             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Dump</span>
                         </div>
-                        <div className="flex justify-between items-baseline mb-2">
+                        <div className="mb-2">
                             <div className="text-xl font-medium tracking-tight text-slate-900">
-                                {dateTime.date}
-                            </div>
-                            <div className="text-xl font-medium tracking-tight text-slate-900">
-                                {dateTime.time}
+                                {date}
                             </div>
                         </div>
                     </div>
