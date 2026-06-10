@@ -28,6 +28,17 @@
             div.innerHTML = '<strong>RUNTIME ERROR:</strong><br>' + message + '<br>At: ' + source + ':' + lineno + ':' + colno + (error ? '<br>Stack: ' + error.stack : '');
             document.body.appendChild(div);
         };
+
+        function lockPortrait() {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('portrait').catch(function() {});
+                }
+            } catch (err) {}
+        }
+        window.addEventListener('load', lockPortrait);
+        window.addEventListener('click', lockPortrait);
+        window.addEventListener('touchstart', lockPortrait);
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Google One Tap / Identity Services -->
