@@ -1211,9 +1211,9 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <SparklesIcon className="w-4 h-4 text-slate-400" />
-                                <span className="text-[10px] font-semibold tracking-widest text-slate-500">out of your head ({completed.length + faded.length})</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Resolved ({completed.length + faded.length})</span>
                             </div>
-                            <h2 className="text-xl font-medium tracking-tight text-slate-900">done and dusted.</h2>
+                            <h2 className="text-xl font-medium tracking-tight text-slate-900">Done</h2>
                         </div>
                         <span className="text-[11px] font-medium text-slate-400 shrink-0 mr-1">
                             {showCompleted ? 'hide' : 'show'}
