@@ -252,7 +252,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isProcessing}
-                            className="bg-white/85 backdrop-blur-xl border-2 border-black shadow-lg rounded-full flex items-center justify-center min-h-[44px] px-8 py-2 text-[13px] font-semibold text-slate-800 transition-all active:scale-95 relative pointer-events-auto mx-auto w-fit"
+                            className="bg-white/85 backdrop-blur-xl border border-black/70 shadow-lg rounded-full flex items-center justify-center min-h-[44px] px-8 py-2 text-[13px] font-semibold text-slate-800 transition-all active:scale-95 relative pointer-events-auto mx-auto w-fit"
                         >
                             {isProcessing
                                 ? <ArrowPathIcon className="w-4 h-4 text-slate-400 animate-spin" />
@@ -326,7 +326,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                 >
                     <button
                         onClick={handleMicClick}
-                        className={`w-11 h-11 rounded-full flex items-center justify-center border-2 border-black shadow-lg active:scale-95 transition-all duration-300 ${
+                        className={`w-11 h-11 rounded-full flex items-center justify-center border border-black/70 shadow-lg active:scale-95 transition-all duration-300 ${
                             isListening 
                                 ? 'bg-red-500 text-white animate-pulse' 
                                 : 'bg-white/90 backdrop-blur-md text-slate-800 hover:bg-slate-50'
