@@ -3,12 +3,13 @@ import { useState, useRef, useEffect } from 'react';
 export const TRACKS = [
     { id: 'groovesalad',  title: 'Groove Salad',    genre: 'Ambient · Downtempo',   streamUrl: 'https://ice1.somafm.com/groovesalad-256-mp3' },
     { id: 'dronezone',    title: 'Drone Zone',       genre: 'Deep Ambient',           streamUrl: 'https://ice1.somafm.com/dronezone-256-mp3' },
-    { id: 'spacestation', title: 'Space Station',    genre: 'Space Ambient',          streamUrl: 'https://ice2.somafm.com/spacestation-128-mp3' },
+    { id: 'defcon',       title: 'Def Con',          genre: 'Ambient · Beats',        streamUrl: 'https://ice1.somafm.com/defcon-256-mp3' },
     { id: 'illstreet',    title: 'Cocktail Lounge',  genre: 'Lounge · Jazz',          streamUrl: 'https://ice1.somafm.com/illstreet-128-mp3' },
     { id: 'cliqhop',      title: 'Cliq Hop',         genre: 'Beats · Electronic',     streamUrl: 'https://ice2.somafm.com/cliqhop-256-mp3' },
-    { id: 'bootliquor',   title: 'Boot Liquor',      genre: 'Americana · Roots',      streamUrl: 'https://ice1.somafm.com/bootliquor-256-mp3' },
+    { id: 'fluid',        title: 'Fluid',            genre: 'Lofi · Hip-Hop Beats',   streamUrl: 'https://ice1.somafm.com/fluid-128-mp3' },
     { id: 'secretagent',  title: 'Secret Agent',     genre: 'Jazz · Cinematic',       streamUrl: 'https://ice4.somafm.com/secretagent-128-mp3' },
     { id: 'lush',         title: 'Lush',             genre: 'Chillout · Grooves',     streamUrl: 'https://ice1.somafm.com/lush-128-mp3' },
+    { id: 'coderadio',    title: 'lofi coderadio',   genre: 'lofi · jazzy beats',     streamUrl: 'https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3' },
 ];
 
 export interface ZenPlayerState {

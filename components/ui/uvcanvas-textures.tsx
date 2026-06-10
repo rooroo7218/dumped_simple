@@ -13,7 +13,7 @@ export const XenonTexture = memo(({ isCompact = false }: { isCompact?: boolean }
           ? "w-[180%] h-[180%] top-[-40%] left-[-40%]" 
           : "inset-0"
       )}>
-        <Xenon className="w-full h-full" />
+        <Xenon {...{ className: "w-full h-full" } as any} />
       </div>
     </div>
   );
@@ -28,7 +28,7 @@ export const NovatrixTexture = memo(({ isCompact = false }: { isCompact?: boolea
           ? "w-[180%] h-[180%] top-[-40%] left-[-40%]" 
           : "inset-0"
       )}>
-        <Novatrix className="w-full h-full" />
+        <Novatrix {...{ className: "w-full h-full" } as any} />
       </div>
     </div>
   );
@@ -43,7 +43,7 @@ export const ZenithoTexture = memo(({ isCompact = false }: { isCompact?: boolean
           ? "w-[180%] h-[180%] top-[-40%] left-[-40%]" 
           : "inset-0"
       )}>
-        <Zenitho className="w-full h-full" />
+        <Zenitho {...{ className: "w-full h-full" } as any} />
       </div>
     </div>
   );
