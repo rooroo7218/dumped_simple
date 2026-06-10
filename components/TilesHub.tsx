@@ -1381,7 +1381,7 @@ const ItemTile = React.memo(({
                 </div>
             )}
 
-            <div className="relative z-10 flex flex-col gap-2">
+            <div className={cn("relative z-10 flex flex-col gap-2", !isExpanded && "pb-8")}>
                 {/* ── Top: Complete button + Title ── */}
             {(!isStale || isExpanded || !shouldMini) && (
                 <div className={cn("flex gap-1", isExpanded ? "items-center" : "items-start")}>
@@ -1429,32 +1429,33 @@ const ItemTile = React.memo(({
                 </div>
             )}
 
-                {/* ── Metadata Badges ── */}
-                {!isExpanded && (!isStale || !shouldMini) && (item.mentionCount > 1 || isOld) && (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        {/* Mention Count Pill */}
-                        {item.mentionCount > 1 && (
-                            <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
-                                <div
-                                    className="h-1 w-1 rounded-full shrink-0"
-                                    style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
-                                />
-                                <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
-                                    {item.mentionCount}×
-                                </span>
-                            </div>
-                        )}
-                        {/* "Old" Badge */}
-                        {isOld && (
-                            <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
-                                <span className={`text-[10px] font-bold tracking-tight uppercase ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
-                                    Old
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
+
+            {/* ── Bottom Right: Metadata Badges (Detached/Absolute) ── */}
+            {!isExpanded && (!isStale || !shouldMini) && (item.mentionCount > 1 || isOld) && (
+                <div className="absolute bottom-1.5 right-1.5 z-20 flex items-center gap-1.5">
+                    {/* Mention Count Pill */}
+                    {item.mentionCount > 1 && (
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                            <div
+                                className="h-1 w-1 rounded-full shrink-0"
+                                style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
+                            />
+                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                                {item.mentionCount}×
+                            </span>
+                        </div>
+                    )}
+                    {/* "Old" Badge */}
+                    {isOld && (
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                            <span className={`text-[10px] font-bold tracking-tight uppercase ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                                Old
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ── Bottom: Icons grouped (Detached/Absolute) ── */}
             {!isExpanded && (!isStale || !shouldMini) && (
