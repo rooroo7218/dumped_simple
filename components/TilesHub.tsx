@@ -1171,6 +1171,7 @@ const ItemTile = React.memo(({
     taskSpacesEnabled,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
+    const isOld = Date.now() - item.createdAt >= 14 * 24 * 60 * 60 * 1000;
     const draggable = true; // useSortable handles draggability
     const [stylerOpen, setStylerOpen] = useState(false);
     const [stylerPosition, setStylerPosition] = useState<'left' | 'right'>('right');
@@ -1428,18 +1429,29 @@ const ItemTile = React.memo(({
                 </div>
             )}
 
-                {/* ── Mention Count Pill ── */}
-                {item.mentionCount > 1 && !isExpanded && (!isStale || !shouldMini) && (
-                    <div className="flex items-center mt-1">
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
-                            <div
-                                className="h-1 w-1 rounded-full shrink-0"
-                                style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
-                            />
-                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
-                                {item.mentionCount}×
-                            </span>
-                        </div>
+                {/* ── Metadata Badges ── */}
+                {!isExpanded && (!isStale || !shouldMini) && (item.mentionCount > 1 || isOld) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {/* Mention Count Pill */}
+                        {item.mentionCount > 1 && (
+                            <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                                <div
+                                    className="h-1 w-1 rounded-full shrink-0"
+                                    style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
+                                />
+                                <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                                    {item.mentionCount}×
+                                </span>
+                            </div>
+                        )}
+                        {/* "Old" Badge */}
+                        {isOld && (
+                            <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                                <span className={`text-[10px] font-bold tracking-tight uppercase ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                                    Old
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
