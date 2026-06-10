@@ -312,13 +312,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 </div>
                                 <div className="px-4 py-2 bg-slate-50/50 border-b border-slate-100">
                                     <div className="flex items-center justify-between mb-2 mt-1">
-                                        <span className="text-[11px] font-bold text-slate-500">daily ritual</span>
+                                        <span className="text-[11px] font-bold text-slate-500">daily reminder</span>
                                         <button 
                                             onClick={() => {
                                                 const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
                                                 onUpdatePersona({ reminderSettings: { ...settings, enabled: !settings.enabled } });
                                             }}
-                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                            className={`w-8 h-4 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                                         >
                                             <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${persona.reminderSettings?.enabled ? 'left-[18px]' : 'left-0.5'}`} />
                                         </button>
@@ -369,7 +369,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
-                                        <span className="text-[11px] font-bold text-slate-500">dim stale</span>
+                                        <span className="text-[11px] font-bold text-slate-500">dim stale cards</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
@@ -381,7 +381,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
-                                        <span className="text-[11px] font-bold text-slate-500">mini stale</span>
+                                        <span className="text-[11px] font-bold text-slate-500">mini stale cards</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });
@@ -392,13 +392,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                         </button>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => { setIsUserMenuOpen(false); setActiveTab('persona'); }}
-                                    className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                                >
-                                    <Cog6ToothIcon className="w-4 h-4" />
-                                    profile & settings
-                                </button>
+
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
@@ -454,13 +448,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <span className="text-[10px] text-slate-400 truncate">{user.email}</span>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                                <button
-                                    onClick={() => { setIsMobileMenuOpen(false); setActiveTab('persona'); }}
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all active:scale-90"
-                                    title="Settings"
-                                >
-                                    <Cog6ToothIcon className="w-4 h-4" />
-                                </button>
+
                                 <button
                                     onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}
                                     className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all active:scale-90"
@@ -479,16 +467,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                             </div>
                         </div>
 
-                        {/* Rituals (Mobile) */}
+                        {/* Reminders (Mobile) */}
                         <div className="px-4 py-3 border-b border-black/10 bg-slate-50/30">
                            <div className="flex items-center justify-between mb-2">
-                               <span className="block text-[11px] font-bold text-slate-500">daily ritual</span>
+                               <span className="block text-[11px] font-bold text-slate-500">daily reminder</span>
                                <button 
                                     onClick={() => {
                                         const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
                                         onUpdatePersona({ reminderSettings: { ...settings, enabled: !settings.enabled } });
                                     }}
-                                    className={`w-10 h-5 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                    className={`w-10 h-5 rounded-full relative transition-colors ${persona.reminderSettings?.enabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                                 >
                                     <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.reminderSettings?.enabled ? 'left-6' : 'left-1'}`} />
                                 </button>
@@ -532,7 +520,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                </div>
 
                                <div className="flex items-center justify-between mb-1 mt-2">
-                                   <span className="block text-[11px] font-bold text-slate-500">dim stale</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">dim stale cards</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
@@ -541,10 +529,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     >
                                         <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${persona.staleTaskDimmingEnabled ? 'left-6' : 'left-1'}`} />
                                     </button>
-                               </div>
+                                </div>
 
                                <div className="flex items-center justify-between mb-1 mt-2">
-                                   <span className="block text-[11px] font-bold text-slate-500">mini stale</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">mini stale cards</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });

@@ -179,7 +179,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
             if (hasDumpedToday) return;
 
             showToast(
-                `Time for your ${settings.timeOfDay} ritual!`, 
+                `Time for your ${settings.timeOfDay} reminder!`, 
                 'info', 
                 `Don't forget to do your ${settings.timeOfDay} brain dump.`
             );

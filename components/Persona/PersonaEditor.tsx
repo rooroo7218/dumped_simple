@@ -183,13 +183,13 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                 )}
             </div>
 
-            {/* ── Daily Rituals ── */}
+            {/* ── Daily Reminders ── */}
             <div className={`${card} p-6 space-y-5 overflow-hidden relative`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full -mr-16 -mt-16" />
                 
                 <div className="flex items-center justify-between relative z-10">
                     <div>
-                        <p className={sectionTitle}>Daily Rituals</p>
+                        <p className={sectionTitle}>Daily Reminders</p>
                         <p className="text-[11px] text-slate-500 font-medium mt-0.5">Stay consistent with your brain dumps</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
                                     } 
                                 });
                             }}
-                            className={`w-10 h-5 rounded-full transition-all relative ${p.reminderSettings?.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                            className={`w-10 h-5 rounded-full transition-all relative ${p.reminderSettings?.enabled ? 'bg-indigo-500' : 'bg-slate-200'}`}
                         >
                             <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${p.reminderSettings?.enabled ? 'left-6' : 'left-1'}`} />
                         </button>
