@@ -40,6 +40,7 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
     };
 
     resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     const chars = characters.split('');
     const drops: number[] = [];
@@ -48,8 +49,6 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
     for (let i = 0; i < columnCount; i++) {
       drops[i] = Math.random() * -100;
     }
-
-    window.addEventListener('resize', resizeCanvas);
 
     const draw = () => {
       ctx.fillStyle = `rgba(0, 0, 0, ${fadeOpacity})`;

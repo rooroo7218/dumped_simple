@@ -277,14 +277,12 @@ export function DitheringShader({
     gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0)
 
     const resize = () => {
-      const w = canvas.clientWidth || canvas.offsetWidth || 100;
-      const h = canvas.clientHeight || canvas.offsetHeight || 100;
-      canvas.width = w; canvas.height = h;
-      gl.viewport(0, 0, w, h);
-    };
+      const w = canvas.clientWidth, h = canvas.clientHeight
+      canvas.width = w; canvas.height = h
+      gl.viewport(0, 0, w, h)
+    }
     resize();
-
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", resize)
 
     const render = () => {
       const t = (Date.now() - startTimeRef.current) * 0.001 * speed
@@ -303,7 +301,7 @@ export function DitheringShader({
     render()
 
     return () => {
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", resize)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [colorBack, colorFront, shape, type, pxSize, speed])
