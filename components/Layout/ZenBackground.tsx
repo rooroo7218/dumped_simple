@@ -81,7 +81,7 @@ export const ZenBackground: React.FC<ZenBackgroundProps> = ({
     }
 
     return (
-        <div className="fixed top-0 left-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100dvh' }}>
+        <div className="fixed inset-0 w-[100vw] z-[1] overflow-hidden pointer-events-none" style={{ height: '100vh', minHeight: '-webkit-fill-available' }}>
 
             {/* Image background (Zen scenes) */}
             <div

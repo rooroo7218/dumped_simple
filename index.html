@@ -48,7 +48,7 @@
             overflow-y: auto;
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
-            background: #ffffff;
+            background: transparent;
             overscroll-behavior: none;
         }
 
@@ -57,7 +57,7 @@
         }
 
         body {
-            background: #ffffff;
+            background: transparent;
             overscroll-behavior: none;
             color: #0f172a;
         }
@@ -195,6 +195,7 @@
 </head>
 
 <body>
+    <div id="root-bg" style="position: fixed; inset: 0; background: #ffffff; z-index: 0;"></div>
     <div id="portrait-only-overlay" style="display: none; position: fixed; inset: 0; background: #ffffff; color: #0f172a; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif;">
         <div class="animate-rotate-device" style="margin-bottom: 20px; color: #6366f1;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 48px; height: 48px;">
