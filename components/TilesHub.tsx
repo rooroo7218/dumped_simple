@@ -257,7 +257,26 @@ const ONBOARDING_SAMPLES: Item[] = [
 
 // ── TilesHub ───────────────────────────────────────────────────────────
 
-interface TilesHubProps { 
+const TASK_PHRASES = [
+    "Phew...Here's all your stuff.",
+    "Here's everything on your plate.",
+    "All your stuff, in one place.",
+    "Everything you've got going on.",
+    "All of it, laid out.",
+    "Here's what's on your mind.",
+    "Everything you're juggling.",
+];
+const FLAGGED_PHRASES = [
+    "These seem important.",
+    "These caught your eye.",
+    "You flagged these.",
+    "Worth a second look.",
+    "Don't forget these.",
+    "These stood out to you.",
+    "On your radar.",
+];
+
+interface TilesHubProps {
     setActiveTab: (tab: any) => void;
     aiStatus?: 'idle' | 'processing' | 'error' | 'success';
     thinkingCopy?: string;
@@ -277,24 +296,6 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     });
 
     // Session-based heading phrases (picked once per session via sessionStorage)
-    const TASK_PHRASES = [
-        "Phew...Here's all your stuff.",
-        "Here's everything on your plate.",
-        "All your stuff, in one place.",
-        "Everything you've got going on.",
-        "All of it, laid out.",
-        "Here's what's on your mind.",
-        "Everything you're juggling.",
-    ];
-    const FLAGGED_PHRASES = [
-        "These seem important.",
-        "These caught your eye.",
-        "You flagged these.",
-        "Worth a second look.",
-        "Don't forget these.",
-        "These stood out to you.",
-        "On your radar.",
-    ];
     const taskPhrase = useState(() => {
         const key = 'session_task_phrase';
         const stored = sessionStorage.getItem(key);
@@ -468,10 +469,6 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         prevStatus.current = aiStatus;
     }, [aiStatus]);
 
-    // Reload when AI status changes (e.g. dump submitted, AI starts processing)
-    useEffect(() => {
-        load();
-    }, [aiStatus]);
 
     // Undo-delete state
     const [pendingDeletes, setPendingDeletes] = useState<Map<string, { item: Item }>>(new Map());
@@ -1439,17 +1436,6 @@ const ItemTile = React.memo(({
     const [draftNotes, setDraftNotes] = useState(item.notes || '');
     const [showExcerpts, setShowExcerpts] = useState(false);
     const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isInViewport, setIsInViewport] = useState(false);
-    useEffect(() => {
-        const el = tileRef.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => setIsInViewport(entry.isIntersecting),
-            { rootMargin: '200px' }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
 
     useLayoutEffect(() => {
         if (isExpanded && titleTextareaRef.current) {
@@ -1609,29 +1595,29 @@ const ItemTile = React.memo(({
                 </div>
             )}
             
-            {/* ── Shader Backgrounds (only rendered when tile is in/near viewport) ── */}
-            {!isStale && isInViewport && itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
-            {!isStale && isInViewport && itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
-            {!isStale && isInViewport && itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
-            {!isStale && isInViewport && itemStyle.texture === 'matrix' && <MatrixRain color="#00ff00" speed={0.5} fontSize={12} />}
-            {!isStale && isInViewport && itemStyle.texture === 'shadow' && <EtheralShadow color="rgba(15, 23, 42, 0.4)" animation={{ scale: 50, speed: 20 }} />}
+            {/* ── Shader Backgrounds ── */}
+            {!isStale && itemStyle.texture === 'novatrix' && <NovatrixTexture isCompact={!isExpanded} />}
+            {!isStale && itemStyle.texture === 'zenitho' && <ZenithoTexture isCompact={!isExpanded} />}
+            {!isStale && itemStyle.texture === 'lamp' && <SpotlightLamp isCompact={!isExpanded} className="absolute inset-0 pointer-events-none" />}
+            {!isStale && itemStyle.texture === 'matrix' && <MatrixRain color="#00ff00" speed={0.5} fontSize={12} />}
+            {!isStale && itemStyle.texture === 'shadow' && <EtheralShadow color="rgba(15, 23, 42, 0.4)" animation={{ scale: 50, speed: 20 }} />}
 
-            {!isStale && isInViewport && itemStyle.texture === 'dithering-wave' && (
+            {!isStale && itemStyle.texture === 'dithering-wave' && (
                 <DitheringShader
                     shape="wave" type="8x8" colorBack="#001122" colorFront="#00bfff" pxSize={3} speed={0.6}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
-            {!isStale && isInViewport && itemStyle.texture === 'dithering-swirl' && (
+            {!isStale && itemStyle.texture === 'dithering-swirl' && (
                 <DitheringShader
                     shape="swirl" type="4x4" colorBack="#220011" colorFront="#ff007f" pxSize={4} speed={0.9}
                     className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
                 />
             )}
 
-            {!isStale && isInViewport && itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
+            {!isStale && itemStyle.texture === 'premium-holographic' && <PremiumHolographic mouseX={mousePos.x} mouseY={mousePos.y} />}
 
-            {!isStale && isInViewport && itemStyle.texture === 'animated-dots' && (
+            {!isStale && itemStyle.texture === 'animated-dots' && (
                 <div className="absolute inset-0 pointer-events-none opacity-40">
                     <AnimatedDots
                         fullScreen={false}

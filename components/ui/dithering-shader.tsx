@@ -284,10 +284,7 @@ export function DitheringShader({
     };
     resize();
 
-    const resizeObserver = new ResizeObserver(() => {
-      resize();
-    });
-    resizeObserver.observe(canvas);
+    window.addEventListener("resize", resize);
 
     const render = () => {
       const t = (Date.now() - startTimeRef.current) * 0.001 * speed
@@ -306,7 +303,7 @@ export function DitheringShader({
     render()
 
     return () => {
-      resizeObserver.disconnect();
+      window.removeEventListener("resize", resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [colorBack, colorFront, shape, type, pxSize, speed])

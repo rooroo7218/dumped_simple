@@ -49,23 +49,7 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
       drops[i] = Math.random() * -100;
     }
 
-    let resizeObserver: ResizeObserver | null = null;
-    if (!isFixed && canvas.parentElement) {
-      resizeObserver = new ResizeObserver(() => {
-        resizeCanvas();
-        const newColumnCount = Math.floor(canvas.width / fontSize);
-        if (newColumnCount !== drops.length) {
-          const oldLen = drops.length;
-          drops.length = newColumnCount;
-          for (let i = oldLen; i < newColumnCount; i++) {
-            drops[i] = Math.random() * -100;
-          }
-        }
-      });
-      resizeObserver.observe(canvas.parentElement);
-    } else {
-      window.addEventListener('resize', resizeCanvas);
-    }
+    window.addEventListener('resize', resizeCanvas);
 
     const draw = () => {
       ctx.fillStyle = `rgba(0, 0, 0, ${fadeOpacity})`;
@@ -89,11 +73,7 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
 
     return () => {
       clearInterval(interval);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      } else {
-        window.removeEventListener('resize', resizeCanvas);
-      }
+      window.removeEventListener('resize', resizeCanvas);
     };
   }, [fontSize, color, characters, fadeOpacity, speed, isFixed]);
 
