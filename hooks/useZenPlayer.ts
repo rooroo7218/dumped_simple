@@ -9,6 +9,10 @@ export const TRACKS = [
     { id: 'nts',          title: 'nts radio',             genre: 'underground beats',       streamUrl: 'https://stream-relay-geo.ntslive.net/stream' },
     { id: 'wsm',          title: 'wsm radio',             genre: 'americana · roots',       streamUrl: 'https://wsm.streamguys1.com/wsm-mp3' },
     { id: 'coderadio',    title: 'lofi coderadio',        genre: 'lofi · jazzy beats',      streamUrl: 'https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3' },
+    { id: 'nightride',    title: 'nightride fm',          genre: 'synthwave · retro',       streamUrl: 'https://stream.nightride.fm/nightride.mp3' },
+    { id: 'chillhop',     title: 'fluxfm chillhop',       genre: 'chillhop · study beats',  streamUrl: 'https://streams.fluxfm.de/Chillhop/mp3-128/' },
+    { id: 'defcon',       title: 'def con',               genre: 'ambient · beats',         streamUrl: 'https://ice1.somafm.com/defcon-256-mp3' },
+    { id: 'fluid',        title: 'fluid',                 genre: 'lofi · hip-hop beats',    streamUrl: 'https://ice1.somafm.com/fluid-128-mp3' },
 ];
 
 export interface ZenPlayerState {
