@@ -45,10 +45,12 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
         if (!vv) return;
         const update = () => {
             const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-            // On mobile, if keyboard is UP, nav bar might be hidden or we might want different spacing.
-            // But for safety, we push it up.
+            const isKeyboardOpen = keyboardHeight > 50;
             const baseOffset = window.innerWidth < 768 ? 84 : 16;
-            setSubmitBottom(Math.max(keyboardHeight, 0) + baseOffset);
+            // On mobile, if the keyboard is open, the position:fixed element is already
+            // pushed up by the visual viewport resizing. Manual height offsets cause
+            // a double-push layout bug. We use a 16px bottom offset when the keyboard is open.
+            setSubmitBottom(isKeyboardOpen ? 16 : baseOffset);
         };
         vv.addEventListener('resize', update);
         vv.addEventListener('scroll', update);
@@ -157,7 +159,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         autoCorrect="off"
                         autoCapitalize="sentences"
                         spellCheck={false}
-                        enterKeyHint="done"
+                        enterKeyHint="enter"
                         maxLength={2000}
                         disabled={isProcessing}
                         style={{
