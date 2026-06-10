@@ -13,6 +13,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
         jobTitle: "",
         lifestyle: "",
         brutalistBackground: 'aurora_dream',
+        staleTaskDimmingEnabled: true,
         customCategories: ['Career', 'Health', 'Finance', 'Household', 'Creativity', 'Learning', 'Experiment', 'Social', 'Maintenance']
     });
     const [aiStatus, setAiStatus] = useState<'idle' | 'processing' | 'error' | 'success'>('idle');
@@ -86,6 +87,7 @@ export const useAppData = (userId?: string, confirmFn?: (message: string, sub?: 
             priority: 'medium',
             tags: [],
             processed: true,
+            category: 'general',
             actions
         };
 

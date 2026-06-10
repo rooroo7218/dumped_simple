@@ -76,6 +76,14 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
         if (meta === true) return false;
         return local;
     });
+
+    const handleRerunOnboarding = () => {
+        localStorage.removeItem('onboarding_completed');
+        localStorage.removeItem('show_interactive_tour');
+        localStorage.removeItem('first_dump_completed');
+        setShowOnboarding(true);
+        setActiveTab('dump');
+    };
     const lastAiErrorRef = React.useRef<string | null>(null);
 
     const { toasts, showToast, dismissToast } = useToast();
@@ -282,6 +290,7 @@ export const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ user, handle
                                     }
                                 }}
                                 isProcessing={aiStatus === 'processing'}
+                                onRerunOnboarding={handleRerunOnboarding}
                             />
                         </ErrorBoundary>
                     </main>

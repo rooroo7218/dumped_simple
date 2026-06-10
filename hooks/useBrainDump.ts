@@ -60,6 +60,7 @@ export const useBrainDump = (
         // 1. CLEAR + NAVIGATE IMMEDIATELY — don't make user wait for AI
         setInput('');
         setAiStatus('processing');
+        localStorage.setItem('first_dump_completed', 'true');
         setLastAiError(null);
         onCommitSuccess(); // navigate to grid now
 
@@ -89,7 +90,7 @@ export const useBrainDump = (
             );
 
             // 5. PROCESS RESULTS (Assign/Create)
-            await databaseService.processDumpResult(dumpId, result.results);
+            await databaseService.processDumpResult(dumpId, result.results as any);
 
             setAiStatus('success');
             setTimeout(() => setAiStatus('idle'), 3000);

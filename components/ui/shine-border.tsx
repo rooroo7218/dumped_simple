@@ -5,12 +5,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+} from "./card";
+import { Badge } from "./badge";
+import { Button } from "./button";
+import { Separator } from "./separator";
 import { Check, Flame } from "lucide-react";
-import {cn} from "@/lib/utils";
+import {cn} from "../../lib/utils";
 
 /* ============================= */
 /* ShineBorder (Reusable Wrapper) */
@@ -22,6 +22,7 @@ type ShineBorderProps = {
   borderWidth?: number;
   duration?: number;
   color?: string;
+  gradient?: string;
   overflowVisible?: boolean;
 };
 
@@ -31,6 +32,7 @@ export const ShineBorder = ({
   borderWidth = 2,
   duration = 3,
   color = "#00f2ff",
+  gradient,
   overflowVisible = false,
 }: ShineBorderProps) => {
   return (

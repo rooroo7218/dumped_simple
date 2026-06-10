@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Item, DumpItem, UserPersona } from '../types';
 import { databaseService } from '../services/databaseService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -181,7 +182,7 @@ const TEXTURE_OPTIONS: { key: TextureKey; label: any; pattern: React.CSSProperti
     ), pattern: {} },
     { key: 'shadow', label: (
         <div className="relative w-full h-full bg-slate-900 rounded-md overflow-hidden">
-            <EtheralShadow isCompact={true} className="scale-125" />
+            <EtheralShadow className="scale-125" />
         </div>
     ), pattern: {} },
 ];
@@ -207,7 +208,7 @@ const ONBOARDING_SAMPLES: Item[] = [
     {
         id: 'sample-1',
         userId: 'onboarding',
-        label: 'Deep Work: Project Apollo docs',
+        label: 'Plan itinerary for Tokyo vacation',
         mentionCount: 3,
         lastMentionedAt: Date.now(),
         firstMentionedAt: Date.now(),
@@ -219,7 +220,7 @@ const ONBOARDING_SAMPLES: Item[] = [
     {
         id: 'sample-2',
         userId: 'onboarding',
-        label: 'Water the plants & succulents',
+        label: 'Wash the car & vacuum interior',
         mentionCount: 2,
         lastMentionedAt: Date.now(),
         firstMentionedAt: Date.now(),
@@ -231,19 +232,19 @@ const ONBOARDING_SAMPLES: Item[] = [
     {
         id: 'sample-3',
         userId: 'onboarding',
-        label: 'Buy coffee beans for the office',
+        label: 'Sort digital photos & backup hard drive',
         mentionCount: 1,
-        lastMentionedAt: Date.now(),
-        firstMentionedAt: Date.now(),
+        lastMentionedAt: Date.now() - 8 * 24 * 60 * 60 * 1000, // 8 days ago (stale!)
+        firstMentionedAt: Date.now() - 8 * 24 * 60 * 60 * 1000,
         isFlagged: false,
         isCompleted: false,
-        createdAt: Date.now(),
+        createdAt: Date.now() - 8 * 24 * 60 * 60 * 1000,
         style: { color: 'amber', texture: 'zenitho' }
     },
     {
         id: 'sample-4',
         userId: 'onboarding',
-        label: 'Urgent: DMV registration renewal',
+        label: 'Urgent: Call dentist about wisdom tooth',
         mentionCount: 1,
         lastMentionedAt: Date.now(),
         firstMentionedAt: Date.now(),
@@ -275,6 +276,169 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         return (saved === 'personal' || saved === 'work') ? saved : 'personal';
     });
 
+    // Session-based heading phrases (picked once per session via sessionStorage)
+    const TASK_PHRASES = [
+        "Phew...Here's all your stuff.",
+        "Here's everything on your plate.",
+        "All your stuff, in one place.",
+        "Everything you've got going on.",
+        "All of it, laid out.",
+        "Here's what's on your mind.",
+        "Everything you're juggling.",
+    ];
+    const FLAGGED_PHRASES = [
+        "These seem important.",
+        "These caught your eye.",
+        "You flagged these.",
+        "Worth a second look.",
+        "Don't forget these.",
+        "These stood out to you.",
+        "On your radar.",
+    ];
+    const taskPhrase = useState(() => {
+        const key = 'session_task_phrase';
+        const stored = sessionStorage.getItem(key);
+        if (stored && TASK_PHRASES.includes(stored)) return stored;
+        const picked = TASK_PHRASES[Math.floor(Math.random() * TASK_PHRASES.length)];
+        sessionStorage.setItem(key, picked);
+        return picked;
+    })[0];
+    const flaggedPhrase = useState(() => {
+        const key = 'session_flagged_phrase';
+        const stored = sessionStorage.getItem(key);
+        if (stored && FLAGGED_PHRASES.includes(stored)) return stored;
+        const picked = FLAGGED_PHRASES[Math.floor(Math.random() * FLAGGED_PHRASES.length)];
+        sessionStorage.setItem(key, picked);
+        return picked;
+    })[0];
+
+    // Tour state
+    const [tourStep, setTourStep] = useState<number | null>(null);
+    const [tourCoords, setTourCoords] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+
+    useEffect(() => {
+        const checkTour = () => {
+            if (localStorage.getItem('onboarding_completed') === '1' && localStorage.getItem('show_interactive_tour') === 'true') {
+                if (window.innerWidth < 768) {
+                    const timer = setTimeout(() => {
+                        setTourStep(0);
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                } else {
+                    localStorage.setItem('show_interactive_tour', 'completed');
+                }
+            }
+        };
+        return checkTour();
+    }, [items]);
+
+    useEffect(() => {
+        if (tourStep === null) {
+            setTourCoords(null);
+            return;
+        }
+
+        const getTargetSelector = (step: number) => {
+            switch (step) {
+                case 0: return '#tile-sample-1';
+                case 1: return '#tile-sample-3';
+                case 2: return '#style-btn-sample-1';
+                default: return null;
+            }
+        };
+
+        const updateCoords = () => {
+            const selector = getTargetSelector(tourStep);
+            if (!selector) return;
+
+            const el = document.querySelector(selector);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                setTourCoords({
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height
+                });
+            } else {
+                const retryTimer = setTimeout(() => {
+                    const retryEl = document.querySelector(selector);
+                    if (retryEl) {
+                        const rect = retryEl.getBoundingClientRect();
+                        setTourCoords({
+                            top: rect.top,
+                            left: rect.left,
+                            width: rect.width,
+                            height: rect.height
+                        });
+                    }
+                }, 200);
+                return () => clearTimeout(retryTimer);
+            }
+        };
+
+        updateCoords();
+        window.addEventListener('resize', updateCoords);
+        window.addEventListener('scroll', updateCoords, true);
+        return () => {
+            window.removeEventListener('resize', updateCoords);
+            window.removeEventListener('scroll', updateCoords, true);
+        };
+    }, [tourStep, items]);
+
+    const handleEndTour = () => {
+        setTourStep(null);
+        localStorage.setItem('show_interactive_tour', 'completed');
+        load();
+    };
+
+    const getTooltipStyles = () => {
+        if (!tourCoords) return {};
+        const isMobile = window.innerWidth < 768;
+        
+        if (isMobile) {
+            return {
+                position: 'fixed' as const,
+                bottom: 'calc(24px + env(safe-area-inset-bottom))',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'calc(100% - 32px)',
+                maxWidth: '400px',
+                zIndex: 250
+            };
+        }
+
+        const spaceBelow = window.innerHeight - (tourCoords.top + tourCoords.height);
+        const placeBelow = spaceBelow > 220;
+        
+        return {
+            position: 'fixed' as const,
+            top: placeBelow ? `${tourCoords.top + tourCoords.height + 12}px` : 'auto',
+            bottom: !placeBelow ? `${window.innerHeight - tourCoords.top + 12}px` : 'auto',
+            left: `${Math.min(window.innerWidth - 340, Math.max(16, tourCoords.left + (tourCoords.width / 2) - 150))}px`,
+            width: '300px',
+            zIndex: 250
+        };
+    };
+
+    const TOUR_STEPS = [
+        {
+            title: 'the pile sorts itself.',
+            body: 'Forget checklists. The more you mention something across your dumps, the bigger its tile gets. "Plan Tokyo vacation" is large because it keeps coming up — that\'s the app telling you it matters.',
+            buttonText: 'next'
+        },
+        {
+            title: 'old stuff fades out.',
+            body: 'Tasks you haven\'t mentioned in 7+ days go grey and quiet automatically. No manual archiving. The pile stays focused on what\'s actually on your mind right now.',
+            buttonText: 'next'
+        },
+        {
+            title: 'make each tile yours.',
+            body: 'Tap the swatch on any tile to dress it up — neon, aurora, holographic, whatever fits your headspace. The pile should feel good to look at.',
+            buttonText: 'start dumping'
+        }
+    ];
+
     const handleSpaceChange = useCallback((space: 'personal' | 'work') => {
         setActiveSpace(space);
         localStorage.setItem('dumped_active_space', space);
@@ -302,6 +466,11 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             return () => clearTimeout(timer);
         }
         prevStatus.current = aiStatus;
+    }, [aiStatus]);
+
+    // Reload when AI status changes (e.g. dump submitted, AI starts processing)
+    useEffect(() => {
+        load();
     }, [aiStatus]);
 
     // Undo-delete state
@@ -379,7 +548,10 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
         let filtered = data.filter(i => !pendingDeleteTimers.current.has(i.id));
         
         // If NO items exist at all, inject onboarding samples
-        if (filtered.length === 0 && !localStorage.getItem('onboarding_completed')) {
+        const hasCompletedFirstDump = localStorage.getItem('first_dump_completed') === 'true';
+        const isAiProcessing = aiStatus === 'processing';
+        
+        if (filtered.length === 0 && (!hasCompletedFirstDump || isAiProcessing)) {
             filtered = ONBOARDING_SAMPLES;
         } else if (filtered.length > 0 && filtered[0].userId !== 'onboarding') {
             // Real data exists — ensure the flag is set so samples never re-appear after a cache clear
@@ -832,12 +1004,12 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-                <p className="text-[#1a1a1a] font-normal text-[17px] leading-[1.75] mb-4">Your head is empty (for now).</p>
+                <p className="text-[#1a1a1a] font-normal text-[17px] leading-[1.75] mb-4">suspiciously quiet in here.</p>
                 <button
                     onClick={() => setActiveTab('dump')}
                     className="text-[#1a1a1a] font-bold text-[17px] leading-[1.75] border-b border-[#1a1a1a] pb-0.5 hover:opacity-70 transition-opacity"
                 >
-                    Start a dump
+                    dump something
                 </button>
             </div>
         );
@@ -860,7 +1032,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="max-w-3xl mx-auto w-full pt-4 pb-24 animate-in fade-in duration-700 overflow-visible">
+            <div className="max-w-3xl mx-auto w-full pb-24 animate-in fade-in duration-700 overflow-visible">
                 {/* ── Space Switcher Tabs ── */}
                 {persona?.taskSpacesEnabled && (
                     <div className="mb-6 mx-1 flex justify-between items-center bg-white/40 backdrop-blur-md border border-slate-200/50 p-1 rounded-2xl shadow-sm w-fit">
@@ -879,41 +1051,38 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     </div>
                 )}
 
-                {aiStatus === 'processing' && (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="mb-10 mx-1 p-[2px] rounded-[24px] overflow-hidden relative"
-                    >
-                        {/* Shimmering border glow */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-50" />
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent animate-pulse" />
-                        
-                        <div className="relative bg-white/70 backdrop-blur-2xl border border-white/40 rounded-[22px] px-6 py-5 flex items-center gap-5 shadow-xl shadow-indigo-500/5">
-                            <div className="relative flex items-center justify-center">
-                                <ArrowPathIcon className="w-5 h-5 text-indigo-500 animate-[spin_2s_linear_infinite]" />
-                                <div className="absolute inset-0 w-5 h-5 bg-indigo-500/20 blur-xl animate-pulse" />
-                            </div>
-                            
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[14px] font-bold text-slate-900 tracking-tight leading-none">
-                                    {thinkingCopy || 'Sorting your thoughts...'}
-                                </span>
-                                <span className="text-[11px] font-medium text-slate-400 tracking-wide uppercase">AI is carefully arranging your items</span>
-                            </div>
-
-                            <div className="ml-auto flex items-center gap-1">
-                                {[0, 1, 2].map(i => (
-                                    <div 
-                                        key={i} 
-                                        className="w-1.5 h-1.5 rounded-full bg-indigo-500/30"
-                                        style={{ animation: `pulse 1.5s ease-in-out ${i * 0.2}s infinite` }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
+                {createPortal(
+                    <AnimatePresence>
+                        {aiStatus === 'processing' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                                className="fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-md z-[60]"
+                            style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
+                            >
+                                <div className="bg-white/90 backdrop-blur-xl border border-black/70 rounded-[22px] px-5 py-4 flex items-center gap-4 shadow-lg">
+                                    <ArrowPathIcon className="w-4 h-4 text-indigo-500 animate-[spin_2s_linear_infinite] shrink-0" />
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-[13px] font-semibold text-slate-900 tracking-tight leading-none">
+                                            {thinkingCopy || 'sorting your thoughts...'}
+                                        </span>
+                                        <span className="text-[11px] font-medium text-slate-400">sorting what you dumped...</span>
+                                    </div>
+                                    <div className="ml-auto flex items-center gap-1">
+                                        {[0, 1, 2].map(i => (
+                                            <div
+                                                key={i}
+                                                className="w-1.5 h-1.5 rounded-full bg-slate-300"
+                                                style={{ animation: `pulse 1.5s ease-in-out ${i * 0.2}s infinite` }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
+                    document.body
                 )}
 
                 {/* ── Success Flash ── */}
@@ -943,12 +1112,12 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             {persona?.tileBoardViewEnabled ? (
                 /* ── Board View: Combined Grid ── */
                 <section className="mb-12">
-                    <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                    <div className="mb-2 mx-1 pb-2 border-b border-slate-100/60">
                         <div className="flex items-center gap-2 mb-1">
                             <SparklesIcon className="w-4 h-4 text-indigo-400" />
                             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Board ({boardItems.length})</span>
                         </div>
-                        <h2 className="text-xl font-medium tracking-tight text-slate-900">Your mind, unified.</h2>
+                        <h2 className="text-xl font-medium tracking-tight text-slate-900">All of your stuff.</h2>
                     </div>
                     <SortableContext items={boardItems.map(i => i.id)} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
@@ -965,6 +1134,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                         size={layout.shouldMini ? 'sm' : 'md'}
                                         className={cn(layout.colSpan, layout.rowSpan)}
                                         taskSpacesEnabled={persona?.taskSpacesEnabled}
+                                        isAiProcessing={aiStatus === 'processing'}
                                     />
                                 );
                             })}
@@ -976,12 +1146,12 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                     {/* ── Flagged ─────────────────────────────────────────────── */}
                     {flagged.length > 0 && (
                         <section className="mb-12">
-                            <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                            <div className="mb-2 mx-1 pb-2 border-b border-slate-100/60">
                                 <div className="flex items-center gap-2 mb-1">
                                     <SparklesIcon className="w-4 h-4 text-rose-400" />
                                     <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Flagged ({flagged.length})</span>
                                 </div>
-                                <h2 className="text-xl font-medium tracking-tight text-slate-900">Needs your attention.</h2>
+                                <h2 className="text-xl font-medium tracking-tight text-slate-900">{flaggedPhrase}</h2>
                             </div>
                             <SortableContext items={flagged.map(i => i.id)} strategy={rectSortingStrategy}>
                                 <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
@@ -998,6 +1168,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                                 size={layout.shouldMini ? 'sm' : 'md'}
                                                 className={cn(layout.colSpan, layout.rowSpan)}
                                                 taskSpacesEnabled={persona?.taskSpacesEnabled}
+                                                isAiProcessing={aiStatus === 'processing'}
                                             />
                                         );
                                     })}
@@ -1008,12 +1179,12 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
 
                     {/* ── Active — grouped by mentionCount, draggable within group ── */}
                     <section className="mb-12">
-                        <div className="mb-5 mx-1 pb-3 border-b border-slate-100/60">
+                        <div className="mb-2 mx-1 pb-2 border-b border-slate-100/60">
                             <div className="flex items-center gap-2 mb-1">
                                 <SparklesIcon className="w-4 h-4 text-amber-400" />
                                 <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tasks ({active.length})</span>
                             </div>
-                            <h2 className="text-xl font-medium tracking-tight text-slate-900">Phew...Here's all your stuff.</h2>
+                            <h2 className="text-xl font-medium tracking-tight text-slate-900">{taskPhrase}</h2>
                         </div>
                             <SortableContext items={sortedActive.map(i => i.id)} strategy={rectSortingStrategy}>
                                 <div className="grid grid-cols-9 gap-1 auto-rows-min grid-flow-dense">
@@ -1030,6 +1201,7 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                                 size={layout.shouldMini ? 'sm' : 'md'}
                                                 className={cn(layout.colSpan, layout.rowSpan)}
                                                 taskSpacesEnabled={persona?.taskSpacesEnabled}
+                                                isAiProcessing={aiStatus === 'processing'}
                                             />
                                         );
                                     })}
@@ -1044,17 +1216,17 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                 <section>
                     <button
                         onClick={() => setShowCompleted(v => !v)}
-                        className="w-full mb-4 mx-1 pb-3 border-b border-slate-100/60 opacity-50 grayscale text-left flex items-center justify-between"
+                        className="w-full mb-2 mx-1 pb-2 border-b border-slate-100/60 opacity-50 grayscale text-left flex items-center justify-between"
                     >
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <SparklesIcon className="w-4 h-4 text-slate-400" />
-                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Resolved ({completed.length + faded.length})</span>
+                                <span className="text-[10px] font-semibold tracking-widest text-slate-500">out of your head ({completed.length + faded.length})</span>
                             </div>
-                            <h2 className="text-xl font-medium tracking-tight text-slate-900">Done and dusted.</h2>
+                            <h2 className="text-xl font-medium tracking-tight text-slate-900">done and dusted.</h2>
                         </div>
                         <span className="text-[11px] font-medium text-slate-400 shrink-0 mr-1">
-                            {showCompleted ? 'Hide' : 'Show'}
+                            {showCompleted ? 'hide' : 'show'}
                         </span>
                     </button>
 
@@ -1076,13 +1248,13 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
             {pendingDeletes.size > 0 && (
                 <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-950/90 text-white shadow-xl backdrop-blur-sm animate-in slide-in-from-bottom-4 fade-in duration-300 whitespace-nowrap">
                     <span className="text-[13px] font-medium">
-                        {pendingDeletes.size === 1 ? 'Item deleted' : `${pendingDeletes.size} items deleted`}
+                        gone.
                     </span>
                     <button
                         onClick={() => [...pendingDeletes.keys()].forEach(handleUndoDelete)}
                         className="text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
                     >
-                        Undo
+                        bring it back
                     </button>
                 </div>
             )}
@@ -1104,11 +1276,82 @@ export const TilesHub: React.FC<TilesHubProps> = ({ setActiveTab, aiStatus, thin
                                 className="shadow-2xl"
                                 isDragging={true}
                                 taskSpacesEnabled={persona?.taskSpacesEnabled}
+                                isAiProcessing={aiStatus === 'processing'}
                             />
                         </div>
                     );
                 })() : null}
             </DragOverlay>
+            
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {tourStep !== null && TOUR_STEPS[tourStep] && (
+                        <>
+                            <style>{`
+                                ${tourStep === 0 ? '#tile-sample-1' : tourStep === 1 ? '#tile-sample-3' : '#style-btn-sample-1'} {
+                                    z-index: 245 !important;
+                                    position: relative !important;
+                                    outline: 3px solid #6366f1 !important;
+                                    outline-offset: 4px !important;
+                                    box-shadow: 0 0 25px rgba(99, 102, 241, 0.6) !important;
+                                    transform: scale(1.03) !important;
+                                    transition: all 0.3s ease !important;
+                                }
+                            `}</style>
+                            <div 
+                                className="fixed inset-0 bg-slate-950/60 z-[240] backdrop-blur-[1.5px] transition-all duration-300"
+                                onClick={handleEndTour}
+                            />
+                            <motion.div
+                                key={tourStep}
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                style={getTooltipStyles()}
+                                className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left pointer-events-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div>
+                                    <h3 className="text-[16px] font-black tracking-tight text-white mb-1">
+                                        {TOUR_STEPS[tourStep].title}
+                                    </h3>
+                                    <p className="text-[13px] leading-relaxed text-slate-300">
+                                        {TOUR_STEPS[tourStep].body}
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-between pt-1">
+                                    <span className="text-[11px] font-bold text-slate-500">
+                                        step {tourStep + 1} of 3
+                                    </span>
+                                    <div className="flex gap-2">
+                                        {tourStep > 0 && (
+                                            <button
+                                                onClick={() => setTourStep(s => s! - 1)}
+                                                className="px-3 py-1.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white text-[12px] font-semibold transition-all active:scale-95"
+                                            >
+                                                back
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                if (tourStep < 2) {
+                                                    setTourStep(s => s! + 1);
+                                                } else {
+                                                    handleEndTour();
+                                                }
+                                            }}
+                                            className="px-4 py-1.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[12px] font-semibold transition-all active:scale-95"
+                                        >
+                                            {TOUR_STEPS[tourStep].buttonText}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </DndContext>
     );
 };
@@ -1162,13 +1405,14 @@ interface ItemTileProps {
     isStale?: boolean;
     shouldMini?: boolean;
     taskSpacesEnabled?: boolean;
+    isAiProcessing?: boolean;
 }
 
 const ItemTile = React.memo(({
     item, isExpanded, excerpts, handlers,
     style: itemStyle, size, aspectRatio, className,
     isDragging, isDragOver, canDrop, isStale, shouldMini,
-    taskSpacesEnabled,
+    taskSpacesEnabled, isAiProcessing,
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
     const isOld = Date.now() - item.createdAt >= 14 * 24 * 60 * 60 * 1000;
@@ -1275,12 +1519,19 @@ const ItemTile = React.memo(({
 
     const TileContent = (
         <div
+            id={`tile-${item.id}`}
             ref={setNodeRef}
             style={{
                 ...sortableStyle,
                 zIndex: isSortableDragging ? 100 : (stylerOpen ? 200 : undefined),
                 overflow: (isExpanded || stylerOpen) ? 'visible' : 'hidden',
-                ...(isExpanded ? (shouldMini ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio })
+                ...(isExpanded ? (shouldMini ? { aspectRatio: '1 / 1' } : {}) : { aspectRatio }),
+                ...(isAiProcessing && item.userId === 'onboarding' ? {
+                    opacity: 0.15,
+                    filter: 'blur(2px) grayscale(0.8)',
+                    pointerEvents: 'none',
+                    transition: 'opacity 2.5s ease-in-out, filter 2.5s ease-in-out'
+                } : {})
             }}
             {...attributes}
             {...listeners}
@@ -1477,6 +1728,7 @@ const ItemTile = React.memo(({
                     {/* Style Button */}
                     <div className="relative" ref={stylerRef}>
                         <button
+                            id={`style-btn-${item.id}`}
                             onClick={(e) => { 
                                 e.stopPropagation(); 
                                 const rect = e.currentTarget.getBoundingClientRect();

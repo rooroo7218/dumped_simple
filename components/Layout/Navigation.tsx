@@ -59,10 +59,10 @@ interface NavigationProps {
 // ─── Nav tabs (no dev/hidden tabs) ───────────────────────────────────────────
 
 const MAIN_TABS = [
-    { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'Dump',       mobileLabel: 'Dump' },
-    { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'Tiles',      mobileLabel: 'Tiles' },
-    // { id: 'rhythm',       icon: ClockIcon,           solidIcon: ClockIconSolid,           label: 'Rhythm',     mobileLabel: 'Rhythm' },
-    { id: 'streak',       icon: CircleIcon,          solidIcon: CircleIcon,               label: 'Pattern',    mobileLabel: 'Pattern' },
+    { id: 'dump',         icon: PlusIcon,            solidIcon: PlusIconSolid,            label: 'dump',       mobileLabel: 'dump' },
+    { id: 'patterns',     icon: Squares2X2Icon,      solidIcon: Squares2X2IconSolid,      label: 'the pile',   mobileLabel: 'the pile' },
+    // { id: 'rhythm',       icon: ClockIcon,           solidIcon: ClockIconSolid,           label: 'rhythm',     mobileLabel: 'rhythm' },
+    { id: 'streak',       icon: CircleIcon,          solidIcon: CircleIcon,               label: 'habit',      mobileLabel: 'habit' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -214,19 +214,19 @@ export const Navigation: React.FC<NavigationProps> = ({
                 {syncStatus === 'saving' && (
                     <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 mr-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-                        Saving…
+                        saving...
                     </span>
                 )}
                 {syncStatus === 'saved' && (
                     <span className="text-[10px] font-medium text-emerald-500 flex items-center gap-1 mr-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Saved
+                        safe.
                     </span>
                 )}
                 {syncStatus === 'local-only' && (
                     <span className="text-[10px] font-medium text-amber-500 flex items-center gap-1 mr-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        Local only
+                        offline only
                     </span>
                 )}
 
@@ -239,13 +239,13 @@ export const Navigation: React.FC<NavigationProps> = ({
 
                     {/* Scenery */}
                     <div className="relative">
-                        <button onClick={() => { setIsSceneryOpen(!isSceneryOpen); setIsUserMenuOpen(false); }} title="Scenery" className={ctrlBtn}>
+                        <button onClick={() => { setIsSceneryOpen(!isSceneryOpen); setIsUserMenuOpen(false); }} title="the mood" className={ctrlBtn}>
                             <PhotoIcon className="w-4 h-4" />
                         </button>
                         {isSceneryOpen && (
                             <div className={`${dropdown} w-72 max-h-[400px] overflow-y-auto p-4`}>
-                                <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 pb-2 border-b text-slate-600 border-slate-100">
-                                    Select scenery
+                                <p className="text-[11px] font-bold text-slate-500 mb-3 pb-2 border-b border-slate-100">
+                                    select the mood
                                 </p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {backgroundScenes.map((scene) => (
@@ -312,7 +312,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 </div>
                                 <div className="px-4 py-2 bg-slate-50/50 border-b border-slate-100">
                                     <div className="flex items-center justify-between mb-2 mt-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Daily Ritual</span>
+                                        <span className="text-[11px] font-bold text-slate-500">daily ritual</span>
                                         <button 
                                             onClick={() => {
                                                 const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
@@ -344,7 +344,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     )}
 
                                     <div className="flex items-center justify-between mb-1 mt-3 pt-3 border-t border-slate-100">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tile Board</span>
+                                        <span className="text-[11px] font-bold text-slate-500">one big board</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ tileBoardViewEnabled: !persona.tileBoardViewEnabled });
@@ -356,7 +356,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Task Spaces</span>
+                                        <span className="text-[11px] font-bold text-slate-500">task spaces</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ taskSpacesEnabled: !persona.taskSpacesEnabled });
@@ -369,7 +369,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dim Stale</span>
+                                        <span className="text-[11px] font-bold text-slate-500">dim stale</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
@@ -381,7 +381,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1 mt-2">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mini Stale</span>
+                                        <span className="text-[11px] font-bold text-slate-500">mini stale</span>
                                         <button 
                                             onClick={() => {
                                                 onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });
@@ -397,14 +397,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                                 >
                                     <Cog6ToothIcon className="w-4 h-4" />
-                                    Profile & Settings
+                                    profile & settings
                                 </button>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleSignOut(); }}
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
                                 >
                                     <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
-                                    Sign out
+                                    sign out
                                 </button>
                                 <button
                                     onClick={() => { setIsUserMenuOpen(false); handleDeleteAccount(); }}
@@ -412,7 +412,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium text-slate-400 hover:bg-slate-50 hover:text-rose-400 transition-colors border-t border-slate-50 disabled:opacity-40"
                                 >
                                     <TrashIcon className="w-4 h-4" />
-                                    Delete account
+                                    delete account
                                 </button>
                             </div>
                         )}
@@ -482,7 +482,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                         {/* Rituals (Mobile) */}
                         <div className="px-4 py-3 border-b border-black/10 bg-slate-50/30">
                            <div className="flex items-center justify-between mb-2">
-                               <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Daily Ritual</span>
+                               <span className="block text-[11px] font-bold text-slate-500">daily ritual</span>
                                <button 
                                     onClick={() => {
                                         const settings = persona.reminderSettings || { enabled: false, frequency: 'daily', timeOfDay: 'morning', time: '09:00' };
@@ -507,7 +507,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                            )}
                            
                                <div className="flex items-center justify-between mb-1 mt-3 pt-3 border-t border-black/5">
-                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tile Board</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">one big board</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ tileBoardViewEnabled: !persona.tileBoardViewEnabled });
@@ -519,7 +519,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                </div>
 
                                <div className="flex items-center justify-between mb-1 mt-2">
-                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Task Spaces</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">task spaces</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ taskSpacesEnabled: !persona.taskSpacesEnabled });
@@ -532,7 +532,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                </div>
 
                                <div className="flex items-center justify-between mb-1 mt-2">
-                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dim Stale Tasks</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">dim stale</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ staleTaskDimmingEnabled: !persona.staleTaskDimmingEnabled });
@@ -544,7 +544,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                </div>
 
                                <div className="flex items-center justify-between mb-1 mt-2">
-                                   <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Miniaturize Stale</span>
+                                   <span className="block text-[11px] font-bold text-slate-500">mini stale</span>
                                    <button 
                                         onClick={() => {
                                             onUpdatePersona({ miniaturizeStaleTasksEnabled: !persona.miniaturizeStaleTasksEnabled });
@@ -562,7 +562,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 onClick={() => setIsMobileBgOpen(!isMobileBgOpen)}
                                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
                             >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Background</span>
+                                <span className="text-[11px] font-bold text-slate-500">the mood</span>
                                 <ChevronDownIcon className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${isMobileBgOpen ? 'rotate-180' : ''}`} />
                             </button>
                             
@@ -602,7 +602,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 onClick={() => setIsMobileMusicOpen(!isMobileMusicOpen)}
                                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
                             >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Music</span>
+                                <span className="text-[11px] font-bold text-slate-500">vibes</span>
                                 <ChevronDownIcon className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${isMobileMusicOpen ? 'rotate-180' : ''}`} />
                             </button>
 

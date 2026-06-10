@@ -4,18 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 const STEPS = [
     {
         emoji: '🧠',
-        title: 'Dump anything',
-        body: 'Every worry, task, idea — just type it out. No formatting, no categories. Just let it flow.',
+        title: 'dump anything.',
+        body: 'Every task, worry, or half-baked idea — just get it out. No categories, no checkboxes, no right way to do it. Just you and a blank page.',
     },
     {
-        emoji: '✦',
-        title: 'AI does the sorting',
-        body: 'After you hit "put it all down", AI reads your dump and turns it into a clean set of tiles — one per thing.',
+        emoji: '📈',
+        title: 'what keeps coming up, comes to the top.',
+        body: "The more you mention something in your dumps, the bigger its tile grows. No manual sorting. The pile organises itself around what's actually rattling around in your head.",
     },
     {
-        emoji: '○',
-        title: 'Watch your patterns',
-        body: "Over time you'll see what keeps coming up. That's the stuff that actually matters.",
+        emoji: '🎨',
+        title: 'make it yours.',
+        body: "Customise tiles with textures, colours, and animated backgrounds. Old tasks that haven't come up in a while fade out on their own. Your headspace, how you want it.",
     },
 ];
 
@@ -26,13 +26,14 @@ interface OnboardingProps {
     userId?: string;
 }
 
-export const Onboarding: React.FC<OnboardingProps> = ({ onDone }) => {
+export const Onboarding: React.FC<OnboardingProps> = ({ onDone, userId }) => {
     const [step, setStep] = useState(0);
     const isLast = step === STEPS.length - 1;
 
     const advance = async () => {
         if (isLast) {
             localStorage.setItem(STORAGE_KEY, '1');
+            localStorage.setItem('show_interactive_tour', 'true');
             
             // If we have a real user, persist to Supabase Auth metadata
             if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
@@ -92,7 +93,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onDone }) => {
                     onClick={advance}
                     className="w-full py-3 rounded-2xl bg-slate-950 text-white text-[14px] font-semibold active:scale-95 transition-all"
                 >
-                    {isLast ? 'Start dumping' : 'Next'}
+                    {isLast ? 'start dumping' : 'next'}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-300 mt-3">Tap anywhere to continue</p>

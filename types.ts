@@ -18,6 +18,8 @@ export interface UserProfile {
   email: string;
   picture: string;
   lastLogin: number;
+  onboarding_completed?: boolean;
+  isGuest?: boolean;
 }
 
 export interface TaskStep {
@@ -69,7 +71,7 @@ export interface MemoryItem {
   id: string;
   timestamp: number;
   content: string;
-  source: 'text' | 'voice' | 'file';
+  source: 'text' | 'voice' | 'file' | 'manual';
   priority: 'low' | 'medium' | 'high';
   tags: string[];
   processed: boolean;
