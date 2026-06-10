@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 export const TRACKS = [
     { id: 'coderadio',    title: 'lofi beats',            genre: 'coderadio',               streamUrl: 'https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3' },
-    { id: 'nightride',    title: 'synthwave',             genre: 'nightride fm',            streamUrl: 'https://stream.nightride.fm/nightride.mp3' },
+    { id: 'chillhop',     title: 'chillhop',              genre: 'fluxfm',                  streamUrl: 'https://streams.fluxfm.de/Chillhop/mp3-128/' },
     { id: 'defcon',       title: 'ambient beats',         genre: 'def con',                 streamUrl: 'https://ice1.somafm.com/defcon-256-mp3' },
     { id: 'fluid',        title: 'lofi hip-hop',          genre: 'fluid',                   streamUrl: 'https://ice1.somafm.com/fluid-128-mp3' },
 ];
