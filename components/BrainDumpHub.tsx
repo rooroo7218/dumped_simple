@@ -29,19 +29,7 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [submitBottom, setSubmitBottom] = useState(84); // 16px base + ~68px nav bar height
     const [fadeOpacity, setFadeOpacity] = useState(1);
-    
-    // Formatting for notebook aesthetic
-    const [date] = useState(() => {
-        const now = new Date();
-        const base = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-        // Insert ordinal suffix: "June 10" → "June 10th"
-        return base.replace(/(\d+)$/, (d) => {
-            const n = parseInt(d);
-            const s = ['th','st','nd','rd'];
-            const v = n % 100;
-            return n + (s[(v - 20) % 10] || s[v] || s[0]);
-        });
-    });
+    const [isFocused, setIsFocused] = useState(false);
 
     // Track keyboard height via visualViewport
     useEffect(() => {
@@ -148,45 +136,53 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
                         </div>
                         <div className="mb-2">
                             <div className="text-xl font-medium tracking-tight text-slate-900">
-                                {date}
+                                What's on your mind?
                             </div>
                         </div>
                     </div>
 
-                    <textarea
-                        ref={textareaRef}
-                        value={input}
-                        onChange={handleChange}
-                        placeholder="What's on your mind?"
-                        rows={1}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="sentences"
-                        spellCheck={false}
-                        enterKeyHint="enter"
-                        maxLength={2000}
-                        disabled={isProcessing}
-                        style={{
-                            opacity: fadeOpacity,
-                            transition: 'opacity 0.18s ease',
-                            width: '100%',
-                            maxWidth: '56rem', // max-w-4xl equivalent
-                            margin: '0 auto',
-                            minHeight: '20dvh',
-                            padding: `0.5rem 32px calc(${submitBottom}px + 100px)`,
-                            border: 'none',
-                            outline: 'none',
-                            resize: 'none',
-                            background: 'transparent',
-                            fontSize: '17px',
-                            lineHeight: '1.75',
-                            color: '#1a1a1a',
-                            caretColor: '#6366f1',
-                            display: 'block',
-                            position: 'relative',
-                            zIndex: 2,
-                        }}
-                    />
+                    <div style={{ position: 'relative', maxWidth: '56rem', margin: '0 auto', width: '100%' }}>
+                        <textarea
+                            ref={textareaRef}
+                            value={input}
+                            onChange={handleChange}
+                            placeholder=""
+                            rows={1}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="sentences"
+                            spellCheck={false}
+                            enterKeyHint="enter"
+                            maxLength={2000}
+                            disabled={isProcessing}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            style={{
+                                opacity: fadeOpacity,
+                                transition: 'opacity 0.18s ease',
+                                width: '100%',
+                                minHeight: '20dvh',
+                                padding: `0.5rem 32px calc(${submitBottom}px + 100px)`,
+                                border: 'none',
+                                outline: 'none',
+                                resize: 'none',
+                                background: 'transparent',
+                                fontSize: '17px',
+                                lineHeight: '1.75',
+                                color: '#1a1a1a',
+                                caretColor: '#6366f1',
+                                display: 'block',
+                                position: 'relative',
+                                zIndex: 2,
+                            }}
+                        />
+                        {!input && !isFocused && (
+                            <span
+                                className="cursor-blink pointer-events-none absolute"
+                                style={{ top: '0.5rem', left: '32px', fontSize: '17px', lineHeight: '1.75', color: '#6366f1', zIndex: 3 }}
+                            >|</span>
+                        )}
+                    </div>
 
                     {input.length > 0 && (
                         <div 
@@ -315,12 +311,13 @@ export const BrainDumpHub: React.FC<BrainDumpHubProps> = ({
             )}
 
             <style>{`
-                textarea::placeholder { color: rgba(0,0,0,0.4); }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 @keyframes pulse {
                     0%, 100% { opacity: 1; transform: scale(1); }
                     50% { opacity: 0.4; transform: scale(0.85); }
                 }
+                @keyframes cursor-blink { 0%, 49% { opacity: 1; } 50%, 99% { opacity: 0; } }
+                .cursor-blink { animation: cursor-blink 1s step-end infinite; }
             `}</style>
         </>
     );
