@@ -1172,6 +1172,7 @@ const ItemTile = React.memo(({
 }: ItemTileProps) => {
     const isSmall = size === 'sm';
     const isOld = Date.now() - item.createdAt >= 14 * 24 * 60 * 60 * 1000;
+    const isDarkBg = !isStale && ['neon', 'xenon', 'lamp', 'zenitho', 'matrix', 'shadow', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture);
     const draggable = true; // useSortable handles draggability
     const [stylerOpen, setStylerOpen] = useState(false);
     const [stylerPosition, setStylerPosition] = useState<'left' | 'right'>('right');
@@ -1436,20 +1437,20 @@ const ItemTile = React.memo(({
                 <div className="absolute bottom-1.5 right-1.5 z-20 flex items-center gap-1.5">
                     {/* Mention Count Pill */}
                     {item.mentionCount > 1 && (
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${isDarkBg || itemStyle.texture === 'novatrix' ? 'bg-white/10 border-white/20' : 'bg-white/40 border-black/5'}`}>
                             <div
                                 className="h-1 w-1 rounded-full shrink-0"
                                 style={{ background: COLOR_OPTIONS.find(c => c.key === itemStyle.color)?.dot ?? '#cbd5e1' }}
                             />
-                            <span className={`text-[10px] font-medium tracking-tight ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                            <span className={`text-[10px] font-medium tracking-tight ${isDarkBg ? 'text-white/95' : (itemStyle.texture === 'novatrix' ? 'text-black/80' : 'text-[#1a1a1a]/70')}`}>
                                 {item.mentionCount}×
                             </span>
                         </div>
                     )}
                     {/* "Old" Badge */}
                     {isOld && (
-                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${['neon', 'novatrix', 'dithering-wave', 'dithering-swirl'].includes(itemStyle.texture) ? 'bg-black/20 border-black/10' : 'bg-white/40 border-black/5'}`}>
-                            <span className={`text-[10px] font-bold tracking-tight uppercase ${itemStyle.texture === 'novatrix' ? 'text-black/80' : (itemStyle.texture === 'neon' ? 'text-white/80' : 'text-[#1a1a1a]/70')}`}>
+                        <div className={`backdrop-blur-sm border-2 px-2 py-0.5 rounded-full flex items-center gap-1.5 ${isDarkBg || itemStyle.texture === 'novatrix' ? 'bg-white/10 border-white/20' : 'bg-white/40 border-black/5'}`}>
+                            <span className={`text-[10px] font-bold tracking-tight uppercase ${isDarkBg ? 'text-white/95' : (itemStyle.texture === 'novatrix' ? 'text-black/80' : 'text-[#1a1a1a]/70')}`}>
                                 Old
                             </span>
                         </div>
@@ -1464,9 +1465,9 @@ const ItemTile = React.memo(({
                     <button
                         onClick={(e) => handlers.onFlag(e, item)}
                         className={`p-1.5 rounded-xl transition-all active:scale-90 ${
-                            !isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
+                            !isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (isDarkBg ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]')
                         } ${
-                            item.isFlagged ? (!isStale && ['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-amber-400' : 'text-amber-600') : ''
+                            item.isFlagged ? (isDarkBg || (!isStale && itemStyle.texture === 'novatrix') ? 'text-amber-400' : 'text-amber-600') : ''
                         }`}
                         title={item.isFlagged ? 'Unflag' : 'Flag'}
                     >
@@ -1484,8 +1485,8 @@ const ItemTile = React.memo(({
                             }}
                             className={`p-1.5 rounded-xl transition-all active:scale-90 ${
                                 stylerOpen 
-                                    ? (!isStale && ['xenon', 'novatrix', 'neon', 'lamp'].includes(itemStyle.texture) ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
-                                    : (!isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (!isStale && ['xenon', 'neon', 'lamp'].includes(itemStyle.texture) ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
+                                    ? (isDarkBg || (!isStale && itemStyle.texture === 'novatrix') ? 'bg-white/10 text-white' : 'bg-[#1a1a1a]/10 text-[#1a1a1a]') 
+                                    : (!isStale && itemStyle.texture === 'novatrix' ? 'text-black/60 hover:text-black' : (isDarkBg ? 'text-white/70 hover:text-white' : 'text-[#1a1a1a]/50 hover:text-[#1a1a1a]'))
                             }`}
                             title="Style"
                         >

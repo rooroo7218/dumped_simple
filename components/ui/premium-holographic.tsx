@@ -122,7 +122,7 @@ export const PremiumHolographic = ({
                 }}
               >
                 <polygon
-                  points="0,0 100,100 100,0 0,100"
+                  points="-100,-100 200,200 200,-100 -100,200"
                   fill={layer.color}
                   filter="url(#premiumBlur)"
                   opacity="0.4"
