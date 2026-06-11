@@ -19,12 +19,20 @@ type CalendarData = {
     count: number;
 }[];
 
-const LEVELS: Record<number, string> = {
+const PURPLE_LEVELS: Record<number, string> = {
     0: 'rgba(15,23,42,0.03)',  // grey — no activity
     1: '#c4b5fd',              // purple-300 — light
     2: '#a78bfa',              // purple-400
     3: '#7c3aed',              // purple-700
     4: '#4c1d95',              // purple-900 — deep
+};
+
+const BLUE_LEVELS: Record<number, string> = {
+    0: 'rgba(15,23,42,0.03)',  // grey — no activity
+    1: '#adc7ff',              // blue-300 — light
+    2: '#709eff',              // blue-400
+    3: '#2b66ff',              // blue-600
+    4: '#0039cb',              // blue-800 — deep
 };
 
 function getLevel(count: number): 0 | 1 | 2 | 3 | 4 {
@@ -93,11 +101,16 @@ function buildWeeks(data: CalendarData, start: Date, end: Date): Week[] {
 
 interface DumpCalendarProps {
     data: CalendarData;
+    theme?: 'purple' | 'blue';
+    unitName?: string;
 }
 
-export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
+export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data, theme = 'purple', unitName = 'dump' }) => {
     const end = endOfDay(new Date());
     const start = startOfDay(subYears(end, 1));
+
+    const activeLevels = theme === 'blue' ? BLUE_LEVELS : PURPLE_LEVELS;
+    const shadowColor = theme === 'blue' ? 'rgba(37, 99, 235, 0.5)' : 'rgba(124, 58, 237, 0.5)';
 
     const [hoveredDay, setHoveredDay] = React.useState<Activity | null>(null);
     const [clickedDay, setClickedDay] = React.useState<Activity | null>(null);
@@ -223,12 +236,12 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                                 width: '100%',
                                                 height: '100%',
                                                 borderRadius: '50%',
-                                                background: day ? (day.level === 0 && showTooltip ? '#f8fafc' : LEVELS[day.level]) : 'transparent',
+                                                background: day ? (day.level === 0 && showTooltip ? '#f8fafc' : activeLevels[day.level]) : 'transparent',
                                                 outline: day ? (showTooltip ? '1.5px solid #0f172a' : '1px solid rgba(0,0,0,0.7)') : 'none',
                                                 transition: 'all 0.2s ease-in-out',
                                                 cursor: day ? 'pointer' : 'default',
                                                 transform: showTooltip ? 'scale(1.25)' : 'none',
-                                                boxShadow: showTooltip ? '0 0 12px rgba(124, 58, 237, 0.5)' : 'none',
+                                                boxShadow: showTooltip ? `0 0 12px ${shadowColor}` : 'none',
                                             }}
                                         />
                                         {showTooltip && (
@@ -266,11 +279,11 @@ export const DumpCalendar: React.FC<DumpCalendarProps> = ({ data }) => {
                                                             width: 5, 
                                                             height: 5, 
                                                             borderRadius: '50%', 
-                                                            background: LEVELS[day.level],
+                                                            background: activeLevels[day.level],
                                                             border: day.level === 0 ? '1px solid rgba(255,255,255,0.3)' : 'none'
                                                         }} 
                                                     />
-                                                    {day.count} dump{day.count !== 1 ? 's' : ''}
+                                                    {day.count} {unitName === 'completed task' ? (day.count === 1 ? 'completed task' : 'completed tasks') : (unitName + (day.count !== 1 ? 's' : ''))}
                                                 </div>
                                                 {/* Tooltip Arrow */}
                                                 <div
